@@ -9,6 +9,7 @@ import subprocess
 from SCEconomy_bizluv_give_A import Economy
 
 import pickle
+import numba as nb
 
 w_init = float(args[1])
 p_init = float(args[2])
@@ -19,8 +20,8 @@ print('the code is running with ', num_core, 'cores...')
 prices_init = [w_init, p_init, rc_init]
 
 
-nd_log_file = './save_data/log.txt'
-detailed_output_file = './save_data/detailed_output.txt'
+nd_log_file = '/home/ec2-user/Dropbox/sceconomy/log.txt'
+detailed_output_file = '/home/ec2-user/Dropbox/sceconomy/detailed_output.txt'
 
 f = open(detailed_output_file, 'w')
 f.close()
@@ -48,7 +49,7 @@ prob_base = np.load('./input_data/transition_matrix.npy')
 prob2 = np.kron(prob_b, prob_base)
 
 ###codes to generate shocks###
-num_s = prob.shape[0]
+num_s = prob2.shape[0]
 num_pop_assigned = 100_000
 sim_time = 2000
 data_i_s_elem = np.ones((num_pop_assigned, sim_time), dtype = int) * (-1)
@@ -58,16 +59,16 @@ data_i_s_elem[:, 0] = 7
 @nb.jit(nopython = True)
 def transit(i, r):
 
-    if r <= prob[i,0]:
+    if r <= prob2[i,0]:
         return 0
 
     for j in range(1, num_s):
 
         #print(np.sum(prob[i,0:j]))
-        if r <= np.sum(prob[i,0:j]):
+        if r <= np.sum(prob2[i,0:j]):
             return j - 1
 
-    if r > np.sum(prob[i,0:-1]) and r <= 1.:
+    if r > np.sum(prob2[i,0:-1]) and r <= 1.:
         return num_s - 1
 
     print('error')
@@ -103,7 +104,7 @@ def target(prices):
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, bgird = brid2 , prob = prob2)
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, bgrid = bgrid2 , prob = prob2)
 
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
