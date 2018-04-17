@@ -3170,6 +3170,7 @@ import pickle
 import os.path
 from sys import platform
 
+#all the processes read econ.pickle
 def import_econ(name = 'econ.pickle'):
 
     if platform == 'darwin':
@@ -3179,7 +3180,7 @@ def import_econ(name = 'econ.pickle'):
         with open(name, mode='rb') as f: econ = pickle.load(f)
         return econ
 
-
+#only the one with rank == 0 will be stored
 def export_econ(econ, name = 'econ.pickle'):
 
 
