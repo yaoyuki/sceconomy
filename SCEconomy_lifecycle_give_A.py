@@ -2371,8 +2371,8 @@ class Economy:
             for i in nb.prange(num_entity):
 #            for i in range(num_entity):
                 for t in range(1, num_time):
-                    is_o = _prob_s_[i,t]
-                    is_o_m1 = _prob_s_[i,t-1]
+                    is_o = _data_is_o_[i,t]
+                    is_o_m1 = _data_is_o_[i,t-1]
 
                     if is_o_m1 and not (is_o): #if s/he dies and reborns, prod. shocks are drawn from the stationary dist
                         _data_[i, t] = draw(_rnd_s_[i, t], _prob_s_st_)
