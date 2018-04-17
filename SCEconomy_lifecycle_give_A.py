@@ -2690,7 +2690,7 @@ class Economy:
                 # for t = sim_time+1:
                 # we need this part since decrease in kap due to succeession depends on realization of a elderly shock
 
-                t = sim_time+1
+                t = sim_time
 
                 kap = data_kap_[i, t-1]
                 is_o = data_is_o_[i,t]
