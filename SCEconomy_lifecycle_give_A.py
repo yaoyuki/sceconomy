@@ -2947,6 +2947,7 @@ class Economy:
             Ecagg_c = np.mean((data_ss[:,6] + p*data_ss[:,7] )* (data_ss[:,0]))
             Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * (1. - data_ss[:,0]))
 
+            #ETn and ETm take into account a transfer part as a negative 
             ETn = np.mean((taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0])
             ETm = np.mean((taum*np.fmax(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - data_ss[:,12], 0.) - tran)*(1. - data_ss[:,0]) )
 
@@ -2969,8 +2970,10 @@ class Economy:
             b = Ea - (1. - taud)*kc - Eks
     #         netb = (grate + delk)*b ##typo
             netb = (rbar - grate)*b
-            tax_rev = Tc + ETn + ETm + Td + Tp + tran + ETr
+#            tax_rev = Tc + ETn + ETm + Td + Tp + tran + ETr
+            tax_rev = Tc + ETn + ETm + Td + Tp + tran
 
+            
             GDP = yc + yn + p*Eys
             C = Ecc + p*Ecs
             xc = (grate + delk)*kc
