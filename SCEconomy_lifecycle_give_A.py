@@ -157,8 +157,8 @@ class Economy:
         self.grate    = 0.02 #gamma, growth rate for detrending
         self.la       = 0.5 #lambda
         self.la_tilde = 0.5 #added lambda_tilde
-        self.tau_wo   = 0.0 #added
-        self.tau_bo   = 0.85 #added
+        self.tau_wo   = 0.5 #added
+        self.tau_bo   = 0.5 #added
         self.mu       = 1.5 
         self.ome      = 0.6 #omega
         self.phi      = 0.15 
@@ -2403,6 +2403,8 @@ class Economy:
         grate = Econ.grate
         la = Econ.la
         la_tilde = Econ.la_tilde
+        tau_wo = Econ.tau_wo
+        tau_bo = Econ.tau_bo
         mu = Econ.mu
         ome = Econ.ome
         phi = Econ.phi
@@ -2742,8 +2744,8 @@ class Economy:
                     data_ss[i,2] = kap
                     data_ss[i,3] = an
                     data_ss[i,4] = kapn
-                    data_ss[i,5] = eps
-                    data_ss[i,6:11] = get_cstatic(np.array([a, an, eps, float(is_o)]))[1:]
+                    data_ss[i,5] = eps*(1. - is_o) + tau_wo*eps*is_o
+                    data_ss[i,6:11] = get_cstatic(np.array([a, an, eps, float(is_o)]))[1:] #here eps is a raw eps, not age-adjusted.
                     data_ss[i,15] = is_o
 
                 else:
@@ -2760,8 +2762,8 @@ class Economy:
                     data_ss[i,2] = kap
                     data_ss[i,3] = an
                     data_ss[i,4] = kapn
-                    data_ss[i,5] = z
-                    data_ss[i,6:15] = get_sstatic(np.array([a, an, kap, kapn, z, float(is_o)]))[1:]
+                    data_ss[i,5] = z*(1. - is_o) + tau_bo*z*is_o
+                    data_ss[i,6:15] = get_sstatic(np.array([a, an, kap, kapn, z, float(is_o)]))[1:] #here z ia a raw z, not age-adjusted.
                     data_ss[i,15] = is_o                    
         
 
@@ -2935,7 +2937,7 @@ class Economy:
             Ecc = np.mean(data_ss[:,6])
             Ecs = np.mean(data_ss[:,7])
             El = np.mean(data_ss[:,9])
-            En = np.mean(data_ss[:,5]* data_ss[:,10] * (data_ss[:,0]))
+            En = np.mean(data_ss[:,5]* data_ss[:,10] * (data_ss[:,0])) #this is a bad notation. should be changed to Een or something.
         #     En = np.mean(data_ss[:,10] * (data_ss[:,0]))
             Ex = np.mean(data_ss[:,12] * (1. - data_ss[:,0]))
             Eks = np.mean(data_ss[:,13] * (1. - data_ss[:,0]))
