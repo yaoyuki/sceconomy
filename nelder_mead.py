@@ -6,7 +6,7 @@ import numpy as np
 import time
 import subprocess
 ### use modified version of SCEConomy module
-from SCEconomy_give_A import Economy
+from SCEconomy_lifecycle_give_A import Economy
 
 import pickle
 
@@ -19,8 +19,8 @@ print('the code is running with ', num_core, 'cores...')
 prices_init = [w_init, p_init, rc_init]
 
 
-nd_log_file = './save_data/log.txt'
-detailed_output_file = './save_data/detailed_output.txt'
+nd_log_file = '/home/ec2-user/Dropbox/lifecycle/log.txt'
+detailed_output_file = '/home/ec2-user/Dropbox/lifecycle/detailed_output.txt'
 
 f = open(detailed_output_file, 'w')
 f.close()
@@ -54,8 +54,7 @@ def target(prices):
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01)
-
+    econ = Economy(agrid = agrid2, zgrid = zgrid2)
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
@@ -63,7 +62,7 @@ def target(prices):
     #with open('econ.pickle', mode='rb') as f: econ = pickle.load(f)
     t0 = time.time()
 
-    result = subprocess.run(['mpiexec', '-n', num_core, 'python', 'SCEconomy_give_A.py'], stdout=subprocess.PIPE)
+    result = subprocess.run(['mpiexec', '-n', num_core, 'python', 'SCEconomy_lifecycle_give_A.py'], stdout=subprocess.PIPE)
     t1 = time.time()
     
 
