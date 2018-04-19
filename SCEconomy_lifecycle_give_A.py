@@ -309,7 +309,7 @@ class Economy:
         print('tau_bo = ', self.tau_bo) #added
         print('trans_retire = ', self.trans_retire) #added        
         print(f'prob_yo =  {self.prob_yo[0,0]}, {self.prob_yo[0,1]}, {self.prob_yo[1,0]}, {self.prob_yo[1,1]}.') #added
-        print('statinary dist of prob_yo = ', self.prob.yo) #added
+        print('statinary dist of prob_yo = ', self.prob_yo_st) #added
         print('')
         
         
@@ -2792,46 +2792,97 @@ class Economy:
         num_total_pop = self.num_total_pop
 
         #load main simlation result
-        data_i_s = self.data_i_s
         data_is_c = self.data_is_c
-
-
         data_is_s = ~data_is_c
+
+        data_is_o = self.data_is_o
+        data_is_y = ~data_is_o
+
+        data_is_born = np.zeros((num_total_pop, sim_time+1), dtype = bool)
+        data_is_born[:,1:] = (~data_is_o[:,1:])*(data_is_o[:,:-1])
+
+        self.data_is_born = data_is_born
         
         s_age = np.ones(num_total_pop, dtype = int) * -1
         c_age = np.ones(num_total_pop, dtype = int) * -1
 
-        for i in range(num_total_pop):
-            if data_is_c[i,-1]:
-                s_age[i] = -1
-            else:
-                t = 0
-                while t < sim_time:
-                    if data_is_s[i, -t - 1]:
-                        s_age[i] = t
-                    else:
-                        break
-                    t = t + 1
+        o_age = np.ones(num_total_pop, dtype = int) * -1
+        y_age = np.ones(num_total_pop, dtype = int) * -1
 
-
-        for i in range(num_total_pop):
-            if data_is_s[i,-1]:
-                c_age[i] = -1
-            else:
-                t = 0
-                while t < sim_time:
-                    
-                    if data_is_c[i, -t - 1]:
-                        c_age[i] = t
+        ind_age = np.ones(num_total_pop, dtype = int) * -1
         
-                    else:
+
+        @nb.jit(nopython = True, parallel = True)
+#        @nb.jit(nopython = True)
+        def _calc_age_(_data_is_, _age_):
+            for i in nb.prange(num_total_pop):
+                if not _data_is_[i,-1]:
+                    _age_[i] = -1
+                else:
+                    t = 0
+                    while t < sim_time:
+                        if _data_is_[i, -t - 1]:
+                            _age_[i] = t
+                        else:
+                            break
+
+                        t = t + 1
+
+        @nb.jit(nopython = True, parallel = True)
+#        @nb.jit(nopython = True)
+        def _calc_ind_age_(_data_is_born_, _age_):
+            for i in nb.prange(num_total_pop):
+                t = 0
+
+                while t < sim_time:
+                    if _data_is_born_[i, -t - 1]:
+                        _age_[i] = t
                         break
-                    t = t + 1
+                    else:
+                        t = t+1
+                        
+
+        _calc_age_(data_is_c, c_age)                
+        _calc_age_(data_is_s, s_age)                                        
+        _calc_age_(data_is_y[:,0:-1], y_age)
+        _calc_age_(data_is_o[:,0:-1], o_age)
+        _calc_ind_age_(data_is_born[:,0:-1], ind_age)
+
+        
+        # for i in range(num_total_pop):
+        #     if data_is_c[i,-1]:
+        #         s_age[i] = -1
+        #     else:
+        #         t = 0
+        #         while t < sim_time:
+        #             if data_is_s[i, -t - 1]:
+        #                 s_age[i] = t
+        #             else:
+        #                 break
+        #             t = t + 1
+
+
+        # for i in range(num_total_pop):
+        #     if data_is_s[i,-1]:
+        #         c_age[i] = -1
+        #     else:
+        #         t = 0
+        #         while t < sim_time:
+                    
+        #             if data_is_c[i, -t - 1]:
+        #                 c_age[i] = t
+        
+        #             else:
+        #                 break
+        #             t = t + 1
         
 
         self.s_age = s_age
         self.c_age = c_age
-
+        self.y_age = y_age
+        self.o_age = o_age
+        self.ind_age = ind_age        
+        
         return
         
     # to be changed
@@ -3507,24 +3558,12 @@ class Economy:
         rbar = Econ.rbar
         rs = Econ.rs
 
-        xi1 = Econ.xi1
-        xi2 = Econ.xi2
-        xi3 = Econ.xi3
-        xi4 = Econ.xi4
-        xi5 = Econ.xi5
-        xi6 = Econ.xi6
-        xi7 = Econ.xi7
-        xi8 = Econ.xi8
-        xi9 = Econ.xi9
-        xi10 = Econ.xi10
-        xi11 = Econ.xi11
-        xi12 = Econ.xi12
-
         data_a = Econ.data_a
         #data_kap = Econ.data_kap
         data_kap0 = Econ.data_kap0
         data_i_s = Econ.data_i_s
         data_is_c = Econ.data_is_c
+        data_is_o = Econ.data_is_o        
 
         #simulation parameters
         sim_time = Econ.sim_time
@@ -3595,13 +3634,14 @@ class Economy:
         data_x = np.zeros(data_a.shape)
         data_ks = np.zeros(data_a.shape)
         data_ys = np.zeros(data_a.shape)
-        data_ys = np.zeros(data_a.shape)
+        #data_ys = np.zeros(data_a.shape)??? 
 
         #note that this does not store some impolied values,,,, say div or value of sweat equity
         calc_all(data_a, data_kap0, data_i_s, data_is_c, data_is_o, ##input
              data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_mx, data_my, data_x, data_ks, data_ys ##output
-            )
+                 )
 
+        # value and dividend part should be rewritten
         # data_val_sweat = np.zeros(data_a.shape)
         # data_div_sweat = np.zeros(data_a.shape)
 
@@ -3662,6 +3702,7 @@ class Economy:
             np.save(dir_path_save + 'data_kap0', self.data_kap0[:, -100:])            
             np.save(dir_path_save + 'data_i_s', self.data_i_s[:, -100:])
             np.save(dir_path_save + 'data_is_c', self.data_is_c[:, -100:])
+            np.save(dir_path_save + 'data_is_o', self.data_is_o[:, -101:])
             np.save(dir_path_save + 'data_u', self.data_u[:, -100:])
             np.save(dir_path_save + 'data_cc', self.data_cc[:, -100:])
             np.save(dir_path_save + 'data_cs', self.data_cs[:, -100:])
@@ -3696,7 +3737,10 @@ class Economy:
 
             np.save(dir_path_save + 's_age', self.s_age)
             np.save(dir_path_save + 'c_age', self.c_age)
-
+            np.save(dir_path_save + 'y_age', self.y_age)
+            np.save(dir_path_save + 'o_age', self.o_age)
+            np.save(dir_path_save + 'ind_age', self.ind_age)                        
+            
 
 import pickle        
 import os.path
