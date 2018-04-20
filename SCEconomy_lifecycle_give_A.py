@@ -2676,10 +2676,10 @@ class Economy:
 
                         
 
-                    if (val_c == val_s):
+                    if val_c == val_s:
                         print('error: val_c == val_s')
 
-                    i_c = (val_c > val_s)
+                    i_c = val_c > val_s
 
                     an = i_c * an_c + (1. - i_c) * an_s
                     kapn = i_c * kapn_c + (1. - i_c) * kapn_s
@@ -3559,7 +3559,7 @@ class Economy:
         rs = Econ.rs
 
         data_a = Econ.data_a
-        #data_kap = Econ.data_kap
+        data_kap = Econ.data_kap
         data_kap0 = Econ.data_kap0
         data_i_s = Econ.data_i_s
         data_is_c = Econ.data_is_c
@@ -3574,7 +3574,7 @@ class Economy:
 
 
         @nb.jit(nopython = True, parallel = True)
-        def calc_all(data_a_, data_kap0_, data_i_s_, data_is_c_, data_is_o_,
+        def calc_all(data_a_, data_kap_, data_kap0_, data_i_s_, data_is_c_, data_is_o_,
                     data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_, data_mx_, data_my_, data_x_, data_ks_, data_ys_):
 
             for i in nb.prange(num_total_pop):
@@ -3598,7 +3598,7 @@ class Economy:
                     ys = np.nan
 
                     a = data_a_[i, t-1]
-                    kap = data_kap0_[i, t-1] #this should be kap0
+                    kap = data_kap_[i, t-1] #this should be kap, not kap0
 
                     an = data_a_[i, t]
                     kapn = data_kap0_[i, t] #this should be kap0
@@ -3637,7 +3637,7 @@ class Economy:
         #data_ys = np.zeros(data_a.shape)??? 
 
         #note that this does not store some impolied values,,,, say div or value of sweat equity
-        calc_all(data_a, data_kap0, data_i_s, data_is_c, data_is_o, ##input
+        calc_all(data_a, data_kap, data_kap0, data_i_s, data_is_c, data_is_o, ##input
              data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_mx, data_my, data_x, data_ks, data_ys ##output
                  )
 
