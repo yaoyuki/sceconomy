@@ -27,12 +27,12 @@ if __name__ == '__main__':
 
 
     ###define additional parameters###
-    num_core = 8 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
+    num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
 
     # prices
-    w_ = 3.1480348355657055
-    p_ = 1.0207889942205437
-    rc_ = 0.06202604135907751
+    w_ = 3.1572282397347546
+    p_ = 0.9727393950908765
+    rc_ = 0.06151741790372089
 
 
     ###end defining additional parameters###
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01, tau_wo = 0.0, tau_bo 0.85)
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, taum = 0.10)
     econ.set_prices(w = w_, p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
 
@@ -72,6 +72,7 @@ if __name__ == '__main__':
     ###calculate other important variables###
 #    econ.calc_sweat_eq_value()
     econ.calc_age()
+    econ.calc_kap_bornwith()
     econ.simulate_other_vars()
     econ.save_result()
     

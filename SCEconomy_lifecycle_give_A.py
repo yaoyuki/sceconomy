@@ -2548,10 +2548,11 @@ class Economy:
         #main data container
         data_a = None
         data_kap = None
-        data_kap0 = None        
+        data_kap0 = None
         data_i_s = None
         data_is_c = None
         data_is_o = None
+
 
         if rank == 0:
             data_a = np.zeros((num_total_pop, sim_time))
@@ -2781,7 +2782,50 @@ class Economy:
 
         return
 
+
+    def calc_kap_bornwith(self):
+
+        #simulation parameters
+        sim_time = self.sim_time
+        num_total_pop = self.num_total_pop
+
+        #load main simlation result
+        data_is_c = self.data_is_c
+        data_is_s = ~data_is_c
+
+
+        data_is_o = self.data_is_o
+        data_is_y = ~data_is_o
+
+        data_kap = self.data_kap
+
+        data_kap_bornwith = np.full(data_kap.shape, -1.0)
+
+        @nb.jit(nopython = True, parallel = True)
+        def _calc_kap_bornwith_(data_kap_bornwith_, data_kap_, data_is_o_):
+
+            for i in nb.prange(num_total_pop):
+
+                t = 0
+                data_kap_bornwith_[i, t] = data_kap_[i, t]
+                data_kap_bornwith_[i, t+1] = data_kap_[i, t+1]
+
+                for t in range(1, sim_time):
+
+                #if reborn
+                    if data_is_o_[i, t] and not data_is_o_[i, t+1]:
+                        data_kap_bornwith_[i, t] = data_kap_[i, t]
+                    else:
+                        data_kap_bornwith_[i, t] = data_kap_bornwith_[i, t-1]
+            
+        
+        _calc_kap_bornwith_(data_kap_bornwith, data_kap, data_is_o)
+
+        self.data_kap_bornwith = data_kap_bornwith
+
+        return
     
+        
     #this calculate age of S-corp. 
     def calc_age(self):
 
@@ -3699,7 +3743,8 @@ class Economy:
             
             np.save(dir_path_save + 'data_a', self.data_a[:, -100:])
             np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:])
-            np.save(dir_path_save + 'data_kap0', self.data_kap0[:, -100:])            
+            np.save(dir_path_save + 'data_kap0', self.data_kap0[:, -100:])
+            np.save(dir_path_save + 'data_kap_bornwith', self.data_kap_bornwith[:, -100:])                        
             np.save(dir_path_save + 'data_i_s', self.data_i_s[:, -100:])
             np.save(dir_path_save + 'data_is_c', self.data_is_c[:, -100:])
             np.save(dir_path_save + 'data_is_o', self.data_is_o[:, -101:])
