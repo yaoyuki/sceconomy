@@ -6,7 +6,7 @@ import numpy as np
 import time
 import subprocess
 ### use modified version of SCEConomy module
-from SCEconomy_lifecycle_give_A import Economy
+from SCEconomy_give_A import Economy
 
 import pickle
 
@@ -36,8 +36,8 @@ def curvedspace(begin, end, curve, num=100):
 
 agrid2 = curvedspace(0., 100., 2., 40)
 # kapgrid2 = curvedspace(0., 1., 2., 20)
-zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
-# prob2 = np.load('./input_data/transition_matrix.npy')
+zgrid2 = np.load('./input_data/zgrid09.npy') ** 2.
+prob2 = np.load('./input_data/transition_matrix_0709.npy')
 
 
 
@@ -54,7 +54,7 @@ def target(prices):
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(agrid = agrid2, zgrid = zgrid2)
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, prob = prob2, la = 0.4)
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
