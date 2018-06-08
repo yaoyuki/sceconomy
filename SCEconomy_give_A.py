@@ -1,3 +1,4 @@
+
 #import Yuki's library in the directory ./library
 import sys
 sys.path.insert(0, './library/')
@@ -1403,7 +1404,7 @@ class Economy:
 
 
                 ans = np.array([0, 0])
-                ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp =   _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ipar_loop, _num_cached_)    
+                ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp =                      _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ipar_loop, _num_cached_)    
 
 
                 # move to an adjacent mesh or leave
@@ -1411,7 +1412,6 @@ class Economy:
                 if ans[0] != 0 and ans[0] != max_ian_sub and ans[1] != 0 and ans[1] != max_ikapn_sub:
                     #solution
                     break
-                
                 elif ans[0] == 0 and (ans[1] != 0 or ans[1] != max_ikapn_sub):
                     if ian_lo == 0:
                         break
@@ -1746,8 +1746,7 @@ class Economy:
 
                                 #obj = lambda x: (get_util_c(np.array([agrid[ia], x, epsgrid[is_to_ieps[istate]]])) + obj2(x))**(1./(1. - mu))
                                 #vcn[ia, ikap, istate] = (vc_util[ia, ikap, istate] + obj2(vc_an[ia, ikap, istate]))**(1./(1. - mu))
-                                _vcn_[ia, ikap, istate] = (_vc_util_[ia, ikap, istate] +
-                                                           fem2d_peval(_vc_an_[ia, ikap, istate], la*kapgrid[ikap], agrid, kapgrid, __EV__[0,0,:,:,istate]))**(1./(1. - mu))
+                                _vcn_[ia, ikap, istate] = (_vc_util_[ia, ikap, istate] +                                                          fem2d_peval(_vc_an_[ia, ikap, istate], la*kapgrid[ikap], agrid, kapgrid, __EV__[0,0,:,:,istate])                                                          )**(1./(1. - mu))
 
 
 
@@ -1755,8 +1754,7 @@ class Economy:
                                 #update S
 
                                 #vsn[ia, ikap, istate] = (vs_util[ia, ikap, istate] + EV_interp_f(vs_an[ia, ikap, istate] , vs_kapn[ia, ikap, istate]))**(1./(1. - mu))
-                                _vsn_[ia, ikap, istate] = (_vs_util_[ia, ikap, istate] +
-                                                           fem2d_peval(_vs_an_[ia, ikap, istate] , _vs_kapn_[ia, ikap, istate], agrid, kapgrid, __EV__[0,0,:,:,istate]) )**(1./(1. - mu))
+                                _vsn_[ia, ikap, istate] = (_vs_util_[ia, ikap, istate] +                                                          fem2d_peval(_vs_an_[ia, ikap, istate] , _vs_kapn_[ia, ikap, istate], agrid, kapgrid, __EV__[0,0,:,:,istate])                                                          )**(1./(1. - mu))
 
                 #after 
 
@@ -1844,33 +1842,31 @@ class Economy:
 
             comm.Bcast([EV, MPI.DOUBLE])
 
-            ###c-loop begins####            	
-            comm.Barrier()
+
             if rank == 0:
                 tc1 = time.time()
-
+            ###c-loop begins####
             _inner_loop_c_with_range_(assigned_state_range, EV, vc_an_tmp, vcn_tmp, vc_util_tmp)
 
-            comm.Barrier()
+
+            ###c-loop ends####
             if rank == 0:
                 tc2 = time.time()
                 print('time for c = {:f}'.format(tc2 - tc1), end = ', ')
-            ###c-loop ends####
 
 
-            ###s-loop begins####
-            comm.Barrier()
             if rank == 0:
                 ts1 = time.time()
-
+            ###s-loop begins####
 
             num_cached = _inner_loop_s_with_range_(assigned_state_range, EV, vs_an_tmp ,vs_kapn_tmp, vsn_tmp, vs_util_tmp, num_cached)
 
-            comm.Barrier()
+
+            ###s-loop ends####
+
             if rank == 0:
                 ts2 = time.time()
                 print('time for s = {:f}'.format(ts2 - ts1), end = ', ')
-            ###s-loop ends####
 
 
             ####policy function iteration starts#####
@@ -3170,7 +3166,6 @@ import pickle
 import os.path
 from sys import platform
 
-#all the processes read econ.pickle
 def import_econ(name = 'econ.pickle'):
 
     if platform == 'darwin':
@@ -3180,7 +3175,7 @@ def import_econ(name = 'econ.pickle'):
         with open(name, mode='rb') as f: econ = pickle.load(f)
         return econ
 
-#only the one with rank == 0 will be stored
+
 def export_econ(econ, name = 'econ.pickle'):
 
 
