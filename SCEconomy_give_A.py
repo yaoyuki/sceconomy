@@ -79,7 +79,8 @@ class Economy:
                  num_subkap_inner = None,
                  sim_time = None,
                  num_total_pop = None,
-                 A = None):
+                 A = None,
+                 path_to_data_i_s = None):
         
 
         
@@ -126,6 +127,7 @@ class Economy:
         if sim_time is not None: self.sim_time = sim_time
         if num_total_pop is not None: self.num_total_pop = num_total_pop
         if A is not None: self.A = A
+        if path_to_data_i_s is not None: self.path_to_data_i_s = path_to_data_i_s
 
         self.__set_implied_parameters__()
     
@@ -163,6 +165,7 @@ class Economy:
         self.sim_time = 1000
         self.num_total_pop = 100000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
+        self.path_to_data_i_s = './input_data/data_i_s.npy'
 
 
 
@@ -2134,8 +2137,9 @@ class Economy:
     #     ###end codes to generate shocks###
 
 
-        ###load shock data###
-        data_i_s_import = np.load('./input_data/data_i_s.npy')
+        ###load shock data### self.path_to_data_i_s
+        data_i_s_import = np.load(Econ.path_to_data_i_s)
+        #data_i_s_import = np.load('./input_data/data_i_s.npy')
         data_i_s_elem[:] = data_i_s_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]
        
         del data_i_s_import
