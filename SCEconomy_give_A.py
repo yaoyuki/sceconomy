@@ -887,7 +887,8 @@ class Economy:
 
                 it = 0
                 tol = 1.0e-12
-                rtol = 4.4408920985006262e-16
+                #rtol = 4.4408920985006262e-16 #this is default tolerance, but sometimes too rigid.
+                rtol = 1.0e-8
                 maxit = 400
                 val_m = 10000.
                 diff = 1.0e10
@@ -913,16 +914,17 @@ class Economy:
                 #convergence check
                 if it == maxit:
                     print('err: bisection method for my did not converge.')
-                    #print('tol = ', tol)
-                    #print('diff = ', diff)
-                    #print('alp1 = ', alp1)
-                    #print('alp2 = ', alp2)
-                    #print('alp3 = ', alp3)
-                    #print('alp4 = ', alp4)
-                    #print('alp5 = ', alp5)
-                    #print('val_m = ', val_m)
-                    #print('my = ', my)
-                    #print('mymax = ', mymax)
+                    
+                    # print('tol = ', tol)
+                    # print('diff = ', diff)
+                    # print('alp1 = ', alp1)
+                    # print('alp2 = ', alp2)
+                    # print('alp3 = ', alp3)
+                    # print('alp4 = ', alp4)
+                    # print('alp5 = ', alp5)
+                    # print('val_m = ', val_m)
+                    # print('my = ', my)
+                    # print('mymax = ', mymax)
 
                 ans = my
                 #### bisection end ####
