@@ -890,6 +890,7 @@ class Economy:
                 rtol = 4.4408920985006262e-16
                 maxit = 400
                 val_m = 10000.
+                diff = 1.0e10
                 while it < maxit:
                     it = it + 1
                     if my > 0. and my < 1.0e-6:
@@ -911,7 +912,9 @@ class Economy:
 
                 #convergence check
                 if it == maxit:
-                    print('err: bisection method for my did not converge. tol = ', tol, ', diff = ', diff)
+                    print('err: bisection method for my did not converge.')
+                    #print('tol = ', tol)
+                    #print('diff = ', diff)
                     #print('alp1 = ', alp1)
                     #print('alp2 = ', alp2)
                     #print('alp3 = ', alp3)

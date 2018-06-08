@@ -1,4 +1,3 @@
-
 import sys
 args = sys.argv
 
@@ -19,8 +18,8 @@ print('the code is running with ', num_core, 'cores...')
 prices_init = [w_init, p_init, rc_init]
 
 
-nd_log_file = '/home/ec2-user/Dropbox/lifecycle/log.txt'
-detailed_output_file = '/home/ec2-user/Dropbox/lifecycle/detailed_output.txt'
+nd_log_file = '/home/ec2-user/Dropbox/case1/log.txt'
+detailed_output_file = '/home/ec2-user/Dropbox/case1/detailed_output.txt'
 
 f = open(detailed_output_file, 'w')
 f.close()
@@ -34,8 +33,8 @@ def curvedspace(begin, end, curve, num=100):
     ans[-1] = end #so that the last element is exactly end
     return ans
 
-agrid2 = curvedspace(0., 100., 2., 40)
-# kapgrid2 = curvedspace(0., 1., 2., 20)
+agrid2 = curvedspace(0., 150., 2., 40)
+kapgrid2 = curvedspace(0., 1.5, 2., 20)
 zgrid2 = np.load('./input_data/zgrid09.npy') ** 2.
 prob2 = np.load('./input_data/transition_matrix_0709.npy')
 
@@ -54,7 +53,7 @@ def target(prices):
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, prob = prob2, la = 0.4)
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2,  zgrid = zgrid2, prob = prob2, la = 0.4, path_to_data_i_s = './input_data/data_i_s_0709.npy')
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
