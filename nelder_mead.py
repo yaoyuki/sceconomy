@@ -33,8 +33,8 @@ def curvedspace(begin, end, curve, num=100):
     ans[-1] = end #so that the last element is exactly end
     return ans
 
-agrid2 = curvedspace(0., 150., 2., 40)
-kapgrid2 = curvedspace(0., 1.5, 2., 20)
+agrid2 = curvedspace(0., 200., 2., 40)
+kapgrid2 = curvedspace(0., 2.0, 2., 20)
 zgrid2 = np.load('./input_data/zgrid09.npy') ** 2.
 prob2 = np.load('./input_data/transition_matrix_0709.npy')
 
@@ -53,7 +53,7 @@ def target(prices):
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(agrid = agrid2, kapgrid = kapgrid2,  zgrid = zgrid2, prob = prob2, la = 0.4, path_to_data_i_s = './input_data/data_i_s_0709.npy')
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2,  zgrid = zgrid2, prob = prob2,  path_to_data_i_s = './input_data/data_i_s_0709.npy')
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
@@ -61,7 +61,7 @@ def target(prices):
     #with open('econ.pickle', mode='rb') as f: econ = pickle.load(f)
     t0 = time.time()
 
-    result = subprocess.run(['mpiexec', '-n', num_core, 'python', 'SCEconomy_lifecycle_give_A.py'], stdout=subprocess.PIPE)
+    result = subprocess.run(['mpiexec', '-n', num_core, 'python', 'SCEconomy_give_A.py'], stdout=subprocess.PIPE)
     t1 = time.time()
     
 
