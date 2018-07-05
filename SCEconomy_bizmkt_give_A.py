@@ -1841,7 +1841,7 @@ class Economy:
         R = np.ones((num_a, num_kap, num_s))*100.0
         
 
-        max_iter = 300
+        max_iter = 50
         max_howard_iter = 0 #temporary
         tol = 1.0e-5
         dist = 10000.0
@@ -1938,11 +1938,11 @@ class Economy:
                             if an_tmp >= 0.: 
                                 vacqn[ia, ikap, istate] = fem2d_peval(an_tmp,  vs_kapn[ia, ikap,istate] + kapbar , agrid, kapgrid, vsn[:,:,istate])
                             else:
-                                #if this is feasible
+                                #if an_tmp is not feasible (an_tmp < amin)
                                 vacqn[ia, ikap, istate] = -np.inf
                                 
 
-                ###calc val for acquisiiton###
+                ###end calc val for acquisiiton###
                 
                 pol_c = vcn > vsn #to be fixed
                 pol_acq = vacqn > np.fmax(vcn, vsn)
@@ -1963,6 +1963,9 @@ class Economy:
         ###calc fair price R(a, kap, s)###
 
         if rank == 0:
+            
+            from scipy.optimize import brentq
+            
             for istate in range(num_s):
                 for ia in range(num_a):
                     for ikap in range(num_kap):
