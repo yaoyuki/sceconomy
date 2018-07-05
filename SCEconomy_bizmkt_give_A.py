@@ -217,10 +217,13 @@ class Economy:
         
         
         
-    def set_prices(self, w, p, rc):
+    def set_prices(self, w, p, rc, pkap, kapbar):
         self.w = w
         self.p = p
         self.rc = rc
+
+        self.pkap = pkap
+        self.kapbar = kapbar
         
         self.__is_price_set__ = True
         
@@ -289,6 +292,10 @@ class Economy:
             print('p = ', self.p)
             print('rc = ', self.rc)
             print('')
+            print('Additional Prices')
+            print('pkap = ', self.pkap)
+            print('kapbar = ', self.kapbar)
+            print('')            
             print('Implied prices')
             print('rbar = ', self.rbar)
             print('rs = ', self.rs)
@@ -1061,6 +1068,9 @@ class Economy:
         p = Econ.p
         rc = Econ.rc
 
+        pkap = Econ.pkap
+        kapbar = Econ.kapbar
+
         rbar = Econ.rbar
         rs = Econ.rs
 
@@ -1827,8 +1837,12 @@ class Economy:
         vsn = np.ones((num_a, num_kap, num_s))*100.0
         vs_util = np.ones((num_a, num_kap, num_s))*100.0
 
-        max_iter = 50
-        max_howard_iter = 200
+        vacqn = np.ones((num_a, num_kap, num_s))*100.0
+        R = np.ones((num_a, num_kap, num_s))*100.0
+        
+
+        max_iter = 300
+        max_howard_iter = 0 #temporary
         tol = 1.0e-5
         dist = 10000.0
         dist_sub = 10000.0
@@ -1912,9 +1926,28 @@ class Economy:
             ####post_calc
             if rank == 0:
 
+                ###calc val for acquisiiton###
 
-                pol_c = vcn > vsn
-                vmaxn[:] = np.fmax(vcn, vsn)
+                for istate in range(num_s):
+                    for ia in range(num_a):
+                        for ikap in range(num_kap):
+
+                            #need to take into account borrowing constraint
+                            an_tmp = vs_an[ia, ikap,istate] - pkap*kapbar
+
+                            if an_tmp >= 0.: 
+                                vacqn[ia, ikap, istate] = fem2d_peval(an_tmp,  vs_kapn[ia, ikap,istate] + kapbar , agrid, kapgrid, vsn[:,:,istate])
+                            else:
+                                #if this is feasible
+                                vacqn[ia, ikap, istate] = -np.inf
+                                
+
+                ###calc val for acquisiiton###
+                
+                pol_c = vcn > vsn #to be fixed
+                pol_acq = vacqn > np.fmax(vcn, vsn)
+                vmaxn[:] = np.fmax( vacqn, np.fmax(vcn, vsn))
+                
                 dist_sub = np.max(np.abs(vmaxn - vmax))
                 dist = np.max(np.abs(vmaxn - vmax) / (1. + np.abs(vmaxn))) 
                 print('{}th loop. dist = {:f}, dist_sub = {:f}.'.format(it, dist, dist_sub))
@@ -1925,6 +1958,20 @@ class Economy:
             dist = comm.bcast(dist)
             dist_sub = comm.bcast(dist_sub)
         ###end main VFI###
+
+
+        ###calc fair price R(a, kap, s)###
+
+        if rank == 0:
+            for istate in range(num_s):
+                for ia in range(num_a):
+                    for ikap in range(num_kap):
+
+                        #the solution is assumed to be [0, 10].`10' is a random number
+                        R[ia, ikap, istate] = brentq(lambda x: femeval(agrid[ia] + x, agrid, vmax[:, 0, istate]) - vmax[ia, ikap, istate], 0., 20.) 
+
+        ###end calc fair price R(a, kap, s)###
+
 
         ###post-calc###
         if rank == 0:
@@ -1943,6 +1990,8 @@ class Economy:
         comm.Bcast([vs_kapn, MPI.DOUBLE])
         comm.Bcast([vcn, MPI.DOUBLE])
         comm.Bcast([vsn, MPI.DOUBLE])
+        comm.Bcast([vacqn, MPI.DOUBLE])        
+        comm.Bcast([R, MPI.DOUBLE])
 
 
         #return policy function
@@ -1951,12 +2000,8 @@ class Economy:
         self.vs_kapn = vs_kapn
         self.vcn = vcn
         self.vsn = vsn
-
-
-
-
-
-
+        self.vacqn = vacqn
+        self.R = R
 
 
         
