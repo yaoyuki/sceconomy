@@ -1933,10 +1933,12 @@ class Economy:
                         for ikap in range(num_kap):
 
                             #need to take into account borrowing constraint
-                            an_tmp = vs_an[ia, ikap,istate] - pkap*kapbar
+                            #an_tmp = vs_an[ia, ikap,istate] - pkap*kapbar
+                            a_tmp = agrid[ia] - pkap*kapbar
 
-                            if an_tmp >= 0.: 
-                                vacqn[ia, ikap, istate] = fem2d_peval(an_tmp,  vs_kapn[ia, ikap,istate] + kapbar , agrid, kapgrid, vsn[:,:,istate])
+                            if a_tmp >= 0.: 
+                                #vacqn[ia, ikap, istate] = fem2d_peval(an_tmp,  vs_kapn[ia, ikap,istate] + kapbar , agrid, kapgrid, vsn[:,:,istate])
+                                vacqn[ia, ikap, istate] = fem2d_peval(a_tmp,  kapgrid[ikap] + kapbar , agrid, kapgrid, vsn[:,:,istate])
                             else:
                                 #if an_tmp is not feasible (an_tmp < amin)
                                 vacqn[ia, ikap, istate] = -np.inf
