@@ -20,13 +20,13 @@ e = Economy(agrid = agrid2, zgrid = zgrid2)
 e.set_prices(w = 3.123668659426386,
              p = 0.995310563254898,
              rc = 0.06327936800968331,
-             pkap = 1.0, #need a good initial guess. later we can always use (6)
+             pkap = 10.0, #need a good initial guess. later we can always use (6)
              kapbar = 1.0)
 
 e.get_policy()
-export_econ(e)
+export_econ(e) #this is ok since the program assumes MPI and, and run the export code if rank == 0
 
 comm.Barrier()
-if rank == 0:
-    import os
-    os.system('say "your program has finished"')
+# if rank == 0:
+#     import os
+#     os.system('say "your program has finished"')

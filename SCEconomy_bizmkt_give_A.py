@@ -1841,7 +1841,7 @@ class Economy:
         R = np.ones((num_a, num_kap, num_s))*100.0
         
 
-        max_iter = 50
+        max_iter = 300
         max_howard_iter = 0 #temporary
         tol = 1.0e-5
         dist = 10000.0
