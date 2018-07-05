@@ -12,7 +12,7 @@ import numba as nb
 
 #my library
 #import
-#from FEM import fem_peval #1D interpolation
+from FEM import femeval #1D interpolation
 from FEM_2D import fem2d_peval, fem2deval_mesh
 from markov import Stationary
 from ravel_unravel_nb import unravel_index_nb
