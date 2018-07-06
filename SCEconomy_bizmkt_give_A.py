@@ -2516,6 +2516,7 @@ class Economy:
         xnb = Econ.xnb
         yn = Econ.yn
         zeta= Econ.zeta
+        pi_f = Econ.pi_f
 
         #new!
         A = Econ.A
