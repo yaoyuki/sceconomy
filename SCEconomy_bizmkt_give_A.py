@@ -2179,6 +2179,7 @@ class Economy:
         data_kap0 = None
         
         data_i_s = None
+        data_saleshock = None
         data_max_posi = None
 
         if rank == 0:
