@@ -2590,6 +2590,7 @@ class Economy:
         mom2 = None
         mom3 = None
         mom4 = None
+        mom5 = None
 
         if rank == 0:
             print('amax = {}'.format(np.max(data_a)))
