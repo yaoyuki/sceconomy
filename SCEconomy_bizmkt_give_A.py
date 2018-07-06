@@ -2227,12 +2227,15 @@ class Economy:
 
         ###load shock data### self.path_to_data_i_s
         data_i_s_import = np.load(Econ.path_to_data_i_s)
-        data_saleshock_import = np.load(Econ.path_to_data_saleshock)
-        #data_i_s_import = np.load('./input_data/data_i_s.npy')
         data_i_s_elem[:] = data_i_s_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]
-        data_saleshock_elem[:] = data_saleshock_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]        
-       
         del data_i_s_import
+        
+        #data_i_s_import = np.load('./input_data/data_i_s.npy')
+        data_saleshock_import = np.load(Econ.path_to_data_saleshock)
+        data_saleshock_elem[:] = data_saleshock_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]        
+
+        del data_saleshock_import
+        
 
         @nb.jit(nopython = True)
         def calc(data_a_, data_kap_, data_a0_, data_kap0_,  data_max_posi_, data_i_s_, data_saleshock_):
