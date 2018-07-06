@@ -15,7 +15,7 @@ rc_init = float(args[3])
 pkap_init = float(args[4])
 kapbar_init = float(args[5])
 
-num_core = args[4]
+num_core = args[6]
 
 print('the code is running with ', num_core, 'cores...')
 prices_init = [w_init, p_init, rc_init, pkap_init, kapbar_init]
@@ -100,7 +100,7 @@ def target(prices):
 
     f = open(nd_log_file, 'a')
     f.writelines(str(w) + ', ' + str(p) + ', ' + str(rc) + ', ' + str(dist) + ', ' +
-                 str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + ', ' + str(moms[4]) + ', ' + str(moms[5]'\n')
+                 str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + ', ' + str(moms[4]) + ', ' + str(moms[5]) + '\n')
     f.close()
     
     if dist < dist_min:
