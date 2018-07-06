@@ -2792,7 +2792,7 @@ class Economy:
             print('Additional moments for bizmkt')
             print('  Frac of ACQ owners                = {}'.format(np.mean(data_ss[:, 0] == 2)))
             print('  Frac of ACQ owners among S-owners = {}'.format(np.mean(data_ss[:, 0] == 2)/(np.mean(data_ss[:, 0] == 1) + np.mean(data_ss[:, 0] == 2)) ))            
-            print('  Frac of kap seller                = {}'.format(np.mean(data_ss[:, 16])))
+            print('  Frac of kap seller                = {}'.format(np.mean(data_ss[:, 17])))
             print('  pi_f (corresponding parameter)    = {}'.format(pi_f))
             print('  E[sale*R]                      = {}'.format(np.mean(data_ss[:, 16]*data_ss[:, 17])))
             print('  E[sale*kap0]                   = {}'.format(np.mean(data_ss[:, 15]*data_ss[:, 17])))            
