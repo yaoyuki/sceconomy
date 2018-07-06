@@ -170,7 +170,7 @@ class Economy:
         self.num_total_pop = 100000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
         self.path_to_data_i_s = './input_data/data_i_s.npy'
-        self.path_to_data_saleshock = './input_data/data_saleshock.npy'        
+        self.path_to_data_saleshock = './input_data/data_saleshock.npy' #pi_f = 0.1 is the current default
         self.pi_f     = 0.1
 
 
@@ -2161,7 +2161,7 @@ class Economy:
         data_a_elem = np.ones((num_pop_assigned, sim_time))*4.0
         data_kap_elem = np.ones((num_pop_assigned, sim_time))*0.0
         data_a0_elem = data_a_elem.copy()
-        data_kap0_elem = data_kap0_elem.copy()
+        data_kap0_elem = data_kap_elem.copy()
 
 
         
