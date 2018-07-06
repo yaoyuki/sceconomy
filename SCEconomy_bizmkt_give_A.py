@@ -2383,7 +2383,7 @@ class Economy:
 
                     #additional term for bizmkt
                     data_ss[i, 15] = kap0
-                    data_ss[i, 16] = a0 - a #this should be equal to R(a0, kap0, s)
+                    data_ss[i, 16] = a - a0 #this should be equal to R(a0, kap0, s)
                     data_ss[i, 17] = data_saleshock[i, t]
 
                 else: # if S or acq-S
@@ -2413,7 +2413,7 @@ class Economy:
 
                     #additional term for bizmkt                    
                     data_ss[i, 15] = kap0
-                    data_ss[i, 16] = a0 - a #this should be R(a, kap, s)
+                    data_ss[i, 16] = a - a0 #this should be R(a, kap, s)
                     data_ss[i, 17] = data_saleshock[i, t]                    
 
 
