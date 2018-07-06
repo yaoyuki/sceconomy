@@ -60,7 +60,7 @@ def target(prices):
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
     econ = Economy(agrid = agrid2, kapgrid = kapgrid2,  zgrid = zgrid2)
 
-    econ.set_prices(w = w_, p = p_, rc = rc_, pkap_, kapbar_)
+    econ.set_prices(w = w_, p = p_, rc = rc_, pkap = pkap_, kapbar = kapbar_)
     
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
     #with open('econ.pickle', mode='rb') as f: econ = pickle.load(f)
