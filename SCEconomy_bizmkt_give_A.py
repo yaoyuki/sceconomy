@@ -2166,7 +2166,7 @@ class Economy:
 
         
         data_i_s_elem = np.ones((num_pop_assigned, sim_time), dtype = int)*7
-        data_saleshock_elem = np.ones((num_pop_assigned, sim_time), dtype = bool)
+        data_saleshock_elem = np.ones((num_pop_assigned, sim_time), dtype = int)
 
         data_max_posi_elem = np.zeros((num_pop_assigned, sim_time), dtype = int) 
         data_max_posi_elem[0:int(num_pop_assigned*0.7), 0] = 1
