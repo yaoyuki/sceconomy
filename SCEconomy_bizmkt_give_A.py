@@ -2189,6 +2189,7 @@ class Economy:
             data_kap0 = np.zeros((num_total_pop, sim_time))
             
             data_i_s = np.zeros((num_total_pop, sim_time), dtype = int)
+            data_saleshock = np.zeros((num_total_pop, sim_time), dtype = int)
             data_max_posi = np.zeros((num_total_pop, sim_time), dtype = int) 
 
     #     ###codes to generate shocks###
@@ -2338,7 +2339,7 @@ class Economy:
         comm.Gatherv(data_kap0_elem, [data_kap0, all_num_pop_assigned, all_istart_pop_assigned,  MPI.DOUBLE.Create_contiguous(sim_time).Commit() ])
         
         comm.Gatherv(data_i_s_elem, [data_i_s, all_num_pop_assigned, all_istart_pop_assigned,  MPI.LONG.Create_contiguous(sim_time).Commit() ])
-        comm.Gatherv(data_saleshock_elem, [data_saleshock_s, all_num_pop_assigned, all_istart_pop_assigned,  MPI.LONG.Create_contiguous(sim_time).Commit() ])
+        comm.Gatherv(data_saleshock_elem, [data_saleshock, all_num_pop_assigned, all_istart_pop_assigned,  MPI.LONG.Create_contiguous(sim_time).Commit() ])
         comm.Gatherv(data_max_posi_elem, [data_max_posi, all_num_pop_assigned, all_istart_pop_assigned,  MPI.LONG.Create_contiguous(sim_time).Commit() ])
 
 
