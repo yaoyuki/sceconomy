@@ -169,8 +169,8 @@ class Economy:
         self.sim_time = 1000
         self.num_total_pop = 100000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
-        self.path_to_data_i_s = './input_data/data_i_s.npy'
-        self.path_to_data_saleshock = './input_data/data_saleshock.npy' #pi_f = 0.1 is the current default
+        self.path_to_data_i_s = './input_data/data_i_s'
+        self.path_to_data_saleshock = './input_data/data_saleshock' #pi_f = 0.1 is the current default
         self.pi_f     = 0.1
 
 
@@ -2226,15 +2226,21 @@ class Economy:
 
 
         ###load shock data### self.path_to_data_i_s
-        data_i_s_import = np.load(Econ.path_to_data_i_s)
-        data_i_s_elem[:] = data_i_s_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]
-        del data_i_s_import
+
+        data_i_s_elem[:] = np.load(Econ.path_to_data_i_s + '_' + str(rank) + '.npy')
+        
+        # data_i_s_import = np.load(Econ.path_to_data_i_s)
+        # data_i_s_elem[:] = data_i_s_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]
+        # del data_i_s_import
+
+
+        data_saleshock_elem[:] = np.load(Econ.path_to_data_saleshock + '_' + str(rank) + '.npy')
         
         #data_i_s_import = np.load('./input_data/data_i_s.npy')
-        data_saleshock_import = np.load(Econ.path_to_data_saleshock)
-        data_saleshock_elem[:] = data_saleshock_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]        
 
-        del data_saleshock_import
+        # data_saleshock_import = np.load(Econ.path_to_data_saleshock)
+        # data_saleshock_elem[:] = data_saleshock_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]        
+        # del data_saleshock_import
         
 
         @nb.jit(nopython = True)
