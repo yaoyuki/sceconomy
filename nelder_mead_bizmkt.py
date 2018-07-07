@@ -83,6 +83,8 @@ def target(prices):
     w = econ.w
     p = econ.p
     rc = econ.rc
+    pkap = econ.pkap
+    kapbar = econ.kapbar
     moms = econ.moms
     
     dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0 + moms[4]**2.0 + moms[5]**2.0)
