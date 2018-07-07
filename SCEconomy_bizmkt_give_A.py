@@ -3411,6 +3411,45 @@ def export_econ(econ, name = 'econ.pickle'):
 
     return
 
+def split_shock(path_to_data_shock, num_total_pop, size):
+
+
+    m = num_total_pop // size
+    r = num_total_pop % size
+
+    data_shock = np.load(path_to_data_shock)
+    
+
+    for rank in range(size):
+        assigned_pop_range =  (rank*m+min(rank,r)), ((rank+1)*m+min(rank+1,r))
+        np.save(data_shock[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time], path_to_data_shock + '_' + str(rank) + '.npy')
+
+    return
+        
+
+
+
+    
+    # num_pop_assigned = assigned_pop_range[1] - assigned_pop_range[0]
+    
+    # all_assigned_pop_range = np.ones((size, 2))*(-2.)
+    # all_num_pop_assigned = ()
+    # all_istart_pop_assigned = ()
+    
+    # for irank in range(size):
+
+    #     all_istart_pop_assigned += (int(irank*m+min(irank,r)), )
+    #     all_assigned_pop_range[irank,0] = irank*m+min(irank,r)
+    #     all_assigned_pop_range[irank,1] = (irank+1)*m+min(irank+1,r)
+    #     all_num_pop_assigned += (int(all_assigned_pop_range[irank,1] - all_assigned_pop_range[irank,0]),)
+        
+    # ### end parameters for MPI ###    
+    
+
+    
+
+
+
 
 if __name__ == '__main__':
     econ = import_econ()
