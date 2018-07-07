@@ -99,7 +99,7 @@ def target(prices):
     print('dist = {:f}'.format(dist))
 
     f = open(nd_log_file, 'a')
-    f.writelines(str(w) + ', ' + str(p) + ', ' + str(rc) + ', ' + str(dist) + ', ' +
+    f.writelines(str(w) + ', ' + str(p) + ', ' + str(rc) + ', ' + str(pkap) + ', ' + str(kapbar) + ', ' +  str(dist) + ', ' +
                  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + ', ' + str(moms[4]) + ', ' + str(moms[5]) + '\n')
     f.close()
     
@@ -111,7 +111,7 @@ def target(prices):
 if __name__ == '__main__':
 
     f = open(nd_log_file, 'w')
-    f.writelines('w, p, rc, dist, mom0, mom1, mom2, mom3, mom4, mom5\n')
+    f.writelines('w, p, rc, pkap, kapbar, dist, mom0, mom1, mom2, mom3, mom4, mom5\n')
     f.close()
 
     nm_result = None
