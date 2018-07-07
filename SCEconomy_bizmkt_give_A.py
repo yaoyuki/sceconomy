@@ -2246,7 +2246,7 @@ class Economy:
         @nb.jit(nopython = True)
         def calc(data_a_, data_kap_, data_a0_, data_kap0_,  data_max_posi_, data_i_s_, data_saleshock_):
 
-            for t in range(sim_time-1):
+            for t in range(sim_time):
                 for i in range(num_pop_assigned):
 
                     #this is indexed by (f, s)^t. a kap are already affected by f and s
@@ -2322,22 +2322,26 @@ class Economy:
                     #this is indexed by (f, s)^t. NOT affected by (f, s)^{t+1}
                     data_a0_[i, t] = a0n
                     data_kap0_[i, t] = kap0n
-                    data_max_posi_[i, t+1] = max_posi
+                    data_max_posi_[i, t] = max_posi
 
 
-                    #we can add kappa-shock here
-                    if data_saleshock_[i, t+1]:
-
-                        istaten = data_i_s_[i, t+1]                        
-
-                        data_a_[i, t+1] = a0n + fem2d_peval(a0n, kap0n, agrid, kapgrid, R[:,:, istaten])
-                        data_kap_[i, t+1] = 0.0
+                    if t < sim_time - 1:
                         
-                    else:
-                        #If a sale shock does not hit, an = a0n, kapn = kap0n
 
-                        data_a_[i, t+1] = a0n 
-                        data_kap_[i, t+1] = kap0n
+
+                        #we can add kappa-shock here
+                        if data_saleshock_[i, t+1]:
+
+                            istaten = data_i_s_[i, t+1]                        
+
+                            data_a_[i, t+1] = a0n + fem2d_peval(a0n, kap0n, agrid, kapgrid, R[:,:, istaten])
+                            data_kap_[i, t+1] = 0.0
+                        
+                        else:
+                            #If a sale shock does not hit, an = a0n, kapn = kap0n
+
+                            data_a_[i, t+1] = a0n 
+                            data_kap_[i, t+1] = kap0n
 
 
         calc(data_a_elem, data_kap_elem, data_a0_elem, data_kap0_elem,  data_max_posi_elem, data_i_s_elem, data_saleshock_elem)                        
@@ -2690,7 +2694,7 @@ class Economy:
             print('')
             print('RESULT')
             print('Simulation Parameters')
-            print('Simulation Periods = ', sim_time)
+            print('Simulation Periods = ', t)
             print('Simulation Pops = ', num_total_pop)
             print('')
             print('Prices')
@@ -2698,6 +2702,17 @@ class Economy:
             print('Wage (w) = {}'.format(w))
             print('S-good price (p) = {}'.format(p))
             print('Interest rate (r_c) = {}'.format(rc))
+            print('Unit kaptilde price  (pkap) = {}'.format(pkap))
+            print('Kaptilde (kapbar) = {}'.format(kapbar))
+
+            print('')
+            print('Implied Prices')
+            print('Unit kaptilde price  (pkap_prime) = {}'.format(pkap_prime))
+            print('Kaptilde (kapbar) = {}'.format(kapbar_prime))
+
+            
+
+            
 
             # mom0 = 1. - (1. - theta)*yc/(w*nc)
             mom0 = 1. - theta/(rc + delk) * yc/kc
@@ -2804,7 +2819,10 @@ class Economy:
             print('  Frac of kap seller                = {}'.format(np.mean(data_ss[:, 17])))
             print('  pi_f (corresponding parameter)    = {}'.format(pi_f))
             print('  E[sale*R]                      = {}'.format(np.mean(data_ss[:, 16]*data_ss[:, 17])))
-            print('  E[sale*kap0]                   = {}'.format(np.mean(data_ss[:, 15]*data_ss[:, 17])))            
+            print('  E[sale*kap0]                   = {}'.format(np.mean(data_ss[:, 15]*data_ss[:, 17])))
+            print('  Unit kaptilde price  (pkap_prime) = {}'.format(pkap_prime))
+            print('  Kaptilde (kapbar) = {}'.format(kapbar_prime))
+            
             
  
         mom0 = comm.bcast(mom0)
