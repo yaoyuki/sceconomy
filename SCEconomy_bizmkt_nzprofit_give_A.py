@@ -2713,6 +2713,7 @@ class Economy:
             print('Implied Prices')
             print('Unit kaptilde price  (pkap_prime) = {}'.format(pkap_prime))
             print('Kaptilde (kapbar) = {}'.format(kapbar_prime))
+            print('intr_profit = {}'.format(intr_profit)))            
 
             
 
@@ -2723,8 +2724,8 @@ class Economy:
             mom1 = 1. - Ecs/Eys
             mom2 = 1. - (tax_rev - tran - netb)/g
             mom3 = 1. - (intr_profit + Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
-
-            mom4 = 1. - kapbar_prime/kapbar
+            mom4 = intr_profit
+            mom5 = 1. - kapbar_prime/kapbar
             
             # mom4 = 1. - pkap_prime/pkap 
             # mom5 = 1. - kapbar_prime/kapbar
@@ -2737,7 +2738,8 @@ class Economy:
             #print('1-((1-taud)kc+E(ks)+b)/Ea = {}'.format(1. - (b + (1.- taud)*kc + Eks)/Ea))
             print('1-(tax-tran-netb)/g = {}'.format(mom2))
             print('1-(Ecc+Ex+(grate+delk)*(kc + Eks)+ g + xnb - yn)/yc = {}'.format(mom3))
-            print('1-pkap\'/pkap = {}'.format(mom4))
+            print('intr_profit = {}'.format(mom4))            
+            # print('1-pkap\'/pkap = {}'.format(mom4))
             print('1-kapbar\'/kapbar = {}'.format(mom5))            
 
             print('')
