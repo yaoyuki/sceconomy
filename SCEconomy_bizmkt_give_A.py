@@ -2389,7 +2389,7 @@ class Economy:
                     data_ss[i,0] = data_max_posi[i, t]
                     data_ss[i,1] = a
                     data_ss[i,2] = kap
-                    data_ss[i,3] = an
+                    data_ss[i,3] = a0n
                     data_ss[i,4] = kapn
                     data_ss[i,5] = eps
                     data_ss[i,6:11] = get_cstatic([a, a0n, eps])[1:]
@@ -2421,7 +2421,7 @@ class Economy:
                     data_ss[i,0] = data_max_posi[i, t]
                     data_ss[i,1] = a
                     data_ss[i,2] = kap
-                    data_ss[i,3] = an
+                    data_ss[i,3] = a0n
                     data_ss[i,4] = kapn
                     data_ss[i,5] = z
                     data_ss[i,6:15] = get_sstatic([a, a0n, kap, kap0n, z])[1:]
@@ -2619,7 +2619,7 @@ class Economy:
 
             EIc = np.mean(is_c)
     #         Ea = np.mean(data_ss[:,3])
-            Ea = np.mean(data_ss[:,1])
+            Ea = np.mean(data_ss[:,3]) #use a0n
     #         Ekap = np.mean(data_ss[:,4])
             Ekap = np.mean(data_ss[:,2])
             Ecc = np.mean(data_ss[:,6])
@@ -2787,7 +2787,7 @@ class Economy:
 
             print('')
             print('Gini Coefficients:')
-            print('  Financial Assets = {}'.format(gini(data_ss[:,1])))
+            print('  Financial Assets = {}'.format(gini(data_ss[:,3]))) #use a0n
             print('  Sweats Assets = {}'.format(gini(data_ss[:,2])))
             print('  C-wages = {}'.format(gini(w*data_ss[:,5]* data_ss[:,10]*(is_c) )))
             print('  S-income = {}'.format(gini((p*data_ss[:,14] ) * (~is_c ))))
