@@ -167,11 +167,11 @@ class Economy:
         self.yn       = 0.451
         self.zeta     = 1.0
         self.sim_time = 1000
-        self.num_total_pop = 100000
+        self.num_total_pop = 100_000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
         self.path_to_data_i_s = './input_data/data_i_s'
         self.path_to_data_saleshock = './input_data/data_saleshock' #pi_f = 0.1 is the current default
-        self.pi_f     = 0.1
+        self.pi_f     = 0.05
 
 
 

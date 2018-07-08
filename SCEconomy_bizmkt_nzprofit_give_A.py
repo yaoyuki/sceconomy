@@ -2665,7 +2665,9 @@ class Economy:
             xc = (grate + delk)*kc
             Exs = (grate + delk)*Eks
 
+
             pkap_prime = np.mean(data_ss[:, 16]*data_ss[:, 17])/np.mean(data_ss[:, 15]*data_ss[:, 17])
+            intr_profit = pkap*np.mean(data_ss[:, 15]*data_ss[:, 17]) - np.mean(data_ss[:, 16]*data_ss[:, 17])
             kapbar_prime = np.mean(data_ss[:, 15]*data_ss[:, 17])/np.mean(data_ss[:, 0] == 2)            
 
             def gini(array):
@@ -2720,9 +2722,12 @@ class Economy:
             mom0 = 1. - theta/(rc + delk) * yc/kc
             mom1 = 1. - Ecs/Eys
             mom2 = 1. - (tax_rev - tran - netb)/g
-            mom3 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
-            mom4 = 1. - pkap_prime/pkap 
-            mom5 = 1. - kapbar_prime/kapbar
+            mom3 = 1. - (intr_profit + Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+
+            mom4 = 1. - kapbar_prime/kapbar
+            
+            # mom4 = 1. - pkap_prime/pkap 
+            # mom5 = 1. - kapbar_prime/kapbar
             
             print('')
 
@@ -2824,6 +2829,7 @@ class Economy:
             print('  E[sale*kap0]                   = {}'.format(np.mean(data_ss[:, 15]*data_ss[:, 17])))
             print('  Unit kaptilde price  (pkap_prime) = {}'.format(pkap_prime))
             print('  Kaptilde (kapbar) = {}'.format(kapbar_prime))
+            print('  intr_profit = {}'.format(intr_profit)))
             
             
  
