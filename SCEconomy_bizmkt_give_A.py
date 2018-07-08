@@ -2401,11 +2401,13 @@ class Economy:
 
                 else: # if S or acq-S
 
+                    is_acq = (data_max_posi[i, t] == 2)
+
                     a0 = data_a0[i, t-1]
                     kap0 = data_kap0[i, t-1]
 
-                    a = data_a[i, t]
-                    kap = data_kap[i, t]
+                    a = data_a[i, t] - is_acq*pkap*kapbar
+                    kap = data_kap[i, t] + is_acq*kapbar
 
                     a0n = data_a0[i, t]
                     kap0n = data_kap0[i, t]
