@@ -2298,7 +2298,7 @@ class Economy:
                         print('error: val_c == val_acq')
 
                     if (val_s == val_acq):
-                        print('error: val_s == val_acq')
+                        print('error: val_s == val_acq') #how to debug?
 
                     is_c = False
                     is_s = False
@@ -2428,7 +2428,7 @@ class Economy:
 
                     #additional term for bizmkt                    
                     data_ss[i, 15] = kap0
-                    data_ss[i, 16] = a - a0 #this should be R(a, kap, s)
+                    data_ss[i, 16] = data_a[i, t] - a0 #this should be R(a, kap, s). in this section.
                     data_ss[i, 17] = data_saleshock[i, t]                    
 
 
