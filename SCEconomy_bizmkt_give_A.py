@@ -2291,14 +2291,14 @@ class Economy:
                         val_acq = (get_sstatic([a_acq_tmp, an_acq, kap_acq_tmp, kapn_acq, z])[0] + fem2d_peval(an_acq, kapn_acq, agrid, kapgrid, EV[:,:,istate])) **(1./(1.- mu))
                     
 
-                    if (val_c == val_s):
+                    if (val_c == val_s) and val_acq <= val_c:
                         print('error: val_c == val_s')
 
-                    if (val_c == val_acq):
+                    if (val_c == val_acq) and val_s <= val_c:
                         print('error: val_c == val_acq')
 
-                    if (val_s == val_acq):
-                        print('error: val_s == val_acq') #how to debug?
+                    if (val_s == val_acq) and val_c <= val_s:
+                        print('error: val_s == val_acq')
 
                     is_c = False
                     is_s = False
