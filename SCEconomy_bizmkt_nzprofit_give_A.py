@@ -2713,7 +2713,7 @@ class Economy:
             print('Implied Prices')
             print('Unit kaptilde price  (pkap_prime) = {}'.format(pkap_prime))
             print('Kaptilde (kapbar) = {}'.format(kapbar_prime))
-            print('intr_profit = {}'.format(intr_profit)))            
+            print('intr_profit = {}'.format(intr_profi))
 
             
 
@@ -2831,7 +2831,7 @@ class Economy:
             print('  E[sale*kap0]                   = {}'.format(np.mean(data_ss[:, 15]*data_ss[:, 17])))
             print('  Unit kaptilde price  (pkap_prime) = {}'.format(pkap_prime))
             print('  Kaptilde (kapbar) = {}'.format(kapbar_prime))
-            print('  intr_profit = {}'.format(intr_profit)))
+            print('  intr_profit = {}'.format(intr_profit))
             
             
  
