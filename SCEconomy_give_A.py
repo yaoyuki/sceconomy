@@ -2601,7 +2601,7 @@ class Economy:
 
         return
 
-    def calc_sweat_eq_value(self):
+    def calc_sweat_eq_value(self, discount = None):
         Econ = self
 
         """
@@ -2829,7 +2829,7 @@ class Economy:
 
 
         @nb.jit(nopython = True, parallel = True)
-        def _inner_get_sweat_equity_value_pp_(_d_, _val_):
+        def _inner_get_sweat_equity_value_pp_(_d_, _val_, discount = None):
             bEval = np.zeros((num_a, num_kap, num_s))
 
             for ia in nb.prange(num_a):
@@ -2841,8 +2841,8 @@ class Economy:
 
                         for istate_n in range(num_s):
 
-        #                     an = an2[ia, ikap, istate, istate_n]
-        #                     kapn = kapn2[ia, ikap, istate, istate_n]
+                            # an = an2[ia, ikap, istate, istate_n]
+                            # kapn = kapn2[ia, ikap, istate, istate_n]
 
                             an = an1[ia, ikap, istate]
                             kapn = kapn1[ia, ikap, istate]
@@ -2850,12 +2850,20 @@ class Economy:
                             dc_un = up_c[ia, ikap, istate, istate_n]
                             val_p = fem2d_peval(an, kapn, agrid, kapgrid, _val_[:, :, istate_n])
 
-            #                     val_p[ia, ikap, istate, istate_n] = fem2d_peval(an, kapn, agrid, kapgrid, val[:, :, istate_n])
+                            # val_p[ia, ikap, istate, istate_n] = fem2d_peval(an, kapn, agrid, kapgrid, val[:, :, istate_n])
 
-                            bEval[ia, ikap, istate] += prob[istate, istate_n] * dc_un * val_p
+            
+                            if discount is None:
+                                #use stochastic discount factor
+                                bEval[ia, ikap, istate] += prob[istate, istate_n]  * val_p * bh* dc_un / dc_u
+                            else:
+                                #use the given discount factor
+                                bEval[ia, ikap, istate] += prob[istate, istate_n]  * val_p * discount
+                                
+                            
 
                         #after taking expectation
-                        bEval[ia, ikap, istate] =  bh * bEval[ia, ikap, istate] / dc_u
+                        bEval[ia, ikap, istate] =  bEval[ia, ikap, istate] 
 
             return _d_ + bEval
 
@@ -2891,8 +2899,14 @@ class Economy:
         print(f'elapsed time = {t1 - t0}')
         print(f'{it+1}th loop. dist = {dist}')
 
-        self.sweat_div = d
-        self.sweat_val = val
+        
+        if discount is None:
+            #save the result if discount factor is stochastic one.
+            self.sweat_div = d
+            self.sweat_val = val
+            
+        return d, val
+        
         
     def simulate_other_vars(self):
         Econ = self
