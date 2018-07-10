@@ -1981,7 +1981,26 @@ class Economy:
                     for ikap in range(num_kap):
 
                         #the solution is assumed to be [0, 10].`10' is a random number
-                        R[ia, ikap, istate] = brentq(lambda x: femeval(agrid[ia] + x, agrid, vmax[:, 0, istate]) - vmax[ia, ikap, istate], 0., 20.) 
+
+                        obj = lambda x: femeval(agrid[ia] + x, agrid, vmax[:, 0, istate]) - vmax[ia, ikap, istate]
+
+                        fa = obj(0.)
+                        fb = obj(30.)
+                        if fa*fb >= 0.:
+                            if abs(fa) <= 1.0e-8:
+                                R[ia, ikap, istate] = 0.0
+                            else:
+
+                                print('a =' , agrid[ia])
+                                print('kap =' , kapgrid[ikap])
+                                print('istate =' , istate)
+
+                                print(fa)
+                                print(fb)
+
+                        else:
+
+                            R[ia, ikap, istate] = brentq(obj, 0., 30.)
 
         ###end calc fair price R(a, kap, s)###
 
@@ -2713,7 +2732,7 @@ class Economy:
             print('Implied Prices')
             print('Unit kaptilde price  (pkap_prime) = {}'.format(pkap_prime))
             print('Kaptilde (kapbar) = {}'.format(kapbar_prime))
-            print('intr_profit = {}'.format(intr_profi))
+            print('intr_profit = {}'.format(intr_profit))
 
             
 
