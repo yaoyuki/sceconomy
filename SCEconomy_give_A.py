@@ -2601,7 +2601,7 @@ class Economy:
 
         return
 
-    def calc_sweat_eq_value(self):
+    def calc_sweat_eq_value(self, discount = -1.0):
         Econ = self
 
         """
@@ -2829,7 +2829,7 @@ class Economy:
 
 
         @nb.jit(nopython = True, parallel = True)
-        def _inner_get_sweat_equity_value_pp_(_d_, _val_):
+        def _inner_get_sweat_equity_value_pp_(_d_, _val_, discount):
             bEval = np.zeros((num_a, num_kap, num_s))
 
             for ia in nb.prange(num_a):
@@ -2841,8 +2841,8 @@ class Economy:
 
                         for istate_n in range(num_s):
 
-        #                     an = an2[ia, ikap, istate, istate_n]
-        #                     kapn = kapn2[ia, ikap, istate, istate_n]
+                            # an = an2[ia, ikap, istate, istate_n]
+                            # kapn = kapn2[ia, ikap, istate, istate_n]
 
                             an = an1[ia, ikap, istate]
                             kapn = kapn1[ia, ikap, istate]
@@ -2850,12 +2850,20 @@ class Economy:
                             dc_un = up_c[ia, ikap, istate, istate_n]
                             val_p = fem2d_peval(an, kapn, agrid, kapgrid, _val_[:, :, istate_n])
 
-            #                     val_p[ia, ikap, istate, istate_n] = fem2d_peval(an, kapn, agrid, kapgrid, val[:, :, istate_n])
+                            # val_p[ia, ikap, istate, istate_n] = fem2d_peval(an, kapn, agrid, kapgrid, val[:, :, istate_n])
 
-                            bEval[ia, ikap, istate] += prob[istate, istate_n] * dc_un * val_p
+            
+                            if discount < 0.0:
+                                #use stochastic discount factor
+                                bEval[ia, ikap, istate] += prob[istate, istate_n]  * val_p * bh* dc_un / dc_u
+                            else:
+                                #use the given discount factor
+                                bEval[ia, ikap, istate] += prob[istate, istate_n]  * val_p * discount
+                                
+                            
 
                         #after taking expectation
-                        bEval[ia, ikap, istate] =  bh * bEval[ia, ikap, istate] / dc_u
+                        bEval[ia, ikap, istate] =  bEval[ia, ikap, istate] 
 
             return _d_ + bEval
 
@@ -2873,7 +2881,7 @@ class Economy:
         t0 = time.time()    
         while it < maxit:
             it = it + 1
-            val_tmp[:] = _inner_get_sweat_equity_value_pp_(d, val)
+            val_tmp[:] = _inner_get_sweat_equity_value_pp_(d, val, discount)
 
 
             dist = np.max(np.abs(val_tmp - val))
@@ -2891,8 +2899,14 @@ class Economy:
         print(f'elapsed time = {t1 - t0}')
         print(f'{it+1}th loop. dist = {dist}')
 
-        self.sweat_div = d
-        self.sweat_val = val
+        
+        if discount < 0.0:
+            #save the result if discount factor is stochastic one.
+            self.sweat_div = d
+            self.sweat_val = val
+            
+        return d, val
+        
         
     def simulate_other_vars(self):
         Econ = self
@@ -3052,8 +3066,6 @@ class Economy:
              data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_mx, data_my, data_x, data_ks, data_ys ##output
             )
 
-        data_val_sweat = np.zeros(data_a.shape)
-        data_div_sweat = np.zeros(data_a.shape)
 
 
 
@@ -3080,8 +3092,24 @@ class Economy:
         sweat_div = self.sweat_div
         sweat_val = self.sweat_val
 
+        sweat_val_bh = self.calc_sweat_eq_value(discount = self.bh)[1]
+        sweat_val_1gR = self.calc_sweat_eq_value(discount = (1. + self.grate)/(1. + self.rbar))[1]
+
+        self.sweat_val_bh = sweat_val_bh
+        self.sweat_val_1gR = sweat_val_1gR
+
+
+        data_div_sweat = np.zeros(data_a.shape)
+        data_val_sweat = np.zeros(data_a.shape)        
+        data_val_sweat_bh = np.zeros(data_a.shape)
+        data_val_sweat_1gR = np.zeros(data_a.shape)        
+
+        
+
         calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_div, data_div_sweat)
         calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val, data_val_sweat)
+        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_bh, data_val_sweat_bh)
+        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_1gR, data_val_sweat_1gR)                
 
 
         self.data_u = data_u
@@ -3095,9 +3123,11 @@ class Economy:
         self.data_x = data_x
         self.data_ks = data_ks
         self.data_ys = data_ys
-        self.data_val_sweat = data_val_sweat
-        self.data_div_sweat = data_div_sweat
 
+        self.data_div_sweat = data_div_sweat
+        self.data_val_sweat = data_val_sweat        
+        self.data_val_sweat_bh = data_val_sweat_bh
+        self.data_val_sweat_1gR = data_val_sweat_1gR
 
         return
     
@@ -3106,6 +3136,10 @@ class Economy:
             print('Saving results under ', dir_path_save, '...')
 
 
+            np.save(dir_path_save + 'agrid', self.agrid)
+            np.save(dir_path_save + 'kapgrid', self.kapgrid)
+            np.save(dir_path_save + 'zgrid', self.zgrid)
+            np.save(dir_path_save + 'epsgrid', self.epsgrid)                         
             
             np.save(dir_path_save + 'data_a', self.data_a[:, -100:])
             np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:])
@@ -3130,11 +3164,19 @@ class Economy:
             np.save(dir_path_save + 'vcn', self.vcn)
             np.save(dir_path_save + 'vsn', self.vsn)
 
+
+          
+
             np.save(dir_path_save + 'sweat_div', self.sweat_div)
             np.save(dir_path_save + 'sweat_val', self.sweat_val)
+            np.save(dir_path_save + 'sweat_val_bh', self.sweat_val_bh)            
+            np.save(dir_path_save + 'sweat_val_1gR', self.sweat_val_1gR)
+            
 
             np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
             np.save(dir_path_save + 'data_val_sweat', self.data_val_sweat[:, -100:])
+            np.save(dir_path_save + 'data_val_sweat_bh', self.data_val_sweat_bh[:, -100:])
+            np.save(dir_path_save + 'data_val_sweat_1gR', self.data_val_sweat_1gR[:, -100:])                        
 
             np.save(dir_path_save + 's_age', self.s_age)
             np.save(dir_path_save + 'c_age', self.c_age)
