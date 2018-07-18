@@ -2487,12 +2487,12 @@ class Economy:
         c_age = np.ones(num_total_pop, dtype = int) * -1
 
         for i in range(num_total_pop):
-            if data_max_posi[i,-1] == 0:
+            if data_is_c[i,-1]:
                 s_age[i] = -1
             else:
                 t = 0
                 while t < sim_time:
-                    if data_max_posi[i, -t - 1] != 0:
+                    if data_is_s[i, -t - 1]:
                         s_age[i] = t
                     else:
                         break
@@ -2500,13 +2500,13 @@ class Economy:
 
 
         for i in range(num_total_pop):
-            if data_max_posi[i,-1] != 0:
+            if data_is_s[i,-1]:
                 c_age[i] = -1
             else:
                 t = 0
                 while t < sim_time:
                     
-                    if data_max_posi[i, -t - 1] == 0:
+                    if data_is_c[i, -t - 1]:
                         c_age[i] = t
         
                     else:
@@ -2518,7 +2518,7 @@ class Economy:
         self.c_age = c_age
 
         return
-        
+                
         
     def calc_moments(self):
         Econ = self
@@ -3151,7 +3151,6 @@ class Economy:
         self.sweat_div = d
         self.sweat_val = val
 
-    #need to be updated for bizmkt
     def simulate_other_vars(self):
         Econ = self
 
@@ -3214,6 +3213,9 @@ class Economy:
         w = Econ.w
         p = Econ.p
         rc = Econ.rc
+        pkap = Econ.pkap
+        kapbar = Econ.kapbar
+        
 
         rbar = Econ.rbar
         rs = Econ.rs
@@ -3232,9 +3234,12 @@ class Economy:
         xi12 = Econ.xi12
 
         data_a = Econ.data_a
+        data_a0 = Econ.data_a0
         data_kap = Econ.data_kap
+        data_kap0 = Econ.data_kap0        
         data_i_s = Econ.data_i_s
-        data_is_c = Econ.data_is_c
+        data_max_posi = Econ.data_max_posi
+        data_saleshock = Econ.data_saleshock
 
         #simulation parameters
         sim_time = Econ.sim_time
@@ -3245,8 +3250,8 @@ class Economy:
 
 
         @nb.jit(nopython = True, parallel = True)
-        def calc_all(data_a_, data_kap_, data_i_s_, data_is_c_,
-                    data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_, data_mx_, data_my_, data_x_, data_ks_, data_ys_):
+        def calc_all(data_a_, data_kap_,data_a0_, data_kap0_, data_i_s_, data_max_posi_,
+                     data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_, data_mx_, data_my_, data_x_, data_ks_, data_ys_, data_R_):
 
             for i in nb.prange(num_total_pop):
                 for t in range(1, sim_time):
@@ -3266,19 +3271,54 @@ class Economy:
                     my = np.nan
                     ks = np.nan
                     ys = np.nan
+                    R = np.nan
 
-                    a = data_a_[i, t-1]
-                    kap = data_kap_[i, t-1]
+                    if data_max_posi[i, t] == 0:
+                        
+                        a0 = data_a0[i, t-1]
+                        kap0 = data_kap0[i, t-1]
 
-                    an = data_a_[i, t]
-                    kapn = data_kap_[i, t]
+                        a = data_a[i, t]
+                        kap = data_kap[i, t]
 
-                    is_c = data_is_c_[i, t]
+                        a0n = data_a0[i, t]
+                        kap0n = data_kap0[i, t]
+                    
+                        an = data_a[i, t+1]
+                        kapn = data_kap[i, t+1]
+                    
+                        eps = epsgrid[is_to_ieps[data_i_s[i, t]]]
 
-                    if is_c:
-                        u, cc, cs, cagg, l ,n = get_cstatic([a, an, eps])
+
+                        u, cc, cs, cagg, l ,n = get_cstatic([a, a0n, eps])
+                        R = data_a[i, t] - a0                        
+
+                        
+                        
                     else:
-                        u, cc, cs, cagg, l, mx, my, x, ks, ys = get_sstatic([a, an, kap, kapn, z])
+
+                        is_acq = (data_max_posi[i, t] == 2)
+
+                        a0 = data_a0[i, t-1]
+                        kap0 = data_kap0[i, t-1]
+
+                        a = data_a[i, t] - is_acq*pkap*kapbar
+                        kap = data_kap[i, t] + is_acq*kapbar
+
+                        a0n = data_a0[i, t]
+                        kap0n = data_kap0[i, t]
+                    
+                        an = data_a[i, t+1]
+                        kapn = data_kap[i, t+1]
+                    
+                        z = zgrid[is_to_iz[data_i_s[i, t]]]
+
+                        u, cc, cs, cagg, l, mx, my, x, ks, ys = get_sstatic([a, a0n, kap, kap0n, z])
+                        R = data_a[i, t] - a0
+
+
+                    
+                        
 
                     data_u_[i, t] = u
                     data_cc_[i, t] = cc
@@ -3291,6 +3331,7 @@ class Economy:
                     data_x_[i, t] = x
                     data_ks_[i, t] = ks
                     data_ys_[i, t] = ys
+                    data_R_[i, t] = R                    
                     
         data_u = np.zeros(data_a.shape)
         data_cc = np.zeros(data_a.shape)
@@ -3304,42 +3345,43 @@ class Economy:
         data_ks = np.zeros(data_a.shape)
         data_ys = np.zeros(data_a.shape)
         data_ys = np.zeros(data_a.shape)
+        data_R = np.zeros(data_a.shape)
 
         #note that this does not store some impolied values,,,, say div or value of sweat equity
-        calc_all(data_a, data_kap, data_i_s, data_is_c, ##input
-             data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_mx, data_my, data_x, data_ks, data_ys ##output
-            )
-
-        data_val_sweat = np.zeros(data_a.shape)
-        data_div_sweat = np.zeros(data_a.shape)
 
 
-
-        @nb.jit(nopython = True, parallel = True)
-        def calc_val_seq(data_a_, data_kap_, data_i_s_, data_is_c_, sweat_eq_val_ ,data_val_seq_):
+        calc_all(data_a, data_kap, data_a0, data_kap0, data_i_s, data_max_posi,
+                 data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_mx, data_my, data_x, data_ks, data_ys, data_R)
         
-            for t in nb.prange(1, sim_time):
-                for i in range(num_total_pop):
-            
-                    istate = data_i_s_[i, t]
-                    eps = epsgrid[is_to_ieps[istate]]
-                    z = zgrid[is_to_iz[istate]]
-                
-                    a = data_a_[i, t-1]
-                    kap = data_kap_[i, t-1]
-            
-                    an = data_a_[i, t]
-                    kapn = data_kap_[i, t]
-                
-                #             is_c = data_is_c_[i, t]
-                
-                    data_val_seq_[i,t] = fem2d_peval(a, kap, agrid, kapgrid, sweat_eq_val_[:,:,istate])
-                
-        sweat_div = self.sweat_div
-        sweat_val = self.sweat_val
 
-        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_div, data_div_sweat)
-        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val, data_val_sweat)
+        # @nb.jit(nopython = True, parallel = True)
+        # def calc_val_seq(data_a_, data_kap_, data_i_s_, data_is_c_, sweat_eq_val_ ,data_val_seq_):
+        
+        #     for t in nb.prange(1, sim_time):
+        #         for i in range(num_total_pop):
+            
+        #             istate = data_i_s_[i, t]
+        #             eps = epsgrid[is_to_ieps[istate]]
+        #             z = zgrid[is_to_iz[istate]]
+                
+        #             a = data_a_[i, t-1]
+        #             kap = data_kap_[i, t-1]
+            
+        #             an = data_a_[i, t]
+        #             kapn = data_kap_[i, t]
+                
+        #         #             is_c = data_is_c_[i, t]
+                
+        #             data_val_seq_[i,t] = fem2d_peval(a, kap, agrid, kapgrid, sweat_eq_val_[:,:,istate])
+
+        # sweat_div = self.sweat_div
+        # sweat_val = self.sweat_val
+
+        # data_val_sweat = np.zeros(data_a.shape)
+        # data_div_sweat = np.zeros(data_a.shape)
+                   
+        # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_div, data_div_sweat)
+        # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val, data_val_sweat)
 
 
         self.data_u = data_u
@@ -3353,8 +3395,10 @@ class Economy:
         self.data_x = data_x
         self.data_ks = data_ks
         self.data_ys = data_ys
-        self.data_val_sweat = data_val_sweat
-        self.data_div_sweat = data_div_sweat
+        self.data_R = data_R        
+        
+        # self.data_val_sweat = data_val_sweat
+        # self.data_div_sweat = data_div_sweat
 
 
         return
@@ -3363,39 +3407,53 @@ class Economy:
         if rank == 0:
             print('Saving results under ', dir_path_save, '...')
 
+            t = self.sim_time-1
+            
+            np.save(dir_path_save + 'agrid', self.agrid)
+            np.save(dir_path_save + 'kapgrid', self.kapgrid)
+            np.save(dir_path_save + 'zgrid', self.zgrid)
+            np.save(dir_path_save + 'epsgrid', self.epsgrid)                         
 
             
-            np.save(dir_path_save + 'data_a', self.data_a[:, -100:])
-            np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:])
-            np.save(dir_path_save + 'data_i_s', self.data_i_s[:, -100:])
-            np.save(dir_path_save + 'data_max_posi', self.data_max_posi[:, -100:])
-            np.save(dir_path_save + 'data_u', self.data_u[:, -100:])
-            np.save(dir_path_save + 'data_cc', self.data_cc[:, -100:])
-            np.save(dir_path_save + 'data_cs', self.data_cs[:, -100:])
-            np.save(dir_path_save + 'data_cagg', self.data_cagg[:, -100:])
-            np.save(dir_path_save + 'data_l', self.data_l[:, -100:])
-            np.save(dir_path_save + 'data_n', self.data_n[:, -100:])
-            np.save(dir_path_save + 'data_mx', self.data_mx[:, -100:])
-            np.save(dir_path_save + 'data_my', self.data_my[:, -100:])
-            np.save(dir_path_save + 'data_x', self.data_x[:, -100:])
-            np.save(dir_path_save + 'data_ks', self.data_ks[:, -100:])
-            np.save(dir_path_save + 'data_ys', self.data_ys[:, -100:])
+            np.save(dir_path_save + 'data_a', self.data_a[:, -100:t])
+            np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:t])
+            np.save(dir_path_save + 'data_a0', self.data_a0[:, -100:t])
+            np.save(dir_path_save + 'data_kap0', self.data_kap0[:, -100:t])
+            
+            np.save(dir_path_save + 'data_i_s', self.data_i_s[:, -100:t])
+            np.save(dir_path_save + 'data_saleshock', self.data_saleshock[:, -100:t])            
+            np.save(dir_path_save + 'data_max_posi', self.data_max_posi[:, -100:t])
+            np.save(dir_path_save + 'data_u', self.data_u[:, -100:t])
+            np.save(dir_path_save + 'data_cc', self.data_cc[:, -100:t])
+            np.save(dir_path_save + 'data_cs', self.data_cs[:, -100:t])
+            np.save(dir_path_save + 'data_cagg', self.data_cagg[:, -100:t])
+            np.save(dir_path_save + 'data_l', self.data_l[:, -100:t])
+            np.save(dir_path_save + 'data_n', self.data_n[:, -100:t])
+            np.save(dir_path_save + 'data_mx', self.data_mx[:, -100:t])
+            np.save(dir_path_save + 'data_my', self.data_my[:, -100:t])
+            np.save(dir_path_save + 'data_x', self.data_x[:, -100:t])
+            np.save(dir_path_save + 'data_ks', self.data_ks[:, -100:t])
+            np.save(dir_path_save + 'data_ys', self.data_ys[:, -100:t])
+            np.save(dir_path_save + 'data_R', self.data_R[:, -100:t])            
             np.save(dir_path_save + 'data_ss', self.data_ss)
 
             np.save(dir_path_save + 'vc_an', self.vc_an)
             np.save(dir_path_save + 'vs_an', self.vs_an)
             np.save(dir_path_save + 'vs_kapn', self.vs_kapn)
             np.save(dir_path_save + 'vcn', self.vcn)
-            np.save(dir_path_save + 'vsn', self.vsn)
-
-            np.save(dir_path_save + 'sweat_div', self.sweat_div)
-            np.save(dir_path_save + 'sweat_val', self.sweat_val)
-
-            np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
-            np.save(dir_path_save + 'data_val_sweat', self.data_val_sweat[:, -100:])
+            np.save(dir_path_save + 'vsn', self.vsn)            
+            np.save(dir_path_save + 'vacqn', self.vacqn)
+            
 
             np.save(dir_path_save + 's_age', self.s_age)
             np.save(dir_path_save + 'c_age', self.c_age)
+
+            # np.save(dir_path_save + 'sweat_div', self.sweat_div)
+            # np.save(dir_path_save + 'sweat_val', self.sweat_val)
+
+            # np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
+            # np.save(dir_path_save + 'data_val_sweat', self.data_val_sweat[:, -100:])
+            
 
             """
             np.save(dir_path_save + 'data_a', self.data_a)

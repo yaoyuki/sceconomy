@@ -16,33 +16,36 @@ if __name__ == '__main__':
 
 
     ### additional info
-#    agrid2 = curvedspace(0., 100., 2., 40)
-#    kapgrid2 = curvedspace(0., 2., 2., 20)
-#    zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
-
     agrid2 = curvedspace(0., 100., 2., 40)
-   
-    zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
-    
-    
+#    kapgrid2 = curvedspace(0., 2., 2., 20)
+    zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
+    
+#    agrid2 = curvedspace(0., 100., 2., 40)
+#    kapgrid2 = curvedspace(0., 2.0, 2., 20)
+    
+    # zgrid2 = np.load('./input_data/zgrid09.npy') ** 2.
+    # prob2 = np.load('./input_data/transition_matrix_0709.npy')
+   
+    # zgrid2 = np.load('./input_data/zgrid_09_0075.npy') ** 2.
+    # prob2 = np.load('./input_data/prob_epsz_07_09_01_0075.npy')
+
+    
 
     ###define additional parameters###
-    num_core = 8 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
+    num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
 
     # prices
-    w_ = 3.12149770513
-    p_ = 0.963758557626
-    rc_ = 0.0636523764656
-
-
+    w_ =  3.123668659426386
+    p_ =  0.995310563254898
+    rc_ =  0.06327936800968331
+    
     ###end defining additional parameters###
 
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.75)
-   
+    econ = Economy(agrid = agrid2, zgrid = zgrid2)
     
     econ.set_prices(w = w_, p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)

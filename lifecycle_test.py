@@ -15,15 +15,15 @@ def curvedspace(begin, end, curve, num=100):
 
 
 agrid2 = curvedspace(0., 100., 2., 40)
-# kapgrid2 = curvedspace(0., 1., 2., 20)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
-# prob2 = np.load('./input_data/transition_matrix.npy')
-e = Economy(agrid = agrid2, zgrid = zgrid2)
-e.set_prices(w = 3.1480348355657055,
-             p = 1.0207889942205437,
-             rc = 0.06202604135907751)
+e = Economy(agrid = agrid2, zgrid = zgrid2, tau_wo = 0.0, tau_bo = 0.85)
+e.set_prices(w = 3.13404317952571,
+             p = 1.003307959207706,
+             rc = 0.06271276577215709)
 e.get_policy()
 export_econ(e)
 
-import os
-os.system('say "your program has finished"')
+comm.Barrier()
+if rank == 0:
+    import os
+    os.system('say "your program has finished"')

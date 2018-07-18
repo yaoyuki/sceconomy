@@ -1,5 +1,5 @@
 import numpy as np
-from SCEconomy_lifecycle_give_A import *
+from SCEconomy_give_A import *
 
 e = import_econ()
 
@@ -11,7 +11,6 @@ np.save('./save_data/zgrid', e.zgrid)
 np.save('./save_data/prob', e.prob)
 np.save('./save_data/is_to_iz', e.is_to_iz)
 np.save('./save_data/is_to_ieps', e.is_to_ieps)
-
 
 
 print('agrid')

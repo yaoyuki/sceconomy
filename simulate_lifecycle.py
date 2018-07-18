@@ -23,16 +23,15 @@ if __name__ == '__main__':
     agrid2 = curvedspace(0., 100., 2., 40)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
     
-    
-
 
     ###define additional parameters###
     num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
 
+
     # prices
-    w_ = 3.1572282397347546
-    p_ = 0.9727393950908765
-    rc_ = 0.06151741790372089
+    w_ = 3.1530984633243797
+    p_ = 0.9507111754761719
+    rc_ = 0.06178244797591238
 
 
     ###end defining additional parameters###
@@ -40,7 +39,7 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, taum = 0.10)
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, tau_wo = 0.0, tau_bo = 0.9, la_tilde = 0.1, taum = 0.1)
     econ.set_prices(w = w_, p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
 
@@ -70,7 +69,7 @@ if __name__ == '__main__':
     
     econ.calc_moments()
     ###calculate other important variables###
-#    econ.calc_sweat_eq_value()
+    econ.calc_sweat_eq_value()
     econ.calc_age()
     econ.calc_kap_bornwith()
     econ.simulate_other_vars()
