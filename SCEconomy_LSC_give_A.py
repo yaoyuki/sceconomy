@@ -1024,7 +1024,7 @@ class Economy:
                     an_sup = min(s_supan[ia, is_to_iz[istate]] - 1.e-6, agrid[-1]) #no extrapolation for aprime
                     an_min = chi*xi8
 
-                ans =  _optimize_given_state_(amin, an_sup, _EV_, ia, istate, _is_c_)
+                ans =  _optimize_given_state_(an_min, an_sup, _EV_, ia, istate, _is_c_)
                 
 
                 _vc_an_[ind] = ans
