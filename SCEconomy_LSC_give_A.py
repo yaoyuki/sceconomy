@@ -159,11 +159,16 @@ class Economy:
         self.yn       = 0.451
         self.zeta     = 1.0 #totally tentative
         self.lbar     = 1.0
+
+        #borrowing constraint for C - guys. they just can't borrow in
+        self.amin      = 0.0
+        
         self.sim_time = 1000
         self.num_total_pop = 100000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
         self.path_to_data_i_s = './input_data/data_i_s'
 
+        
 
 
 
@@ -187,9 +192,7 @@ class Economy:
         self.is_to_iz = np.load('./input_data/is_to_iz.npy')
         self.is_to_ieps = np.load('./input_data/is_to_ieps.npy')
         
-        #computational parameters
-        #conflixt with chi*xi8
-        self.amin      = 0.0
+
        
 
         
@@ -1016,11 +1019,13 @@ class Economy:
 
                 if _is_c_:
                     an_sup = min(c_supan[ia, is_to_ieps[istate]] - 1.e-6, agrid[-1]) #no extrapolation for aprime
+                    an_min = amin
                 else:
                     an_sup = min(s_supan[ia, is_to_iz[istate]] - 1.e-6, agrid[-1]) #no extrapolation for aprime
+                    an_min = chi*xi8
 
-
-                ans =  _optimize_given_state_(chi*xi8, an_sup, _EV_, ia, istate, _is_c_)
+                ans =  _optimize_given_state_(amin, an_sup, _EV_, ia, istate, _is_c_)
+                
 
                 _vc_an_[ind] = ans
                 _vcn_[ind] = -_obj_loop_(ans, _EV_, ia, istate, _is_c_)
@@ -1480,8 +1485,11 @@ class Economy:
 
                     an = i_c * an_c + (1. - i_c) * an_s
 
-                    if an < chi*xi8:
-                        print('simulation error: an < k_s. t = ', t , ', i = ' , i)
+                    if (an < chi*xi8) and not is_c:
+                        print('simulation error: an < k_s but S. t = ', t , ', i = ' , i)
+                        
+                    if (an < amin) and  is_c:
+                        print('simulation error: an < amin but C. t = ', t , ', i = ' , i)
                         
 
                     data_a_[i, t] = an
