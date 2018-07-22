@@ -12,8 +12,8 @@ import numba as nb
 
 #my library
 #import
-#from FEM import fem_peval #1D interpolation
-from FEM_2D import fem2d_peval, fem2deval_mesh
+from FEM import femeval, fem_peval #1D interpolation
+from FEM_2D import fem2d_peval, fem2deval_mesh #2D interpolation
 from markov import Stationary
 from ravel_unravel_nb import unravel_index_nb
 
@@ -69,15 +69,12 @@ class Economy:
                  zeta = None,
                  lbar = None,
                  agrid = None,
-                 kapgrid = None,
                  epsgrid = None,
                  zgrid = None,
                  prob = None,
                  is_to_iz = None,
                  is_to_ieps = None,
                  amin = None,
-                 num_suba_inner = None,
-                 num_subkap_inner = None,
                  sim_time = None,
                  num_total_pop = None,
                  A = None,
@@ -117,15 +114,12 @@ class Economy:
         if zeta is not None: self.zeta = zeta
         if lbar is not None: self.lbar = lbar
         if agrid is not None: self.agrid = agrid
-        if kapgrid is not None: self.kapgrid = kapgrid
         if epsgrid is not None: self.epsgrid = epsgrid
         if zgrid is not None: self.zgrid = zgrid
         if prob is not None: self.prob = prob
         if is_to_iz is not None: self.is_to_iz = is_to_iz
         if is_to_ieps is not None: self.is_to_ieps = is_to_ieps
         if amin is not None: self.amin = amin
-        if num_suba_inner is not None: self.num_suba_inner = num_suba_inner
-        if num_subkap_inner is not None: self.num_subkap_inner = num_subkap_inner
         if sim_time is not None: self.sim_time = sim_time
         if num_total_pop is not None: self.num_total_pop = num_total_pop
         if A is not None: self.A = A
@@ -174,7 +168,6 @@ class Economy:
 
 
         self.agrid = np.load('./input_data/agrid.npy')
-        self.kapgrid = np.load('./input_data/kapgrid.npy')
         self.epsgrid = np.load('./input_data/epsgrid.npy')    
         self.zgrid = np.load('./input_data/zgrid.npy')
         
@@ -195,16 +188,14 @@ class Economy:
         self.is_to_ieps = np.load('./input_data/is_to_ieps.npy')
         
         #computational parameters
+        #conflixt with chi*xi8
         self.amin      = 0.0
-        self.num_suba_inner = 20
-        self.num_subkap_inner = 30
-        
+       
 
         
     def __set_implied_parameters__(self):
         #length of grids
         self.num_a = len(self.agrid)
-        self.num_kap = len(self.kapgrid)
         self.num_eps = len(self.epsgrid)
         self.num_z = len(self.zgrid)
         self.num_s = self.prob.shape[0]
@@ -280,6 +271,7 @@ class Economy:
         print('xnb = ', self.xnb)
         print('yn = ', self.yn)
         print('zeta = ', self.zeta)
+        print('lbar = ', self.lbar)
         print('A = ', self.A)
         
         
@@ -325,8 +317,6 @@ class Economy:
         print('Computational Parameters')
 
         print('amin = ', self.amin)
-        print('num_suba_inner = ', self.num_suba_inner)
-        print('num_subkap_inner = ', self.num_subkap_inner)
         print('sim_time = ', self.sim_time)
         print('num_total_pop = ', self.num_total_pop)
 
@@ -360,7 +350,6 @@ class Economy:
         zeta= self.zeta
 
         agrid = self.agrid
-        kapgrid = self.kapgrid
         epsgrid = self.epsgrid
         zgrid = self.zgrid
 
@@ -370,11 +359,8 @@ class Economy:
         is_to_ieps = self.is_to_ieps
 
         amin = self.amin
-        num_suba_inner = self.num_suba_inner
-        num_subkap_inne = self.num_subkap_inner
 
         num_a = self.num_a
-        num_kap = self.num_kap
         num_eps = self.num_eps
         num_z = self.num_z
 
@@ -441,7 +427,6 @@ class Economy:
         zeta= self.zeta
 
         agrid = self.agrid
-        kapgrid = self.kapgrid
         epsgrid = self.epsgrid
         zgrid = self.zgrid
 
@@ -451,11 +436,8 @@ class Economy:
         is_to_ieps = self.is_to_ieps
 
         amin = self.amin
-        num_suba_inner = self.num_suba_inner
-        num_subkap_inne = self.num_subkap_inner
 
         num_a = self.num_a
-        num_kap = self.num_kap
         num_eps = self.num_eps
         num_z = self.num_z
 
@@ -496,7 +478,8 @@ class Economy:
                 return np.nan #???
             
         return dc_util
-        
+
+    import math    
         
         
     def generate_cstatic(self):
@@ -528,7 +511,6 @@ class Economy:
         zeta= self.zeta
 
         agrid = self.agrid
-        kapgrid = self.kapgrid
         epsgrid = self.epsgrid
         zgrid = self.zgrid
 
@@ -538,11 +520,8 @@ class Economy:
         is_to_ieps = self.is_to_ieps
 
         amin = self.amin
-        num_suba_inner = self.num_suba_inner
-        num_subkap_inne = self.num_subkap_inner
 
         num_a = self.num_a
-        num_kap = self.num_kap
         num_eps = self.num_eps
         num_z = self.num_z
         num_s = self.prob.shape[0]
@@ -581,6 +560,9 @@ class Economy:
             eps = s[2]
 
             u = -np.inf
+            #u = -float('Inf')
+            #u = -math.inf
+
             cc = -1.0
             cs = -1.0
             cagg = -1.0
@@ -640,7 +622,6 @@ class Economy:
         lbar = self.lbar
 
         agrid = self.agrid
-        kapgrid = self.kapgrid
         epsgrid = self.epsgrid
         zgrid = self.zgrid
 
@@ -650,11 +631,8 @@ class Economy:
         is_to_ieps = self.is_to_ieps
 
         amin = self.amin
-        num_suba_inner = self.num_suba_inner
-        num_subkap_inne = self.num_subkap_inner
 
         num_a = self.num_a
-        num_kap = self.num_kap
         num_eps = self.num_eps
         num_z = self.num_z
 
@@ -685,6 +663,8 @@ class Economy:
         ###end loading vars###
         
         util = self.generate_util()
+
+
         
 
         @nb.jit(nopython = True)
@@ -697,12 +677,13 @@ class Economy:
             #ks and ys are predetermined here
             # ks = (p*alpha/(rs+delk))**(1./(1. - alpha))
             ks = xi8 #should be the same as above
-
             ys = z*ks**alpha
 
-            
-
             u = -np.inf
+            
+#             u = -math.inf
+
+#             u = -float('Inf')            
 #             mx = -1.0
 #             my = -1.0
 #             l = -1.0
@@ -714,7 +695,7 @@ class Economy:
 
 
             #find cc
-            #if feasible,... Here I really don't check an >= 
+            #if feasible,... Here I really don't check an >= amin
             #cc = xi4*a - xi5*an + xi6 + xi11*(p*z*xi8**alpha - (rs+delk)*xi8)
             cc = xi4*a - xi5*an + xi6 + xi11*(p*ys - (rs+delk)*ks)
             cs = xi1*cc
@@ -726,8 +707,10 @@ class Economy:
                 
             #else, return -np.inf
 
-                
-            return u, cc, cs, cagg, lbar, ks, ys 
+
+            # lbar is a given constant
+            #mx, my, x are set to np.nan.
+            return u, cc, cs, cagg, lbar, np.nan, np.nan, np.nan, ks, ys 
         
         return get_sstatic
     
@@ -762,7 +745,6 @@ class Economy:
         zeta= Econ.zeta
 
         agrid = Econ.agrid
-        kapgrid = Econ.kapgrid
         epsgrid = Econ.epsgrid
         zgrid = Econ.zgrid
 
@@ -772,11 +754,8 @@ class Economy:
         is_to_ieps = Econ.is_to_ieps
 
         amin = Econ.amin
-        num_suba_inner = Econ.num_suba_inner
-        num_subkap_inner = Econ.num_subkap_inner
 
         num_a = Econ.num_a
-        num_kap = Econ.num_kap
         num_eps = Econ.num_eps
         num_z = Econ.num_z
         num_s = Econ.num_s
@@ -809,7 +788,7 @@ class Economy:
 
         ###parameters for MPI###
 
-        num_total_state = num_a * num_kap * num_s
+        num_total_state = num_a* num_s
         m = num_total_state // size
         r = num_total_state % size
 
@@ -836,459 +815,58 @@ class Economy:
         @nb.jit(nopython = True)
         def unravel_ip(i_aggregated_state):
 
-            istate, ia, ikap = unravel_index_nb(i_aggregated_state, num_s, num_a, num_kap)
+            istate, ia = unravel_index_nb(i_aggregated_state, num_s, num_a)
             #ia, ikap, istate = unravel_index_nb(i_aggregated_state, num_a, num_kap, num_s)
-            return istate, ia, ikap
+            return istate, ia
 
         get_cstatic = Econ.generate_cstatic()
 
-        #obtain the max...
-        cvals_supan = np.ones((num_a, num_eps)) * (-2.)
+        #to solve C-optimization problem, we need the max feasible set for an [amin, sup_an]
+        c_supan = np.ones((num_a, num_eps)) * (-2.)
         for ia, a in enumerate(agrid):
                 for ieps, eps in enumerate(epsgrid):
 
-                    cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun)*w*eps + tran)/(1. + grate)
-
-
-        get_sstatic = Econ.generate_sstatic()
-
-
-
-        ## construct subagrid and subkapgrid
-
-        ## subagrid
-        subagrid = np.ones((num_a-1)* (num_suba_inner-2) + num_a)
-        num_suba = len(subagrid)
-
-        ia = 0
-        for ia in range(num_a - 1):
-            subagrid[ia*(num_suba_inner) - ia : (ia+1)*(num_suba_inner) - ia] = np.linspace(agrid[ia], agrid[ia+1], num_suba_inner)
-
-
-
-        ## subkapgrid
-        subkapgrid = np.ones((num_kap - 1)* (num_subkap_inner - 2) + num_kap)
-
-        num_subkap = len(subkapgrid)
-
-        ikap = 0
-        for ikap in range(num_kap-1):
-            subkapgrid[ikap*(num_subkap_inner) - ikap : (ikap+1)*(num_subkap_inner) - ikap] = np.linspace(kapgrid[ikap], kapgrid[ikap+1], num_subkap_inner)
-
-
-
-        ia_to_isuba = [1 for i in range(num_a)] #np.ones(num_a, dtype = int)
-        for ia in range(num_a):
-            ia_to_isuba[ia] = (num_suba_inner-1)*ia
-
-
-        ikap_to_isubkap = [1 for i in range(num_kap)] #np.ones(num_kap, dtype = int)
-        for ikap in range(num_kap):
-            ikap_to_isubkap[ikap] = (num_subkap_inner-1)*ikap
-
-        # ikap_to_isubkap_exp = [1 for i in range(num_kap+1)] #np.ones(num_kap, dtype = int)
-        # for ikap in range(num_kap):
-        #     ikap_to_isubkap_exp[ikap] = (num_subkap_inner-1)*ikap
-        # ikap_to_isubkap_exp[-1] = len(subkapgrid) - 1
-
-
-
-        # #check
-        #subagrid[ia_to_isuba] - agrid
-        #subkapgrid[ikap_to_isubkap] - kapgrid
-
-        #export to numpy array,...sometimes we need this.
-        ia_to_isuba = np.array(ia_to_isuba)
-        ikap_to_isubkap = np.array(ikap_to_isubkap)
-        #ikap_to_isubkap_exp = np.array(ikap_to_isubkap_exp)
-
-        @nb.jit(nopython = True)
-        def unravel_isub_mesh(i_subgrid_mesh):
-
-            ind, ia_m, ikap_m = unravel_index_nb(i_aggregated_state, num_assigned, num_a-1, num_kap - 1)
-
-            return ind, ia_m, ikap_m
-        @nb.jit(nopython = True)
-        def get_isub_mesh(ind, ia_m, ikap_m):
-
-            return ind * (num_a-1)*(num_kap-1) + ia_m *(num_kap-1) + ikap_m
-
-
-
-        #Store the S-corp utility values for the main grid
-
-        s_util_origin = np.ones((num_assigned, num_a, num_kap))
-
-        @nb.jit(nopython = True)
-        def get_s_util_origin(_s_util_origin_ = s_util_origin):
-
-            for ip in range(assigned_state_range[0], assigned_state_range[1]):
-
-                ind = ip - assigned_state_range[0]
-                istate, ia, ikap = unravel_ip(ip)
-
-
-                for ian in range(num_a):
-                    for ikapn in range(num_kap):
-
-                        a = agrid[ia]
-                        kap = kapgrid[ikap]
-                        z = zgrid[is_to_iz[istate]]
-                        an = agrid[ian]
-                        kapn = kapgrid[ikapn]
-
-                        state = [a, an, kap, kapn, z]
-
-        #                 _s_util_origin_[ind, ian, ikapn] = get_sutil_cache(ip, ia_to_isuba[ian], ikap_to_isubkap[ikapn])
-                        _s_util_origin_[ind, ian, ikapn] = get_sstatic(state)[0]
-                        # get_sstatic(state)[0] #
-
-
-        get_s_util_origin(s_util_origin)  
-
-
-        #prepare for caching data
-        num_prealloc = int(num_assigned * (num_a-1)* (num_kap - 1) * 0.05) #assign 5%
-        num_cached = 0
-        ind_s_util_finemesh_cached = np.ones((num_assigned * (num_a-1)* (num_kap - 1)), dtype = int)*(-1)
-        s_util_finemesh_cached = np.zeros((num_prealloc, num_suba_inner, num_subkap_inner))
-
-
-        #define inner loop functions
-
-        @nb.jit(nopython = True)
-        def _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ip,
-                                     _num_cached_,
-                                     _ind_s_util_finemesh_cached_ = ind_s_util_finemesh_cached,
-                                     _s_util_finemesh_cached_ = s_util_finemesh_cached):
-
-            ian_c = ian_hi - 1
-            ikapn_c = ikapn_hi - 1
-
-
-            istate, ia, ikap = unravel_ip(ip)  
-            ind = ip - assigned_state_range[0]
-
-            a = agrid[ia]
-            kap = kapgrid[ikap]
-            z = zgrid[is_to_iz[istate]]
-
-            subsubagrid = subagrid[ia_to_isuba[ian_lo] : ia_to_isuba[ian_hi]+1]
-            subsubkapgrid = subkapgrid[ikap_to_isubkap[ikapn_lo] : ikap_to_isubkap[ikapn_hi]+1]
-
-            if (len(subsubagrid) != 2*num_suba_inner - 1) or (len(subsubkapgrid) != 2*num_subkap_inner - 1):
-                print('error: grid number of the finer grid')
-
-
-
-            #define a finer grid
-
-        #     s_util_fine_mesh = svals_util[ia, ikap, ia_to_isuba[ian_lo] : ia_to_isuba[ian_hi]+1, ikap_to_isubkap[ikapn_lo] : ikap_to_isubkap[ikapn_hi]+1 ,is_to_iz[istate]]
-
-            s_util_fine_mesh = np.zeros((len(subsubagrid), len(subsubkapgrid)))
-
-
-            for ian in [ian_lo, ian_hi-1]:
-                for ikapn in [ikapn_lo, ikapn_hi-1]:
-                    isub_mesh = get_isub_mesh(ind, ian, ikapn)
-
-        #             print('isub_mesh = ', isub_mesh)
-
-                    if _ind_s_util_finemesh_cached_[isub_mesh] == -1:
-
-
-                        for ian_sub in range(ia_to_isuba[ian], ia_to_isuba[ian+1] + 1):
-                            ian_ind = ian_sub - ia_to_isuba[ian_lo]
-
-                            for ikapn_sub in range(ikap_to_isubkap[ikapn], ikap_to_isubkap[ikapn+1] + 1):
-                                ikapn_ind = ikapn_sub - ikap_to_isubkap[ikapn_lo]
-
-                                an = subagrid[ian_sub]
-                                kapn = subkapgrid[ikapn_sub]
-
-        #                         print('an = ', an)
-        #                         print('kapn = ', kapn)
-
-                                state = [a, an, kap, kapn, z]
-
-                                s_util_fine_mesh[ian_ind, ikapn_ind] = get_sstatic(state)[0]
-
-        #                         print('sutil = ', s_util_fine_mesh[ian_ind, ikapn_ind])
-
-                        if _num_cached_ < num_prealloc:
-                            ind_new_entry = _num_cached_  #this is inefficient. just keep track using another var.
-                            #this should be less than something...
-                            _s_util_finemesh_cached_[ind_new_entry, :, :] =                                         s_util_fine_mesh[(ia_to_isuba[ian] - ia_to_isuba[ian_lo]):(ia_to_isuba[ian+1]+1 - ia_to_isuba[ian_lo]),                                                          (ikap_to_isubkap[ikapn] - ikap_to_isubkap[ikapn_lo]):(ikap_to_isubkap[ikapn+1]+1 - ikap_to_isubkap[ikapn_lo])]
-
-                            _ind_s_util_finemesh_cached_[isub_mesh] = ind_new_entry
-
-                            _num_cached_ = _num_cached_ +1
-
-        #                     print('cached')
-        #                     print(_s_util_finemesh_cached_[ind_new_entry, :, :])
-        #                     print('')
-        #                     print('fine_mesh')
-        #                     print(s_util_fine_mesh)
-
-
-
-
-
-                    else: #if it is already cached
-
-                         s_util_fine_mesh[(ia_to_isuba[ian] - ia_to_isuba[ian_lo]):(ia_to_isuba[ian+1]+1 - ia_to_isuba[ian_lo]),                          (ikap_to_isubkap[ikapn] - ikap_to_isubkap[ikapn_lo]):(ikap_to_isubkap[ikapn+1]+1 - ikap_to_isubkap[ikapn_lo])] =                             _s_util_finemesh_cached_[_ind_s_util_finemesh_cached_[isub_mesh], :, :]
-
-
-
-
-            obj_fine_mesh = - (s_util_fine_mesh + fem2deval_mesh(subsubagrid, subsubkapgrid, agrid, kapgrid, _EV_[0, 0, :, :, istate])  )**(1./(1. - mu))
-
-
-
-
-            ans_some = unravel_index_nb(np.argmin(obj_fine_mesh), len(subsubagrid), len(subsubkapgrid))
-
-
-
-            _an_tmp_ = subsubagrid[ans_some[0]]
-            _kapn_tmp_ = subsubkapgrid[ans_some[1]]
-            _val_tmp_ = -obj_fine_mesh[ans_some[0], ans_some[1]] 
-            _u_tmp_  = s_util_fine_mesh[ans_some[0], ans_some[1]]
-
-
-
-            return ans_some[0], ans_some[1], _num_cached_ ,_an_tmp_, _kapn_tmp_, _val_tmp_, _u_tmp_
-
-
+                    c_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun)*w*eps + tran)/(1. + grate)
+
+
+        get_sstatic = Econ.generate_sstatic()                    
+        #to solve S-optimization problem, we need the max feasible set for an [amin, sup_an]                    
+        s_supan = np.ones((num_a, num_eps)) * (-2.)
+        
+        ks = xi8 
+
+        for iz, z in enumerate(zgrid):
+            for ia, a in enumerate(agrid):
+                    ys = z*ks**alpha
+                    s_supan[ia, iz] = ((1. + rbar)*a + (1. - taum)*(p*ys - (rs + delk)*ks) + tran)/(1. + grate)
+
+        del ks, ys
+                    
+        # objective function of VFI optimization problem
         @nb.jit(nopython = True)    
-        def _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_): #, an_tmp, kapn_tmp, _val_tmp_, u_tmp):
-
-            istate, ia, ikap = unravel_ip(ipar_loop)
-
-        #     print('ia =, ', ia, ' ikap = ', ikap, ' istate = ', istate)
-
-            a = agrid[ia]
-            kap = kapgrid[ikap]
-
-            iz = is_to_iz[istate]
-            z = zgrid[iz]
-
-            kapn_min = kap*(1. - delkap)/(1. + grate)
-
-            #rough grid search 
-
-            ind = ipar_loop - assigned_state_range[0]
-            obj_mesh = - (s_util_origin[ind, :, :] + _EV_[0, 0, :, :, istate]) **(1./(1. - mu))
-
-
-            ans_tmp = unravel_index_nb(np.argmin(obj_mesh), num_a, num_kap)
-
-
-            an_tmp = agrid[ans_tmp[0]]
-            kapn_tmp = kapgrid[ans_tmp[1]]
-            val_tmp = -obj_mesh[ans_tmp[0], ans_tmp[1]] 
-            u_tmp  = s_util_origin[ind, :, :][ans_tmp[0], ans_tmp[1]]
-
-
-            #find surrounding grids
-            ian_lo = max(ans_tmp[0] - 1, 0)
-            ian_hi = min(ans_tmp[0] + 1, len(agrid) - 1)
-
-
-            ikapn_lo = max(ans_tmp[1] - 1, 0)
-            ikapn_hi = min(ans_tmp[1] + 1, len(kapgrid) - 1) #one is added
-
-
-
-            if (ian_lo + 2 != ian_hi):
-                if ian_lo == 0:
-                    ian_hi = ian_hi + 1
-                elif ian_hi == num_a -1:
-                    ian_lo = ian_lo -1
-                else:
-                    print('error')
-
-            if (ikapn_lo + 2 != ikapn_hi):
-                if ikapn_lo == 0:
-                    ikapn_hi = ikapn_hi + 1
-                elif ikapn_hi == num_kap-1:
-                    ikapn_lo = ikapn_lo - 1
-                else:
-                    print('error')
-
-
-
-            #check if there exists mesh
-            if (ian_lo + 2 != ian_hi) or (ikapn_lo + 2 != ikapn_hi):
-                print('error: a finer grid was not generated.')
-
-
-            if subkapgrid[ikap_to_isubkap[ikapn_hi]] <= kapn_min:
-                print('subkapgrid[ikap_to_isubkap[ikapn_hi]] <= kapn_min')
-
-
-
-
-            max_ian_sub = 2*num_suba_inner - 2
-            max_ikapn_sub =  2*num_subkap_inner - 2
-
-
-            max_iter = 100
-            it_finer = 0
-            while (it_finer < max_iter):
-                it_finer = it_finer + 1
-
-
-                ans = np.array([0, 0])
-                ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp =                      _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ipar_loop, _num_cached_)    
-
-
-                # move to an adjacent mesh or leave
-
-                if ans[0] != 0 and ans[0] != max_ian_sub and ans[1] != 0 and ans[1] != max_ikapn_sub:
-                    #solution
-                    break
-                elif ans[0] == 0 and (ans[1] != 0 or ans[1] != max_ikapn_sub):
-                    if ian_lo == 0:
-                        break
-                    else:
-                        ian_lo = ian_lo - 1
-                        ian_hi = ian_hi - 1
-
-                elif ans[0] == max_ian_sub and (ans[1] != 0 or ans[1] != max_ikapn_sub):
-                    if ian_hi == num_a-1:
-                        break
-                    else:
-                        ian_lo = ian_lo + 1
-                        ian_hi = ian_hi + 1
-
-                elif ans[1]  == 0 and (ans[0] != 0 or ans[0] != max_ian_sub):
-                    if ikapn_lo == 0:
-                        break
-                    else:
-                        ikapn_lo = ikapn_lo - 1
-                        ikapn_hi = ikapn_hi - 1
-
-                elif ans[1]  == max_ikapn_sub and (ans[0] != 0 or ans[0] != max_ian_sub):
-                    if ikapn_hi == num_kap-1: 
-                        break
-                    else:
-                        ikapn_lo = ikapn_lo + 1
-                        ikapn_hi = ikapn_hi + 1
-
-                elif ans[0] == 0 and ans[1] == 0:
-                    if ian_lo == 0 and ikapn_lo == 0:
-                        break
-                    else:
-                        if ian_lo != 0:
-                            ian_lo = ian_lo - 1
-                            ian_hi = ian_hi - 1
-                        if ikapn_lo != 0:
-                            ikapn_lo = ikapn_lo - 1
-                            ikapn_hi = ikapn_hi - 1
-
-                elif ans[0] == 0 and ans[1] == max_ikapn_sub:
-                    if ian_lo == 0 and ikapn_hi == num_kap-1:
-                        break
-                    else:
-                        if ian_lo != 0:
-                            ian_lo = ian_lo - 1
-                            ian_hi = ian_hi - 1
-                        if ikapn_hi != num_kap - 1:
-                            ikapn_lo = ikapn_lo + 1
-                            ikapn_hi = ikapn_hi + 1
-
-                elif ans[0] == max_ian_sub and ans[1] == 0:
-                    if ian_hi == num_a-1 and ikapn_lo == 0:
-                        break
-                    else:
-                        if ian_hi != num_a-1:
-                            ian_lo = ian_lo + 1
-                            ian_hi = ian_hi + 1
-                        if ikapn_lo != 0:
-                            ikapn_lo = ikapn_lo - 1
-                            ikapn_hi = ikapn_hi - 1
-
-                elif ans[0] == max_ian_sub and ans[1] == max_ikapn_sub:
-                    if ian_hi == num_a-1 and ikapn_hi == num_kap-1:
-                        break
-                    else:
-                        if ian_hi != num_a-1:
-                            ian_lo = ian_lo + 1
-                            ian_hi = ian_hi + 1
-                        if ikapn_hi != num_kap-1:
-                            ikapn_lo = ikapn_lo + 1
-                            ikapn_hi = ikapn_hi + 1
-                else:
-                    print('error: ****')
-        #                         print('ans[0] = {}, ans[1] = {}'.format(ans[0], ans[1]))
-
-                if it_finer == max_iter:
-                    print('error: reached the max fine grid search')
-                    print('ia = ', ia, ', ikap = ', ikap, ', istate = ', istate)
-
-                    break
-
-
-            return an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_
-
-
-        @nb.jit(nopython = True) 
-        def _inner_loop_s_with_range_(assigned_indexes, _EV_, _vs_an_, _vs_kapn_, _vsn_, _vs_util_, _num_cached_):
-
-
-        #     for istate in range(num_s):
-        #         for ia in range(num_a):
-        #             for ikap in range(num_kap):
-
-            ibegin = assigned_indexes[0]
-            iend = assigned_indexes[1]
-
-
-
-            ind = 0
-            for ipar_loop in range(ibegin, iend):
-
-
-                istate, ia, ikap = unravel_ip(ipar_loop)
-
-
-                an_tmp = -3.0
-                kapn_tmp = -3.0
-                val_tmp = -3.0
-                u_tmp = -3.0
-
-                an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_ = _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_)#, an_tmp, kapn_tmp, val_tmp, u_tmp)
-
-                _vs_an_[ind] = an_tmp
-                _vs_kapn_[ind] = kapn_tmp
-                _vsn_[ind] = val_tmp
-                _vs_util_[ind] = u_tmp
-
-
-
-                ind = ind+1
-
-            return _num_cached_
-
-        @nb.jit(nopython = True)    
-        def obj_loop_c(*args):
+        def _obj_loop_(*args):
             _an_ = args[0]
             _EV_ = args[1]
             _ia_ = args[2]
-            _ikap_ = args[3]
-            _istate_ = args[4]
+            _istate_ = args[3]
+            _is_c_ = args[4]
 
-            u = get_cstatic(np.array([agrid[_ia_], _an_, epsgrid[is_to_ieps[_istate_]]]))[0]
+            u = 0.0
 
-            return -(u + fem2d_peval(_an_, la*kapgrid[_ikap_], agrid, kapgrid, _EV_[0, 0, :, :, _istate_]) )**(1./(1. - mu)) 
+            if _is_c_:
+                u = get_cstatic(np.array([agrid[_ia_], _an_, epsgrid[is_to_ieps[_istate_]]]))[0]
+            else:
+                u = get_sstatic(np.array([agrid[_ia_], _an_, zgrid[is_to_iz[_istate_]]]))[0]
 
+            return -(u + bh*fem_peval(_an_, agrid,  _EV_[0, :, _istate_])**(1. - mu))**(1./(1. - mu)) 
+            # return -(u + fem_peval(_an_, agrid,  _EV_[0, :, _istate_] ))**(1./(1. - mu)) 
+            
         #epsilon = np.finfo(float).eps
         @nb.jit(nopython = True)
-        def _inner_inner_loop_c_(_an_sup_, _EV_, _ia_, _ikap_ ,_istate_):
+        def _optimize_given_state_(_an_min_, _an_sup_, _EV_, _ia_ ,_istate_, _is_c_):        
 
-             #arguments
-            ax = 0.0
+            #arguments
+            ax = _an_min_
             cx = _an_sup_
             bx = 0.5*(ax + cx)
 
@@ -1308,8 +886,11 @@ class Economy:
             v=bx
             w=v
             x=v
-            e=0.0 
-            fx= obj_loop_c(x,  _EV_, _ia_, _ikap_ ,_istate_) 
+            e=0.0
+
+#            print('is_c = ',_is_c_)
+
+            fx= _obj_loop_(x,  _EV_, _ia_ ,_istate_, _is_c_) 
             fv=fx
             fw=fx
 
@@ -1332,7 +913,7 @@ class Economy:
                     it = itmax
 
                     xmin=x
-                    brent=fx
+                    # brent=fx
 
 
                 if (abs(e) > tol1):
@@ -1379,7 +960,7 @@ class Economy:
                 else:
                     u = x+abs(tol1)*np.sign(d)
 
-                fu = obj_loop_c(u, _EV_, _ia_, _ikap_ ,_istate_)
+                fu = _obj_loop_(u, _EV_, _ia_ ,_istate_, _is_c_)
 
                 if (fu <= fx):
                     if (u >= x):
@@ -1421,11 +1002,8 @@ class Economy:
             return ans
 
         @nb.jit(nopython = True)
-        def _inner_loop_c_with_range_(assigned_indexes, _EV_, _vc_an_, _vcn_, _vc_util_):
+        def _inner_loop_for_assigned_(assigned_indexes, _EV_, _vc_an_, _vcn_, _vc_util_, _is_c_):
 
-        #     for istate in range(num_s):
-        #         for ia in range(num_a):
-        #             for ikap in range(num_kap):
 
             ibegin = assigned_indexes[0]
             iend = assigned_indexes[1]
@@ -1434,77 +1012,86 @@ class Economy:
             for ipar_loop in range(ibegin, iend):
 
                 #we should replace unravel_index_nb with something unflexible one.
-                istate, ia, ikap = unravel_ip(ipar_loop)
+                istate, ia = unravel_ip(ipar_loop)
 
-                an_sup = min(cvals_supan[ia, is_to_ieps[istate]] - 1.e-6, agrid[-1]) #no extrapolation for aprime
+                if _is_c_:
+                    an_sup = min(c_supan[ia, is_to_ieps[istate]] - 1.e-6, agrid[-1]) #no extrapolation for aprime
+                else:
+                    an_sup = min(s_supan[ia, is_to_iz[istate]] - 1.e-6, agrid[-1]) #no extrapolation for aprime
 
-                ans = -10000.
 
-                ans =  _inner_inner_loop_c_(an_sup, _EV_, ia, ikap ,istate)
+                ans =  _optimize_given_state_(chi*xi8, an_sup, _EV_, ia, istate, _is_c_)
 
                 _vc_an_[ind] = ans
-                _vcn_[ind] = -obj_loop_c(ans, _EV_, ia, ikap, istate)
-        #         _vcn_[ind] = -obj_loop_c(ans, _EV_, ia, ikap, istate)
-        # #         _vc_util_[ind] = get_cstatic([agrid[ia], ans, epsgrid[is_to_ieps[istate]]])[0]
-                _vc_util_[ind] = get_cstatic(np.array([agrid[ia], ans, epsgrid[is_to_ieps[istate]]]))[0]
+                _vcn_[ind] = -_obj_loop_(ans, _EV_, ia, istate, _is_c_)
 
+                if _is_c_:
+                    _vc_util_[ind] = get_cstatic(np.array([agrid[ia], ans, epsgrid[is_to_ieps[istate]]]))[0]
+                else:
+                    _vc_util_[ind] = get_sstatic(np.array([agrid[ia], ans, zgrid[is_to_iz[istate]]]))[0]
+                    
                 ind = ind + 1
 
+        # howard interation is commented out for now.
 
-        @nb.jit(nopython = True)
-        def _howard_iteration_(_vmax_, _vcn_, _vsn_, _vc_an_, _vc_util_,_vs_an_, _vs_kapn_, _vs_util_ ,howard_iter):
-            __EV__ = np.zeros((1, 1, num_a, num_kap, num_s))
-            if howard_iter > 0:
+        # @nb.jit(nopython = True)
+        # def _howard_iteration_(_vmax_, _vcn_, _vsn_, _vc_an_, _vc_util_,_vs_an_, _vs_kapn_, _vs_util_ ,howard_iter):
+        #     __EV__ = np.zeros((1, 1, num_a, num_kap, num_s))
+        #     if howard_iter > 0:
 
-                for it_ho in range(howard_iter):
+        #         for it_ho in range(howard_iter):
 
-                    _vmax_[:] = np.fmax(_vcn_, _vsn_)
-        #             _EV_[:] = bh*((_vmax_**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s)) #does not depend on ia or ikap
-                    for ia in range(num_a):
-                        __EV__[0, 0, ia, :, :] = bh*((_vmax_[ia,:,:]**(1. - mu))@(prob.T)).reshape((1, 1, 1, num_kap, num_s)) 
-
-
-                    #EV[:] = bh*((vmaxn**(1. - mu))@(prob.T)).reshape((num_a, num_kap, num_s)) #does not depend on ia or ikap
+        #             _vmax_[:] = np.fmax(_vcn_, _vsn_)
+        # #             _EV_[:] = bh*((_vmax_**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s)) #does not depend on ia or ikap
+        #             for ia in range(num_a):
+        #                 __EV__[0, 0, ia, :, :] = bh*((_vmax_[ia,:,:]**(1. - mu))@(prob.T)).reshape((1, 1, 1, num_kap, num_s)) 
 
 
-                    for istate in range(num_s):
-                        iz = is_to_iz[istate]
-                        z = zgrid[iz]
-                        #EV_c_interp_f = RectBivariateSpline(agrid, kapgrid, EV[0, 0, :, :, istate],kx = 1, ky = 1)
-
-                        for ia in range(num_a):
-                            for ikap in range(num_kap):
-                                #kap = kapgrid[ikap]
-                                #update C
-
-        #                         EV_c = EV_c_interp_f(agrid, la*kapgrid[ikap])
-        #                         obj2 = interp1d(agrid,  EV_c.reshape(num_a), fill_value = 'extrapolate')
-
-                                #obj = lambda x: (get_util_c(np.array([agrid[ia], x, epsgrid[is_to_ieps[istate]]])) + obj2(x))**(1./(1. - mu))
-                                #vcn[ia, ikap, istate] = (vc_util[ia, ikap, istate] + obj2(vc_an[ia, ikap, istate]))**(1./(1. - mu))
-                                _vcn_[ia, ikap, istate] = (_vc_util_[ia, ikap, istate] +                                                          fem2d_peval(_vc_an_[ia, ikap, istate], la*kapgrid[ikap], agrid, kapgrid, __EV__[0,0,:,:,istate])                                                          )**(1./(1. - mu))
+        #             #EV[:] = bh*((vmaxn**(1. - mu))@(prob.T)).reshape((num_a, num_kap, num_s)) #does not depend on ia or ikap
 
 
+        #             for istate in range(num_s):
+        #                 iz = is_to_iz[istate]
+        #                 z = zgrid[iz]
+        #                 #EV_c_interp_f = RectBivariateSpline(agrid, kapgrid, EV[0, 0, :, :, istate],kx = 1, ky = 1)
+
+        #                 for ia in range(num_a):
+        #                     for ikap in range(num_kap):
+        #                         #kap = kapgrid[ikap]
+        #                         #update C
+
+        # #                         EV_c = EV_c_interp_f(agrid, la*kapgrid[ikap])
+        # #                         obj2 = interp1d(agrid,  EV_c.reshape(num_a), fill_value = 'extrapolate')
+
+        #                         #obj = lambda x: (get_util_c(np.array([agrid[ia], x, epsgrid[is_to_ieps[istate]]])) + obj2(x))**(1./(1. - mu))
+        #                         #vcn[ia, ikap, istate] = (vc_util[ia, ikap, istate] + obj2(vc_an[ia, ikap, istate]))**(1./(1. - mu))
+        #                         _vcn_[ia, ikap, istate] = (_vc_util_[ia, ikap, istate] +                                                          fem2d_peval(_vc_an_[ia, ikap, istate], la*kapgrid[ikap], agrid, kapgrid, __EV__[0,0,:,:,istate])                                                          )**(1./(1. - mu))
 
 
-                                #update S
-
-                                #vsn[ia, ikap, istate] = (vs_util[ia, ikap, istate] + EV_interp_f(vs_an[ia, ikap, istate] , vs_kapn[ia, ikap, istate]))**(1./(1. - mu))
-                                _vsn_[ia, ikap, istate] = (_vs_util_[ia, ikap, istate] +                                                          fem2d_peval(_vs_an_[ia, ikap, istate] , _vs_kapn_[ia, ikap, istate], agrid, kapgrid, __EV__[0,0,:,:,istate])                                                          )**(1./(1. - mu))
-
-                #after 
 
 
-        #             vmaxn[:] = np.fmax(vcn, vsn)
+        #                         #update S
+
+        #                         #vsn[ia, ikap, istate] = (vs_util[ia, ikap, istate] + EV_interp_f(vs_an[ia, ikap, istate] , vs_kapn[ia, ikap, istate]))**(1./(1. - mu))
+        #                         _vsn_[ia, ikap, istate] = (_vs_util_[ia, ikap, istate] +                                                          fem2d_peval(_vs_an_[ia, ikap, istate] , _vs_kapn_[ia, ikap, istate], agrid, kapgrid, __EV__[0,0,:,:,istate])                                                          )**(1./(1. - mu))
+
+        #         #after 
 
 
-        ###pararell
+        # #             vmaxn[:] = np.fmax(vcn, vsn)
+
+
+        # ###pararell
 
         @nb.jit(nopython = True)
         def reshape_to_mat(v, val):
             for i in range(len(val)):
-                istate, ia, ikap = unravel_ip(i)
-                v[ia, ikap, istate] = val[i]
+                # istate, ia, ikap = unravel_ip(i)
+                # v[ia, ikap, istate] = val[i]
+                
+                istate, ia = unravel_ip(i)
+                v[ia, istate] = val[i]
+                
 
 
         #initialize variables for VFI            
@@ -1513,7 +1100,6 @@ class Economy:
         vc_util_tmp = np.ones((num_assigned))
 
         vs_an_tmp = np.ones((num_assigned))
-        vs_kapn_tmp = np.ones((num_assigned))
         vsn_tmp = np.ones((num_assigned))
         vs_util_tmp = np.ones((num_assigned))
 
@@ -1527,37 +1113,34 @@ class Economy:
             vc_util_full = np.ones((num_total_state))
 
         vs_an_full = None
-        vs_kapn_full = None
         vsn_full = None
         vs_util_full = None
 
         if rank == 0:
             vs_an_full = np.ones((num_total_state))
-            vs_kapn_full = np.ones((num_total_state))
             vsn_full = np.ones((num_total_state))*(-2.)
             vs_util_full = np.ones((num_total_state))
 
 
-
-        vmax = np.ones((num_a, num_kap, num_s))
-        vmaxn = np.ones((num_a, num_kap, num_s))*100.0
+        #all the dimensions are d
+        vmax = np.ones((num_a, num_s))
+        vmaxn = np.ones(vmax.shape)*100.0
         vmaxm1 = np.ones(vmax.shape)
-        EV = np.ones((1, 1, num_a, num_kap, num_s))
+        EV = np.ones((1,) + vmax.shape)
 
 
-        vc_an = np.zeros((num_a, num_kap, num_s))
-        vcn = np.ones((num_a, num_kap, num_s))*100.0
-        vc_util = np.ones((num_a, num_kap, num_s))*100.0
+        vc_an = np.zeros(vmax.shape)
+        vcn = np.ones(vmax.shape)*100.0
+        vc_util = np.ones(vmax.shape)*100.0
 
 
-        vs_an = np.zeros((num_a, num_kap, num_s))
-        vs_kapn = np.zeros((num_a, num_kap, num_s))
-        vsn = np.ones((num_a, num_kap, num_s))*100.0
-        vs_util = np.ones((num_a, num_kap, num_s))*100.0
+        vs_an = np.zeros(vmax.shape)
+        vsn = np.ones(vmax.shape)*100.0
+        vs_util = np.ones(vmax.shape)*100.0
 
-        max_iter = 50
-        max_howard_iter = 200
-        tol = 1.0e-5
+        max_iter = 1000
+        max_howard_iter = 0
+        tol = 1.0e-8
         dist = 10000.0
         dist_sub = 10000.0
         it = 0
@@ -1570,22 +1153,25 @@ class Economy:
         ###main VFI iteration###
         while it < max_iter and dist > tol:
 
+            
 
-
+            ### calculate EV and Bcast ###
             if rank == 0:
                 it = it + 1
-                EV[:] = bh*((vmax**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s))
+                # EV[:] = bh*((vmax**(1. - mu))@(prob.T)).reshape((1,) + vmax.shape)
+                EV[:] = ((vmax)@(prob.T)).reshape((1,) + vmax.shape)                
 
             comm.Bcast([EV, MPI.DOUBLE])
+            ### end calculate EV and Bcast ###            
 
 
             if rank == 0:
                 tc1 = time.time()
             ###c-loop begins####
-            _inner_loop_c_with_range_(assigned_state_range, EV, vc_an_tmp, vcn_tmp, vc_util_tmp)
-
-
+            _inner_loop_for_assigned_(assigned_state_range, EV, vc_an_tmp, vcn_tmp, vc_util_tmp,  True)
             ###c-loop ends####
+
+            
             if rank == 0:
                 tc2 = time.time()
                 print('time for c = {:f}'.format(tc2 - tc1), end = ', ')
@@ -1593,11 +1179,9 @@ class Economy:
 
             if rank == 0:
                 ts1 = time.time()
+                
             ###s-loop begins####
-
-            num_cached = _inner_loop_s_with_range_(assigned_state_range, EV, vs_an_tmp ,vs_kapn_tmp, vsn_tmp, vs_util_tmp, num_cached)
-
-
+            _inner_loop_for_assigned_(assigned_state_range, EV, vs_an_tmp, vsn_tmp, vs_util_tmp, False)
             ###s-loop ends####
 
             if rank == 0:
@@ -1605,39 +1189,38 @@ class Economy:
                 print('time for s = {:f}'.format(ts2 - ts1), end = ', ')
 
 
-            ####policy function iteration starts#####
+                
 
             comm.Gatherv(vcn_tmp,[vcn_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
             comm.Gatherv(vsn_tmp,[vsn_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
             comm.Gatherv(vc_an_tmp,[vc_an_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
             comm.Gatherv(vs_an_tmp,[vs_an_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
-            comm.Gatherv(vs_kapn_tmp,[vs_kapn_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
             comm.Gatherv(vc_util_tmp,[vc_util_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
             comm.Gatherv(vs_util_tmp,[vs_util_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
 
             if rank == 0:
                 reshape_to_mat(vc_an, vc_an_full)
                 reshape_to_mat(vs_an, vs_an_full)
-                reshape_to_mat(vs_kapn, vs_kapn_full)
                 reshape_to_mat(vc_util, vc_util_full)
                 reshape_to_mat(vs_util, vs_util_full)
                 reshape_to_mat(vcn, vcn_full)
                 reshape_to_mat(vsn, vsn_full)
 
+                ####policy function iteration starts#####
                 if max_howard_iter > 0:
                     #print('Starting Howard Iteration...')
                     t3 = time.time()
 
-                    _howard_iteration_(vmaxn, vcn, vsn, vc_an, vc_util, vs_an, vs_kapn, vs_util ,max_howard_iter)
+                    # _howard_iteration_(vmaxn, vcn, vsn, vc_an, vc_util, vs_an, vs_kapn, vs_util ,max_howard_iter)
 
                 if max_howard_iter > 0:
                     t4 = time.time()
                     print('time for HI = {:f}'.format(t4 - t3), end = ', ') 
 
-            ####policy function iteration ends#####
+                ####policy function iteration ends#####
 
 
-            ####post_calc
+            #### post_calc ####
             if rank == 0:
 
 
@@ -1668,7 +1251,6 @@ class Economy:
         ###Bcast the result###
         comm.Bcast([vc_an, MPI.DOUBLE])
         comm.Bcast([vs_an, MPI.DOUBLE])
-        comm.Bcast([vs_kapn, MPI.DOUBLE])
         comm.Bcast([vcn, MPI.DOUBLE])
         comm.Bcast([vsn, MPI.DOUBLE])
 
@@ -1676,21 +1258,14 @@ class Economy:
         #return policy function
         self.vc_an = vc_an
         self.vs_an = vs_an
-        self.vs_kapn = vs_kapn
         self.vcn = vcn
         self.vsn = vsn
-
-
-
-
-
-
-
 
         
     #def get_obj(w, p, rc, vc_an, vs_an, vs_kapn, vcn, vsn):
     def simulate_model(self):
         Econ = self
+        
 
         #import data from Econ
         alpha = Econ.alpha
@@ -1718,9 +1293,9 @@ class Economy:
         xnb = Econ.xnb
         yn = Econ.yn
         zeta= Econ.zeta
+        lbar = Econ.lbar
 
         agrid = Econ.agrid
-        kapgrid = Econ.kapgrid
         epsgrid = Econ.epsgrid
         zgrid = Econ.zgrid
 
@@ -1730,11 +1305,8 @@ class Economy:
         is_to_ieps = Econ.is_to_ieps
 
         amin = Econ.amin
-        num_suba_inner = Econ.num_suba_inner
-        num_subkap_inner = Econ.num_subkap_inner
 
         num_a = Econ.num_a
-        num_kap = Econ.num_kap
         num_eps = Econ.num_eps
         num_z = Econ.num_z
         num_s = Econ.num_s
@@ -1771,32 +1343,27 @@ class Economy:
 
         vc_an = Econ.vc_an
         vs_an = Econ.vs_an
-        vs_kapn = Econ.vs_kapn
         vcn = Econ.vcn
         vsn = Econ.vsn    
 
 
         #obtain the value function and the discounted expected value function
         vn = np.fmax(vcn, vsn) #the value function
-        EV = bh*((vn**(1. - mu))@(prob.T)) # the discounted expected value function
+        # EV = bh*((vn**(1. - mu))@(prob.T)) # the discounted expected value function
+
+        # ((vmax)@(prob.T)).reshape((1,) + vmax.shape)                
+        EV = vn@(prob.T)
 
 
         @nb.jit(nopython = True)
         def unravel_ip(i_aggregated_state):
 
-            istate, ia, ikap = unravel_index_nb(i_aggregated_state, num_s, num_a, num_kap)
+            istate, ia = unravel_index_nb(i_aggregated_state, num_s, num_a)
             #ia, ikap, istate = unravel_index_nb(i_aggregated_state, num_a, num_kap, num_s)
             return istate, ia, ikap
 
         get_cstatic = Econ.generate_cstatic()
         get_sstatic = Econ.generate_sstatic()
-
-        #do we need this one here...?
-        cvals_supan = np.ones((num_a, num_eps)) * (-2.)
-        for ia, a in enumerate(agrid):
-                for ieps, eps in enumerate(epsgrid):
-
-                    cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun)*w*eps + tran)/(1. + grate)
 
 
         ### start parameters for MPI ###
@@ -1821,20 +1388,17 @@ class Economy:
 
         #data container for each node
         data_a_elem = np.ones((num_pop_assigned, sim_time))*4.0
-        data_kap_elem = np.ones((num_pop_assigned, sim_time))*0.0
         data_i_s_elem = np.ones((num_pop_assigned, sim_time), dtype = int)*7
         data_is_c_elem = np.zeros((num_pop_assigned, sim_time), dtype = bool) 
         data_is_c_elem[0:int(num_pop_assigned*0.7), 0] = True
 
         #main data container
         data_a = None
-        data_kap = None
         data_i_s = None
         data_is_c = None
 
         if rank == 0:
-            data_a = np.zeros((num_total_pop, sim_time))
-            data_kap = np.zeros((num_total_pop, sim_time))
+            data_a = np.ones((num_total_pop, sim_time)) * chi*xi8 #start from the feasible minimum value
             data_i_s = np.zeros((num_total_pop, sim_time), dtype = int)
             data_is_c = np.zeros((num_total_pop, sim_time), dtype = bool) 
 
@@ -1878,13 +1442,12 @@ class Economy:
         del data_i_s_import
 
         @nb.jit(nopython = True)
-        def calc(data_a_, data_kap_, data_i_s_, data_is_c_):
+        def calc(data_a_, data_i_s_, data_is_c_):
 
             for t in range(1, sim_time):
                 for i in range(num_pop_assigned):
 
                     a = data_a_[i, t-1]
-                    kap = data_kap_[i, t-1]
 
                     istate = data_i_s_[i, t]
                     eps = epsgrid[is_to_ieps[istate]]
@@ -1893,18 +1456,15 @@ class Economy:
 
                     #print('period = ', t)
 
-                    an_c = fem2d_peval(a, kap, agrid, kapgrid, vc_an[:,:,istate])
-                    kapn_c = la*kap #fem2d_peval(a, kap, agrid, kapgrid, vc_kapn[:,:,istate]) #or lambda * kap
-                    #kapn_c = fem2d_peval(a, kap, agrid, kapgrid, vc_kapn[:,:,istate])
+                    an_c = femeval(a, agrid, vc_an[:,istate])
+                    an_s = femeval(a, agrid, vs_an[:,istate])
 
-                    an_s = fem2d_peval(a, kap, agrid, kapgrid, vs_an[:,:,istate])
-                    kapn_s = fem2d_peval(a, kap, agrid, kapgrid, vs_kapn[:,:,istate])
-                    #if we dont 'want to allow for extraplation
-                    #kapn_s = max((1. - delkap)/(1.+grate)*kap, fem2d_peval(a, kap, agrid, kapgrid, vs_kapn[:,:,istate]))
+                    # val_c = (get_cstatic([a, an_c, eps])[0]  + fem2d_peval(an_c, kapn_c, agrid, kapgrid, EV[:,:,istate])) **(1./(1.- mu))
+                    # val_s = (get_sstatic([a, an_s, z])[0]    + fem2d_peval(an_s, kapn_s, agrid, kapgrid, EV[:,:,istate])) **(1./(1.- mu))
 
 
-                    val_c = (get_cstatic([a, an_c, eps])[0]  + fem2d_peval(an_c, kapn_c, agrid, kapgrid, EV[:,:,istate])) **(1./(1.- mu))
-                    val_s = (get_sstatic([a, an_s, kap, kapn_s, z])[0]    + fem2d_peval(an_s, kapn_s, agrid, kapgrid, EV[:,:,istate])) **(1./(1.- mu))
+                    val_c = (get_cstatic([a, an_c, eps])[0]  + bh*fem_peval(an_c, agrid, EV[:,istate])**(1.-mu) ) **(1./(1.- mu))
+                    val_s = (get_sstatic([a, an_s, z  ])[0]  + bh*fem_peval(an_s, agrid, EV[:,istate])**(1.-mu) ) **(1./(1.- mu))
 
                     if (val_c == val_s):
                         print('error: val_c == val_s')
@@ -1912,16 +1472,18 @@ class Economy:
                     i_c = val_c > val_s
 
                     an = i_c * an_c + (1. - i_c) * an_s
-                    kapn = i_c * kapn_c + (1. - i_c) * kapn_s
+
+                    if an < chi*xi8:
+                        print('simulation error: an < k_s. t = ', t , ', i = ' , i)
+                        
 
                     data_a_[i, t] = an
-                    data_kap_[i, t] = kapn
                     data_is_c_[i, t] = i_c
 
-        calc(data_a_elem, data_kap_elem, data_i_s_elem, data_is_c_elem)
+        calc(data_a_elem, data_i_s_elem, data_is_c_elem)
 
         comm.Gatherv(data_a_elem, [data_a, all_num_pop_assigned, all_istart_pop_assigned,  MPI.DOUBLE.Create_contiguous(sim_time).Commit() ])
-        comm.Gatherv(data_kap_elem, [data_kap, all_num_pop_assigned, all_istart_pop_assigned,  MPI.DOUBLE.Create_contiguous(sim_time).Commit() ])
+
         comm.Gatherv(data_i_s_elem, [data_i_s, all_num_pop_assigned, all_istart_pop_assigned,  MPI.LONG.Create_contiguous(sim_time).Commit() ])   
         comm.Gatherv(data_is_c_elem, [data_is_c, all_num_pop_assigned, all_istart_pop_assigned,  MPI.BOOL.Create_contiguous(sim_time).Commit() ])
 
@@ -1941,39 +1503,40 @@ class Economy:
                 if data_is_c[i, t]: 
 
                     a = data_a[i, t-1]
-                    kap = data_kap[i, t-1]
                     an = data_a[i, t]
-                    kapn = data_kap[i, t]
                     eps = epsgrid[is_to_ieps[data_i_s[i, t]]]
 
                     data_ss[i,0] = 1.
                     data_ss[i,1] = a
-                    data_ss[i,2] = kap
+                    data_ss[i,2] = np.nan
                     data_ss[i,3] = an
-                    data_ss[i,4] = kapn
+                    data_ss[i,4] = np.nan
                     data_ss[i,5] = eps
                     data_ss[i,6:11] = get_cstatic([a, an, eps])[1:]
+
+                    #return u, cc, cs, cagg, l ,n
 
                 else:
 
                     a = data_a[i, t-1]
-                    kap = data_kap[i, t-1]
                     an = data_a[i, t]
-                    kapn = data_kap[i, t]
                     z = zgrid[is_to_iz[data_i_s[i, t]]]
 
                     data_ss[i,0] = 0.
                     data_ss[i,1] = a
-                    data_ss[i,2] = kap
+                    data_ss[i,2] = np.nan
                     data_ss[i,3] = an
-                    data_ss[i,4] = kapn
+                    data_ss[i,4] = np.nan
                     data_ss[i,5] = z
-                    data_ss[i,6:15] = get_sstatic([a, an, kap, kapn, z])[1:]
+
+                    
+                    data_ss[i,6:15] = get_sstatic([a, an, z])[1:]
+
+                    #return u, cc, cs, cagg, lbar,NAN, NAN, NAN, ks, ys 
         
 
 
         self.data_a = data_a
-        self.data_kap = data_kap
         self.data_i_s = data_i_s
         self.data_is_c = data_is_c
         self.data_ss = data_ss
@@ -1993,7 +1556,6 @@ class Economy:
 
         #load main simlation result
         data_a = self.data_a
-        data_kap = self.data_kap
         data_i_s = self.data_i_s
         data_is_c = self.data_is_c
         data_ss = self.data_ss
@@ -2067,12 +1629,12 @@ class Economy:
         xnb = Econ.xnb
         yn = Econ.yn
         zeta= Econ.zeta
+        lbar = Econ.lbar
 
-        #new!
+
         A = Econ.A
 
         agrid = Econ.agrid
-        kapgrid = Econ.kapgrid
         epsgrid = Econ.epsgrid
         zgrid = Econ.zgrid
 
@@ -2082,11 +1644,8 @@ class Economy:
         is_to_ieps = Econ.is_to_ieps
 
         amin = Econ.amin
-        num_suba_inner = Econ.num_suba_inner
-        num_subkap_inner = Econ.num_subkap_inner
 
         num_a = Econ.num_a
-        num_kap = Econ.num_kap
         num_eps = Econ.num_eps
         num_z = Econ.num_z
         num_s = Econ.num_s
@@ -2121,7 +1680,6 @@ class Economy:
 
         #load main simlation result
         data_a = self.data_a
-        data_kap = self.data_kap
         data_i_s = self.data_i_s
         data_is_c = self.data_is_c
         data_ss = self.data_ss
@@ -2137,33 +1695,26 @@ class Economy:
         if rank == 0:
             print('amax = {}'.format(np.max(data_a)))
             print('amin = {}'.format(np.min(data_a)))
-            print('kapmax = {}'.format(np.max(data_kap)))
-            print('kapmin = {}'.format(np.min(data_kap)))
 
             t = -1
 
             EIc = np.mean(data_ss[:,0])
-    #         Ea = np.mean(data_ss[:,3])
-            Ea = np.mean(data_ss[:,1])
-    #         Ekap = np.mean(data_ss[:,4])
-            Ekap = np.mean(data_ss[:,2])
+            Ea  = np.mean(data_ss[:,1])
             Ecc = np.mean(data_ss[:,6])
             Ecs = np.mean(data_ss[:,7])
-            El = np.mean(data_ss[:,9])
-            En = np.mean(data_ss[:,5]* data_ss[:,10] * (data_ss[:,0]))
-        #     En = np.mean(data_ss[:,10] * (data_ss[:,0]))
-            Ex = np.mean(data_ss[:,12] * (1. - data_ss[:,0]))
+            El  = np.mean(data_ss[:,9])
+            En  = np.mean( np.nan_to_num(data_ss[:,5]* data_ss[:,10] * data_ss[:,0] ) ) #num_to_num replace nan to zero.
+
             Eks = np.mean(data_ss[:,13] * (1. - data_ss[:,0]))
             Eys = np.mean(data_ss[:,14] * (1. - data_ss[:,0]))
-            Emx = np.mean(data_ss[:,10] * (1. - data_ss[:,0]))
-            Emy = np.mean(data_ss[:,11] * (1. - data_ss[:,0]))
 
 
             Ecagg_c = np.mean((data_ss[:,6] + p*data_ss[:,7] )* (data_ss[:,0]))
             Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * (1. - data_ss[:,0]))
 
-            ETn = np.mean((taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0])
-            ETm = np.mean((taum*np.fmax(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - data_ss[:,12], 0.) - tran)*(1. - data_ss[:,0]) )
+            ETn = np.mean( np.nan_to_num( (taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0]) )
+            # ETm = np.mean((taum*np.fmax(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - data_ss[:,12], 0.) - tran)*(1. - data_ss[:,0]) )
+            ETm = np.mean(np.nan_to_num((taum*np.fmax(p*data_ss[:,14] - (rs + delk)*data_ss[:,13], 0.) - tran)*(1. - data_ss[:,0]) )) #do we need fmax?
 
 
             # yc = 1.0 #we can do this by choosing C-corp firm productivity A
@@ -2173,7 +1724,7 @@ class Economy:
 
             yc = A * (kc**theta)*(nc**(1.-theta))
 
-            yc_sub = Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn
+            yc_sub = Ecc + (grate + delk)*(kc + Eks) + g + xnb - yn
 
             Tc = tauc*(Ecc + p*Ecs)
             Tp = taup*(yc - w*nc - delk*kc)
@@ -2231,7 +1782,7 @@ class Economy:
             mom0 = 1. - theta/(rc + delk) * yc/kc
             mom1 = 1. - Ecs/Eys
             mom2 = 1. - (tax_rev - tran - netb)/g
-            mom3 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            mom3 = 1. - (Ecc + (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
             print('')
 
             # print('1-(1-thet)*yc/(E[w*eps*n]) = {}'.format(mom0))
@@ -2239,12 +1790,12 @@ class Economy:
             print('1-E(cs)/E(ys) = {}'.format(mom1))
             #print('1-((1-taud)kc+E(ks)+b)/Ea = {}'.format(1. - (b + (1.- taud)*kc + Eks)/Ea))
             print('1-(tax-tran-netb)/g = {}'.format(mom2))
-            print('1-(Ecc+Ex+(grate+delk)*(kc + Eks)+ g + xnb - yn)/yc = {}'.format(mom3))
+            print('1-(Ecc+(grate+delk)*(kc + Eks)+ g + xnb - yn)/yc = {}'.format(mom3))
 
             print('')
             print('Important Moments')
             print('  Financial assets = {}'.format(Ea))
-            print('  Sweat assets = {}'.format(Ekap))
+            print('  Sweat assets = {}'.format(np.nan))
             print('  Govt. debt = {}'.format(b))
             print('  S-Corp Rental Capital (ks) =  {}'.format(Eks))
             print('  Ratio of C-corp workers = {}'.format(EIc))
@@ -2263,16 +1814,17 @@ class Economy:
             print('S-corporation production:')
             print('  Consumption = {}'.format(Ecs))
             print('  Output = {}'.format(Eys))
-            print('  investment, sweat = {}'.format(Ex))
-            print('  Hours, production = {}'.format(Emy))
-            print('  Hours, sweat = {}'.format(Emx))
-            print('  Sweat equity (kap) = {}'.format(Ekap))
+            print('  investment, sweat = {}'.format(np.nan))
+            print('  Hours, production = {}'.format(np.nan))
+            print('  Hours, sweat = {}'.format(np.nan))
+            print('  Sweat equity (kap) = {}'.format(np.nan))
 
             print('')
             print('National Income Shares (./GDP):')
             print('  C-wages (w*nc) = {}'.format((w*nc)/GDP))
             print('  Rents = {}'.format((rc*kc + rs*Eks)/GDP))
-            print('  Sweat = {}'.format((p*Eys - (rs+delk)*Eks)/GDP))
+            # print('  Sweat = {}'.format((p*Eys - (rs+delk)*Eks)/GDP))
+            print('  Sweat = {}'.format(np.nan)            )
             print('  Deprec. = {}'.format((delk*(kc+Eks))/GDP))
             print('  NonBusiness income = {}'.format(yn/GDP))
 
@@ -2295,8 +1847,8 @@ class Economy:
             print('')
             print('Gini Coefficients:')
             print('  Financial Assets = {}'.format(gini(data_ss[:,1])))
-            print('  Sweats Assets = {}'.format(gini(data_ss[:,2])))
-            print('  C-wages = {}'.format(gini(w*data_ss[:,5]* data_ss[:,10]*data_ss[:,0])))
+            print('  Sweats Assets = {}'.format(np.nan))
+            print('  C-wages = {}'.format(gini(np.nan_to_num(w*data_ss[:,5]* data_ss[:,10]*data_ss[:,0]))) )
             print('  S-income = {}'.format(gini((p*data_ss[:,14] ) * (1. - data_ss[:,0]))))
         #     print('  S-income = {}'.format(gini((p*data_ss[:,14]) * (1. - data_ss[:,0]))))
         #     print('  Total Income'.format('?'))
@@ -2329,6 +1881,7 @@ class Economy:
 
         return
 
+    #needs to be updated
     def calc_sweat_eq_value(self, discount = -1.0):
         Econ = self
 
@@ -2369,9 +1922,9 @@ class Economy:
         xnb = Econ.xnb
         yn = Econ.yn
         zeta= Econ.zeta
-
+        lbar = Econ.lbar
+        
         agrid = Econ.agrid
-        kapgrid = Econ.kapgrid
         epsgrid = Econ.epsgrid
         zgrid = Econ.zgrid
 
@@ -2381,11 +1934,8 @@ class Economy:
         is_to_ieps = Econ.is_to_ieps
 
         amin = Econ.amin
-        num_suba_inner = Econ.num_suba_inner
-        num_subkap_inner = Econ.num_subkap_inner
 
         num_a = Econ.num_a
-        num_kap = Econ.num_kap
         num_eps = Econ.num_eps
         num_z = Econ.num_z
         num_s = Econ.num_s
@@ -2417,7 +1967,6 @@ class Economy:
         #load the value functions
         vc_an = Econ.vc_an
         vs_an = Econ.vs_an
-        vs_kapn = Econ.vs_kapn
         vcn = Econ.vcn
         vsn = Econ.vsn  
 
@@ -2427,7 +1976,8 @@ class Economy:
 
         #obtain the value function and the discounted expected value function
         vn = np.fmax(vcn, vsn) #the value function
-        EV = bh*((vn**(1. - mu))@(prob.T)) # the discounted expected value function
+        # EV = bh*((vn**(1. - mu))@(prob.T)) # the discounted expected value function
+        EV = vn@(prob.T)
 
 
         ###obtain dividends and the stochastic discount factor###
@@ -2452,44 +2002,35 @@ class Economy:
             for ia in range(num_a):
                 a = agrid[ia]
     #         for ia, a in enumerate(agrid):
-                for ikap, kap in enumerate(kapgrid):
+                for ikap, kap in enumerate(kapgrid): #need to be drop since we don't have kappa.
                     for istate in range(num_s):
 
                         an = None
-                        kapn = None
 
-                        an_s = vs_an[ia, ikap, istate]
-                        kapn_s = vs_kapn[ia, ikap, istate]
+                        an_s = vs_an[ia, istate]
                         z = zgrid[is_to_iz[istate]]
 
-                        an_c = vc_an[ia, ikap, istate]
-                        kapn_c = la * kap
+                        an_c = vc_an[ia, istate]
                         eps = epsgrid[is_to_ieps[istate]]
 
-                        ####this does not work actually... infeasible points are possibly chosen due to inter/extra-polation
-                        #val_s = fem2d_peval(an_s, kapn_s, agrid, kapgrid, vsn[:,:, istate])
-                        #val_c = fem2d_peval(an_c, kapn_c, agrid, kapgrid, vcn[:,:, istate])
-
-                        val_c = (get_cstatic([a, an_c, eps])[0]  + fem2d_peval(an_c, kapn_c, agrid, kapgrid, EV[:,:,istate])) **(1./(1.- mu))
-                        val_s = (get_sstatic([a, an_s, kap, kapn_s, z])[0]  + fem2d_peval(an_s, kapn_s, agrid, kapgrid, EV[:,:,istate])) **(1./(1.- mu))
+                        val_c = (get_cstatic([a, an_c, eps])[0]  + bh*fem2d_peval(an_c, agrid, EV[:,istate])**(1.-mu)) **(1./(1.- mu))
+                        val_s = (get_sstatic([a, an_s, z  ])[0]  + bh*fem2d_peval(an_s, agrid, EV[:,istate])**(1.-mu)) **(1./(1.- mu))
 
 
                         if val_s >= val_c:
-                            to_be_s[ia, ikap, istate] = True
+                            to_be_s[ia, istate] = True
 
                             an = an_s
-                            kapn = kapn_s
 
-
-                            u, cc, cs, cagg, l, mx, my, x, ks, ys = get_sstatic([a, an, kap, kapn, z])
+                            u, cc, cs, cagg, l, mx, my, x, ks, ys = get_sstatic([a, an, z])
 
 
                             #print(f'u = {u}')
-                            u_c[ia, ikap, istate] = dc_util(cagg, l)
+                            u_c[ia, istate] = dc_util(cagg, l)
 
-                            profit = p*ys - (rs + delk)*ks - x #this can be nagative
-                            tax = taum * max(profit, 0.)
-                            div = phi * p * ys - x #div related to sweat equity
+                            profit = p*ys - (rs + delk)*ks #this can be nagative
+                            tax = taum * max(profit, 0.) #do we need max?
+                            div = phi * p * ys  #div related to sweat equity
 
 
                             d[ia, ikap, istate] = div
@@ -2497,8 +2038,8 @@ class Economy:
 
 
                         else:
-                            to_be_s[ia, ikap, istate] = False
-                            d[ia, ikap, istate] = 0.0
+                            to_be_s[ia, istate] = False
+                            d[ia, istate] = 0.0
     #                         d_after_tax[ia, ikap, istate] = 0.0
 
                             an = an_c
@@ -2669,10 +2210,10 @@ class Economy:
         vthet = Econ.vthet
         xnb = Econ.xnb
         yn = Econ.yn
-        zeta= Econ.zeta
+        zeta = Econ.zeta
+        lbar = Econ.lbar
 
         agrid = Econ.agrid
-        kapgrid = Econ.kapgrid
         epsgrid = Econ.epsgrid
         zgrid = Econ.zgrid
 
@@ -2682,11 +2223,8 @@ class Economy:
         is_to_ieps = Econ.is_to_ieps
 
         amin = Econ.amin
-        num_suba_inner = Econ.num_suba_inner
-        num_subkap_inner = Econ.num_subkap_inner
 
         num_a = Econ.num_a
-        num_kap = Econ.num_kap
         num_eps = Econ.num_eps
         num_z = Econ.num_z
         num_s = Econ.num_s
@@ -2716,7 +2254,6 @@ class Economy:
         xi12 = Econ.xi12
 
         data_a = Econ.data_a
-        data_kap = Econ.data_kap
         data_i_s = Econ.data_i_s
         data_is_c = Econ.data_is_c
 
@@ -2729,8 +2266,8 @@ class Economy:
 
 
         @nb.jit(nopython = True, parallel = True)
-        def calc_all(data_a_, data_kap_, data_i_s_, data_is_c_,
-                    data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_, data_mx_, data_my_, data_x_, data_ks_, data_ys_):
+        def calc_all(data_a_, data_i_s_, data_is_c_,
+                    data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_,  data_ks_, data_ys_):
 
             for i in nb.prange(num_total_pop):
                 for t in range(1, sim_time):
@@ -2746,23 +2283,21 @@ class Economy:
                     cagg = np.nan
                     l = np.nan
                     n = np.nan
-                    mx = np.nan
-                    my = np.nan
+                    mx = np.nan #redundant
+                    my = np.nan #redundant
+                    x = np.nan #redundant
                     ks = np.nan
                     ys = np.nan
 
                     a = data_a_[i, t-1]
-                    kap = data_kap_[i, t-1]
-
                     an = data_a_[i, t]
-                    kapn = data_kap_[i, t]
 
                     is_c = data_is_c_[i, t]
 
                     if is_c:
                         u, cc, cs, cagg, l ,n = get_cstatic([a, an, eps])
                     else:
-                        u, cc, cs, cagg, l, mx, my, x, ks, ys = get_sstatic([a, an, kap, kapn, z])
+                        u, cc, cs, cagg, l, mx, my, x, ks, ys = get_sstatic([a, an, z])
 
                     data_u_[i, t] = u
                     data_cc_[i, t] = cc
@@ -2770,9 +2305,9 @@ class Economy:
                     data_cagg_[i, t] = cagg
                     data_l_[i, t] = l
                     data_n_[i, t] = n
-                    data_mx_[i, t] = mx
-                    data_my_[i, t] = my
-                    data_x_[i, t] = x
+                    # data_mx_[i, t] = mx
+                    # data_my_[i, t] = my
+                    # data_x_[i, t] = x
                     data_ks_[i, t] = ks
                     data_ys_[i, t] = ys
                     
@@ -2782,62 +2317,62 @@ class Economy:
         data_cagg = np.zeros(data_a.shape)
         data_l = np.zeros(data_a.shape)
         data_n = np.zeros(data_a.shape)
-        data_mx = np.zeros(data_a.shape)
-        data_my = np.zeros(data_a.shape)
-        data_x = np.zeros(data_a.shape)
+        
+        # data_mx = np.zeros(data_a.shape)
+        # data_my = np.zeros(data_a.shape)
+        # data_x = np.zeros(data_a.shape)
+        
         data_ks = np.zeros(data_a.shape)
-        data_ys = np.zeros(data_a.shape)
         data_ys = np.zeros(data_a.shape)
 
         #note that this does not store some impolied values,,,, say div or value of sweat equity
-        calc_all(data_a, data_kap, data_i_s, data_is_c, ##input
-             data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_mx, data_my, data_x, data_ks, data_ys ##output
+        calc_all(data_a, data_i_s, data_is_c, ##input
+             data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_ks, data_ys ##output
             )
 
 
-
-
-        @nb.jit(nopython = True, parallel = True)
-        def calc_val_seq(data_a_, data_kap_, data_i_s_, data_is_c_, sweat_eq_val_ ,data_val_seq_):
+        # for now I haven't programmed thsi part.
+        # @nb.jit(nopython = True, parallel = True)
+        # def calc_val_seq(data_a_, data_kap_, data_i_s_, data_is_c_, sweat_eq_val_ ,data_val_seq_):
         
-            for t in nb.prange(1, sim_time):
-                for i in range(num_total_pop):
+        #     for t in nb.prange(1, sim_time):
+        #         for i in range(num_total_pop):
             
-                    istate = data_i_s_[i, t]
-                    eps = epsgrid[is_to_ieps[istate]]
-                    z = zgrid[is_to_iz[istate]]
+        #             istate = data_i_s_[i, t]
+        #             eps = epsgrid[is_to_ieps[istate]]
+        #             z = zgrid[is_to_iz[istate]]
                 
-                    a = data_a_[i, t-1]
-                    kap = data_kap_[i, t-1]
+        #             a = data_a_[i, t-1]
+        #             kap = data_kap_[i, t-1]
             
-                    an = data_a_[i, t]
-                    kapn = data_kap_[i, t]
+        #             an = data_a_[i, t]
+        #             kapn = data_kap_[i, t]
                 
-                #             is_c = data_is_c_[i, t]
+        #         #             is_c = data_is_c_[i, t]
                 
-                    data_val_seq_[i,t] = fem2d_peval(a, kap, agrid, kapgrid, sweat_eq_val_[:,:,istate])
+        #             data_val_seq_[i,t] = fem2d_peval(a, kap, agrid, kapgrid, sweat_eq_val_[:,:,istate])
                 
-        sweat_div = self.sweat_div
-        sweat_val = self.sweat_val
+        # sweat_div = self.sweat_div
+        # sweat_val = self.sweat_val
 
-        sweat_val_bh = self.calc_sweat_eq_value(discount = self.bh)[1]
-        sweat_val_1gR = self.calc_sweat_eq_value(discount = (1. + self.grate)/(1. + self.rbar))[1]
+        # sweat_val_bh = self.calc_sweat_eq_value(discount = self.bh)[1]
+        # sweat_val_1gR = self.calc_sweat_eq_value(discount = (1. + self.grate)/(1. + self.rbar))[1]
 
-        self.sweat_val_bh = sweat_val_bh
-        self.sweat_val_1gR = sweat_val_1gR
+        # self.sweat_val_bh = sweat_val_bh
+        # self.sweat_val_1gR = sweat_val_1gR
 
 
-        data_div_sweat = np.zeros(data_a.shape)
-        data_val_sweat = np.zeros(data_a.shape)        
-        data_val_sweat_bh = np.zeros(data_a.shape)
-        data_val_sweat_1gR = np.zeros(data_a.shape)        
+        # data_div_sweat = np.zeros(data_a.shape)
+        # data_val_sweat = np.zeros(data_a.shape)        
+        # data_val_sweat_bh = np.zeros(data_a.shape)
+        # data_val_sweat_1gR = np.zeros(data_a.shape)        
 
         
 
-        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_div, data_div_sweat)
-        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val, data_val_sweat)
-        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_bh, data_val_sweat_bh)
-        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_1gR, data_val_sweat_1gR)                
+        # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_div, data_div_sweat)
+        # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val, data_val_sweat)
+        # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_bh, data_val_sweat_bh)
+        # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_1gR, data_val_sweat_1gR)                
 
 
         self.data_u = data_u
@@ -2846,16 +2381,16 @@ class Economy:
         self.data_cagg = data_cagg
         self.data_l = data_l
         self.data_n = data_n
-        self.data_mx = data_mx
-        self.data_my = data_my
-        self.data_x = data_x
+        # self.data_mx = data_mx
+        # self.data_my = data_my
+        # self.data_x = data_x
         self.data_ks = data_ks
         self.data_ys = data_ys
 
-        self.data_div_sweat = data_div_sweat
-        self.data_val_sweat = data_val_sweat        
-        self.data_val_sweat_bh = data_val_sweat_bh
-        self.data_val_sweat_1gR = data_val_sweat_1gR
+        # self.data_div_sweat = data_div_sweat
+        # self.data_val_sweat = data_val_sweat        
+        # self.data_val_sweat_bh = data_val_sweat_bh
+        # self.data_val_sweat_1gR = data_val_sweat_1gR
 
         return
     
@@ -2865,12 +2400,12 @@ class Economy:
 
 
             np.save(dir_path_save + 'agrid', self.agrid)
-            np.save(dir_path_save + 'kapgrid', self.kapgrid)
+            # np.save(dir_path_save + 'kapgrid', self.kapgrid)
             np.save(dir_path_save + 'zgrid', self.zgrid)
             np.save(dir_path_save + 'epsgrid', self.epsgrid)                         
             
             np.save(dir_path_save + 'data_a', self.data_a[:, -100:])
-            np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:])
+            # np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:])
             np.save(dir_path_save + 'data_i_s', self.data_i_s[:, -100:])
             np.save(dir_path_save + 'data_is_c', self.data_is_c[:, -100:])
             np.save(dir_path_save + 'data_u', self.data_u[:, -100:])
@@ -2879,32 +2414,32 @@ class Economy:
             np.save(dir_path_save + 'data_cagg', self.data_cagg[:, -100:])
             np.save(dir_path_save + 'data_l', self.data_l[:, -100:])
             np.save(dir_path_save + 'data_n', self.data_n[:, -100:])
-            np.save(dir_path_save + 'data_mx', self.data_mx[:, -100:])
-            np.save(dir_path_save + 'data_my', self.data_my[:, -100:])
-            np.save(dir_path_save + 'data_x', self.data_x[:, -100:])
+            # np.save(dir_path_save + 'data_mx', self.data_mx[:, -100:])
+            # np.save(dir_path_save + 'data_my', self.data_my[:, -100:])
+            # np.save(dir_path_save + 'data_x', self.data_x[:, -100:])
             np.save(dir_path_save + 'data_ks', self.data_ks[:, -100:])
             np.save(dir_path_save + 'data_ys', self.data_ys[:, -100:])
             np.save(dir_path_save + 'data_ss', self.data_ss)
 
             np.save(dir_path_save + 'vc_an', self.vc_an)
             np.save(dir_path_save + 'vs_an', self.vs_an)
-            np.save(dir_path_save + 'vs_kapn', self.vs_kapn)
+            # np.save(dir_path_save + 'vs_kapn', self.vs_kapn)
             np.save(dir_path_save + 'vcn', self.vcn)
             np.save(dir_path_save + 'vsn', self.vsn)
 
 
           
 
-            np.save(dir_path_save + 'sweat_div', self.sweat_div)
-            np.save(dir_path_save + 'sweat_val', self.sweat_val)
-            np.save(dir_path_save + 'sweat_val_bh', self.sweat_val_bh)            
-            np.save(dir_path_save + 'sweat_val_1gR', self.sweat_val_1gR)
+            # np.save(dir_path_save + 'sweat_div', self.sweat_div)
+            # np.save(dir_path_save + 'sweat_val', self.sweat_val)
+            # np.save(dir_path_save + 'sweat_val_bh', self.sweat_val_bh)            
+            # np.save(dir_path_save + 'sweat_val_1gR', self.sweat_val_1gR)
             
 
-            np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
-            np.save(dir_path_save + 'data_val_sweat', self.data_val_sweat[:, -100:])
-            np.save(dir_path_save + 'data_val_sweat_bh', self.data_val_sweat_bh[:, -100:])
-            np.save(dir_path_save + 'data_val_sweat_1gR', self.data_val_sweat_1gR[:, -100:])                        
+            # np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
+            # np.save(dir_path_save + 'data_val_sweat', self.data_val_sweat[:, -100:])
+            # np.save(dir_path_save + 'data_val_sweat_bh', self.data_val_sweat_bh[:, -100:])
+            # np.save(dir_path_save + 'data_val_sweat_1gR', self.data_val_sweat_1gR[:, -100:])                        
 
             np.save(dir_path_save + 's_age', self.s_age)
             np.save(dir_path_save + 'c_age', self.c_age)
