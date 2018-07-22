@@ -33,7 +33,7 @@ def curvedspace(begin, end, curve, num=100):
     ans[-1] = end #so that the last element is exactly end
     return ans
 
-# agrid2 = curvedspace(0., 200., 2., 40)
+zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 
 
 
@@ -49,8 +49,8 @@ def target(prices):
     print('computing for the case w = {:f}, p = {:f}, rc = {:f}'.format(w_, p_, rc_), end = ', ')
     
     ###set any additional condition/parameters
-    ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy()
+
+    econ = Economy(zgrid = zgrid2, chi = 1.0)
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     

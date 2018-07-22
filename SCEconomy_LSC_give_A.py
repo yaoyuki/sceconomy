@@ -162,7 +162,7 @@ class Economy:
         self.sim_time = 1000
         self.num_total_pop = 100000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
-        self.path_to_data_i_s = './input_data/data_i_s.npy'
+        self.path_to_data_i_s = './input_data/data_i_s'
 
 
 
