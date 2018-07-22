@@ -1392,6 +1392,9 @@ class Economy:
         data_is_c_elem = np.zeros((num_pop_assigned, sim_time), dtype = bool) 
         data_is_c_elem[0:int(num_pop_assigned*0.7), 0] = True
 
+
+        
+
         #main data container
         data_a = None
         data_i_s = None
@@ -1435,11 +1438,15 @@ class Economy:
 
 
         ###load shock data### self.path_to_data_i_s
-        data_i_s_import = np.load(Econ.path_to_data_i_s)
-        #data_i_s_import = np.load('./input_data/data_i_s.npy')
-        data_i_s_elem[:] = data_i_s_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]
+        # data_i_s_import = np.load(Econ.path_to_data_i_s)
+        # data_i_s_import = np.load('./input_data/data_i_s.npy')
+        # data_i_s_elem[:] = data_i_s_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]
+
+        data_i_s_elem[:] = np.load(Econ.path_to_data_i_s + '_' + str(rank) + '.npy')
+
+        
        
-        del data_i_s_import
+        # del data_i_s_import
 
         @nb.jit(nopython = True)
         def calc(data_a_, data_i_s_, data_is_c_):
