@@ -20,7 +20,7 @@ e = Economy(agrid = agrid2, zgrid = zgrid2)
 e.set_prices(w = 3.123668659426386,
              p = 0.995310563254898,
              rc = 0.06327936800968331,
-             pkap = 10.0, #need a good initial guess. later we can always use (6)
+             pkap = 1.5, #need a good initial guess. later we can always use (6)
              kapbar = 1.0)
 
 e.get_policy()
