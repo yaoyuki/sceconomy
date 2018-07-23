@@ -397,7 +397,11 @@ class Economy:
             if c > 0.0 and l > 0.0 and l <= 1.0:
                 return (1. - bh) * (((c**eta)*(l**(1. - eta)))**(1. - mu))
             else:
-                return -np.inf
+                if mu < 1.0:
+                    return -np.inf
+                else:
+                    return np.inf
+                #not way to code mu = 1.0 case
 
         return util
     
