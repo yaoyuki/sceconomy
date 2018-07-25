@@ -33,7 +33,12 @@ def curvedspace(begin, end, curve, num=100):
     ans[-1] = end #so that the last element is exactly end
     return ans
 
+# prob2 = np.load('./input_data/prob_epsz_07_09_01_0075.npy')
+# zgrid2 = np.load('./input_data/zgrid_09_0075.npy') ** 2.
+
+
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
+
 
 
 
@@ -50,7 +55,7 @@ def target(prices):
     
     ###set any additional condition/parameters
 
-    econ = Economy(zgrid = zgrid2, chi = 1.0)
+    econ = Economy(zgrid = zgrid2*0.45)
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
