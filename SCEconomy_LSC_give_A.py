@@ -838,7 +838,7 @@ class Economy:
 
         get_sstatic = Econ.generate_sstatic()                    
         #to solve S-optimization problem, we need the max feasible set for an [amin, sup_an]                    
-        s_supan = np.ones((num_a, num_eps)) * (-2.)
+        s_supan = np.ones((num_a, num_z)) * (-2.)
         
         ks = xi8 
 
@@ -1842,8 +1842,8 @@ class Economy:
             print('National Income Shares (./GDP):')
             print('  C-wages (w*nc) = {}'.format((w*nc)/GDP))
             print('  Rents = {}'.format((rc*kc + rs*Eks)/GDP))
-            # print('  Sweat = {}'.format((p*Eys - (rs+delk)*Eks)/GDP))
-            print('  Sweat = {}'.format(np.nan)            )
+            print('  Sweat = {}'.format((p*Eys - (rs+delk)*Eks)/GDP))
+            # print('  Sweat = {}'.format(np.nan)            )
             print('  Deprec. = {}'.format((delk*(kc+Eks))/GDP))
             print('  NonBusiness income = {}'.format(yn/GDP))
 
@@ -2520,6 +2520,22 @@ def export_econ(econ, name = 'econ.pickle'):
             with open(name, mode='wb') as f: pickle.dump(econ, f)   
 
     return
+
+def split_shock(path_to_data_shock, num_total_pop, size):
+
+
+    m = num_total_pop // size
+    r = num_total_pop % size
+
+    data_shock = np.load(path_to_data_shock + '.npy')
+    
+
+    for rank in range(size):
+        assigned_pop_range =  (rank*m+min(rank,r)), ((rank+1)*m+min(rank+1,r))
+        np.save(path_to_data_shock + '_' + str(rank) + '.npy', data_shock[assigned_pop_range[0]:assigned_pop_range[1], :])
+
+    return
+
 
 
 if __name__ == '__main__':

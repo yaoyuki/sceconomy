@@ -15,14 +15,19 @@ if __name__ == '__main__':
         return ans
 
 
-    ### additional info
-    zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
+    ### LSC PT setup ###
+    input_path = './input_data_LSC_pt/'
 
-    # zgrid2 = np.load('./input_data/zgrid_09_0075.npy') ** 2.0
-    # prob2 = np.load('./input_data/prob_epsz_07_09_01_0075.npy')
+    agrid = np.load(input_path + 'agrid.npy')
+    epsgrid = np.load(input_path + 'epsgrid.npy')
+    zgrid = (np.load(input_path + 'zgrid.npy') ** 2.0) * 0.45
     
+    is_to_iz = np.load(input_path + 'is_to_iz.npy')
+    is_to_ieps = np.load(input_path + 'is_to_ieps.npy')
 
-    
+    prob = np.load(input_path + 'prob.npy')
+
+    path_to_data_i_s = input_path + 'data_i_s'
     ###define additional parameters###
     num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
 
@@ -37,7 +42,9 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(zgrid = zgrid2*0.45,  path_to_data_i_s = './input_data/data_i_s')
+    econ = Economy(agrid = agrid, epsgrid = epsgrid, zgrid = zgrid,
+                   is_to_iz = is_to_iz, is_to_ieps = is_to_ieps, prob = prob,
+                   path_to_data_i_s = path_to_data_i_s)
     
     econ.set_prices(w = w_, p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
