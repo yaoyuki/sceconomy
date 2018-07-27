@@ -33,20 +33,53 @@ def curvedspace(begin, end, curve, num=100):
     ans[-1] = end #so that the last element is exactly end
     return ans
 
+
+
 ### LSC PT setup ###
 input_path = './input_data_LSC_pt/'
 
 agrid = np.load(input_path + 'agrid.npy')
-kapgrid = np.load(input_path + 'kapgrid.npy')
 epsgrid = np.load(input_path + 'epsgrid.npy')
-zgrid = (np.load(input_path + 'zgrid.npy') ** 2.0) * 0.45
 
+    
 is_to_iz = np.load(input_path + 'is_to_iz.npy')
 is_to_ieps = np.load(input_path + 'is_to_ieps.npy')
 
-prob = np.load(input_path + 'prob.npy')
 
-path_to_data_i_s = input_path + 'data_i_s'
+# zgrid = (np.load(input_path + 'zgrid.npy') ** 2.0) * 0.4
+    
+#insert a new zgrid data
+# zgrid_zt = np.load(input_path + 'zgrid_original.npy')
+zgrid_zt = np.load(input_path + 'zgrid_07_0025.npy') 
+zgrid_zp = np.exp([0.0, 0.2])
+zgrid = np.kron(zgrid_zp, zgrid_zt)
+zgrid = (zgrid**2.0) * 0.39
+
+
+# prob = np.load(input_path + 'prob.npy')
+# path_to_data_i_s = input_path + 'data_i_s'
+
+
+#insert new shock sequences
+prob_P = np.array([[1. - 0.5/0.5*(1.-0.99), 0.5/0.5*(1.-0.99)], [1. - 0.99, 0.99]])
+
+prob_T = np.load('./input_data_LSC_pt/prob_07_07_01_0025.npy')
+# prob_T = np.load('./input_data_LSC_pt/prob_T.npy')
+prob = np.kron(prob_P, prob_T)
+
+num_pop = 100_000
+sim_time_full = 2_000
+data_i_s = np.ones((num_pop, sim_time_full), dtype = int)
+data_rand = np.random.rand(num_pop, sim_time_full)
+calc_trans(data_i_s, data_rand, prob)
+
+np.save('./input_data_LSC_pt/data_i_s_tmp.npy', data_i_s[:,-1000:])
+split_shock('./input_data_LSC_pt/data_i_s_tmp', 100_000, 4)
+
+path_to_data_i_s = input_path + 'data_i_s_tmp'
+
+###end LSC PT setup ###
+
 
 
 
@@ -61,9 +94,9 @@ def target(prices):
     print('computing for the case w = {:f}, p = {:f}, rc = {:f}'.format(w_, p_, rc_), end = ', ')
     
     ###set any additional condition/parameters
-    econ = Economy(agrid = agrid, kapgrid = kapgrid, epsgrid = epsgrid, zgrid = zgrid,
+    econ = Economy(agrid = agrid, epsgrid = epsgrid, zgrid = zgrid,
                    is_to_iz = is_to_iz, is_to_ieps = is_to_ieps, prob = prob,
-                   path_to_data_i_s = path_to_data_i_s)
+                   path_to_data_i_s = path_to_data_i_s, alpha = 0.5)
     
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
