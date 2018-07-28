@@ -5,7 +5,9 @@ import numpy as np
 import time
 import subprocess
 ### use modified version of SCEConomy module
-from SCEconomy_LSC_give_A import Economy
+
+from SCEconomy_LSC_give_A import Economy, split_shock
+from markov import calc_trans
 
 import pickle
 
@@ -74,7 +76,7 @@ data_rand = np.random.rand(num_pop, sim_time_full)
 calc_trans(data_i_s, data_rand, prob)
 
 np.save('./input_data_LSC_pt/data_i_s_tmp.npy', data_i_s[:,-1000:])
-split_shock('./input_data_LSC_pt/data_i_s_tmp', 100_000, 4)
+split_shock('./input_data_LSC_pt/data_i_s_tmp', 100_000, int(num_core))
 
 path_to_data_i_s = input_path + 'data_i_s_tmp'
 
@@ -96,7 +98,7 @@ def target(prices):
     ###set any additional condition/parameters
     econ = Economy(agrid = agrid, epsgrid = epsgrid, zgrid = zgrid,
                    is_to_iz = is_to_iz, is_to_ieps = is_to_ieps, prob = prob,
-                   path_to_data_i_s = path_to_data_i_s, alpha = 0.5)
+                   path_to_data_i_s = path_to_data_i_s, alpha = 0.6)
     
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
