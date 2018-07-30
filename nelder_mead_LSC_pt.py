@@ -98,7 +98,7 @@ def target(prices):
     ###set any additional condition/parameters
     econ = Economy(agrid = agrid, epsgrid = epsgrid, zgrid = zgrid,
                    is_to_iz = is_to_iz, is_to_ieps = is_to_ieps, prob = prob,
-                   path_to_data_i_s = path_to_data_i_s, alpha = 0.6)
+                   path_to_data_i_s = path_to_data_i_s, alpha = 0.6, taum = 0.10)
     
 
     econ.set_prices(w = w_, p = p_, rc = rc_)

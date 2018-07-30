@@ -37,7 +37,7 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(zgrid = zgrid2*0.45,  path_to_data_i_s = './input_data/data_i_s')
+    econ = Economy(zgrid = zgrid2*0.45)
     
     econ.set_prices(w = w_, p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
