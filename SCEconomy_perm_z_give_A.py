@@ -118,6 +118,7 @@ class Economy:
         if kapgrid is not None: self.kapgrid = kapgrid
         if epsgrid is not None: self.epsgrid = epsgrid
         if zgrid is not None: self.zgrid = zgrid
+        if zpgrid is not None: self.zpgrid = zpgrid        
         if prob is not None: self.prob = prob
         if is_to_iz is not None: self.is_to_iz = is_to_iz
         if is_to_ieps is not None: self.is_to_ieps = is_to_ieps
@@ -168,12 +169,12 @@ class Economy:
         self.path_to_data_i_s = './input_data/data_i_s.npy'
 
 
-
-
         self.agrid = np.load('./input_data/agrid.npy')
         self.kapgrid = np.load('./input_data/kapgrid.npy')
         self.epsgrid = np.load('./input_data/epsgrid.npy')    
         self.zgrid = np.load('./input_data/zgrid.npy')
+
+        self.zpgrid = np.load('./input_data/zpgrid.npy')
         
 
         #conbined exogenous states
@@ -205,6 +206,9 @@ class Economy:
         self.num_eps = len(self.epsgrid)
         self.num_z = len(self.zgrid)
         self.num_s = self.prob.shape[0]
+
+
+        self.num_zp = len(self.zpgrid)        
 
         
         #implied parameters
@@ -653,6 +657,7 @@ class Economy:
         num_kap = self.num_kap
         num_eps = self.num_eps
         num_z = self.num_z
+        num_zp = self.num_zp
 
         nu = self.nu
         bh = self.bh
@@ -1081,7 +1086,7 @@ class Economy:
 
         ###parameters for MPI###
 
-        num_total_state = num_a * num_kap * num_s
+        num_total_state = num_a * num_kap * num_s * num_zp
         m = num_total_state // size
         r = num_total_state % size
 
@@ -1108,9 +1113,9 @@ class Economy:
         @nb.jit(nopython = True)
         def unravel_ip(i_aggregated_state):
 
-            istate, ia, ikap = unravel_index_nb(i_aggregated_state, num_s, num_a, num_kap)
+            istate, ia, ikap = unravel_index_nb(i_aggregated_state, num_zp, num_s, num_a, num_kap)
             #ia, ikap, istate = unravel_index_nb(i_aggregated_state, num_a, num_kap, num_s)
-            return istate, ia, ikap
+            return izp, istate, ia, ikap
 
         get_cstatic = Econ.generate_cstatic()
 
@@ -1197,7 +1202,7 @@ class Economy:
             for ip in range(assigned_state_range[0], assigned_state_range[1]):
 
                 ind = ip - assigned_state_range[0]
-                istate, ia, ikap = unravel_ip(ip)
+                izp, istate, ia, ikap = unravel_ip(ip)
 
 
                 for ian in range(num_a):
@@ -1205,9 +1210,15 @@ class Economy:
 
                         a = agrid[ia]
                         kap = kapgrid[ikap]
-                        z = zgrid[is_to_iz[istate]]
+                        zt = zgrid[is_to_iz[istate]]
                         an = agrid[ian]
                         kapn = kapgrid[ikapn]
+
+                        zp = zpgrid[izp]
+
+                        z = zt*zp
+
+                        
 
                         state = [a, an, kap, kapn, z]
 
@@ -1238,13 +1249,16 @@ class Economy:
             ikapn_c = ikapn_hi - 1
 
 
-            istate, ia, ikap = unravel_ip(ip)  
+            izp, istate, ia, ikap = unravel_ip(ip)  
             ind = ip - assigned_state_range[0]
 
             a = agrid[ia]
             kap = kapgrid[ikap]
-            z = zgrid[is_to_iz[istate]]
+            zt = zgrid[is_to_iz[istate]]
+            zp = zpgrid[izp]
+            z = zt*zp
 
+            
             subsubagrid = subagrid[ia_to_isuba[ian_lo] : ia_to_isuba[ian_hi]+1]
             subsubkapgrid = subkapgrid[ikap_to_isubkap[ikapn_lo] : ikap_to_isubkap[ikapn_hi]+1]
 
@@ -1335,7 +1349,7 @@ class Economy:
         @nb.jit(nopython = True)    
         def _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_): #, an_tmp, kapn_tmp, _val_tmp_, u_tmp):
 
-            istate, ia, ikap = unravel_ip(ipar_loop)
+            izp, istate, ia, ikap = unravel_ip(ipar_loop)
 
         #     print('ia =, ', ia, ' ikap = ', ikap, ' istate = ', istate)
 
@@ -1343,7 +1357,9 @@ class Economy:
             kap = kapgrid[ikap]
 
             iz = is_to_iz[istate]
-            z = zgrid[iz]
+            zt = zgrid[iz]
+            zp = zpgrid[izp]
+            z = zt*zp
 
             kapn_min = kap*(1. - delkap)/(1. + grate)
 
@@ -1412,7 +1428,7 @@ class Economy:
 
 
                 ans = np.array([0, 0])
-                ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp =                      _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ipar_loop, _num_cached_)    
+                ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp = _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ipar_loop, _num_cached_)    
 
 
                 # move to an adjacent mesh or leave
