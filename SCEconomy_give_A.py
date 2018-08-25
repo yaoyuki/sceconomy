@@ -2143,11 +2143,14 @@ class Economy:
 
 
         ###load shock data### self.path_to_data_i_s
-        data_i_s_import = np.load(Econ.path_to_data_i_s)
-        #data_i_s_import = np.load('./input_data/data_i_s.npy')
-        data_i_s_elem[:] = data_i_s_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]
+        # data_i_s_import = np.load(Econ.path_to_data_i_s)
+        # data_i_s_import = np.load('./input_data/data_i_s.npy')
+        # data_i_s_elem[:] = data_i_s_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]
+        # del data_i_s_import        
+
+        data_i_s_elem[:] = np.load(Econ.path_to_data_i_s + '_' + str(rank) + '.npy')
        
-        del data_i_s_import
+
 
         @nb.jit(nopython = True)
         def calc(data_a_, data_kap_, data_i_s_, data_is_c_):
@@ -3238,6 +3241,22 @@ def export_econ(econ, name = 'econ.pickle'):
             with open(name, mode='wb') as f: pickle.dump(econ, f)   
 
     return
+
+def split_shock(path_to_data_shock, num_total_pop, size):
+
+
+    m = num_total_pop // size
+    r = num_total_pop % size
+
+    data_shock = np.load(path_to_data_shock + '.npy')
+    
+
+    for rank in range(size):
+        assigned_pop_range =  (rank*m+min(rank,r)), ((rank+1)*m+min(rank+1,r))
+        np.save(path_to_data_shock + '_' + str(rank) + '.npy', data_shock[assigned_pop_range[0]:assigned_pop_range[1], :])
+
+    return
+
 
 
 if __name__ == '__main__':
