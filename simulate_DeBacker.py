@@ -21,8 +21,8 @@ if __name__ == '__main__':
 
 
     ### additional info
-    agrid2 = curvedspace(0., 100., 2., 40)
-#    kapgrid2 = curvedspace(0., 2., 2., 20)
+    agrid2 = curvedspace(0., 200., 2., 40)
+    kapgrid2 = curvedspace(0., 2., 2., 20)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
     prob = np.load('./DeBacker/prob_epsz.npy')
@@ -55,9 +55,9 @@ if __name__ == '__main__':
     ###end defining additional parameters###
 
     print('Solving the model with the given prices...')
-    print('Do not simulate more than one models at the same time...')
+    print('Do not simulate more thn one maodels at the same time...')
 
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, prob = prob, path_to_data_i_s = path_to_data_i_s)
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob, path_to_data_i_s = path_to_data_i_s)
     
     econ.set_prices(w = w_, p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)

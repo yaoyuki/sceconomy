@@ -5,7 +5,8 @@ import numpy as np
 import time
 import subprocess
 ### use modified version of SCEConomy module
-from SCEconomy_give_A import Economy
+from SCEconomy_give_A import Economy, split_shock
+from markov import calc_trans
 
 import pickle
 
@@ -16,6 +17,8 @@ num_core = args[4]
 
 print('the code is running with ', num_core, 'cores...')
 prices_init = [w_init, p_init, rc_init]
+
+input_path = './input_data/'
 
 
 nd_log_file = '/home/ec2-user/Dropbox/case0/log.txt'
@@ -33,8 +36,8 @@ def curvedspace(begin, end, curve, num=100):
     ans[-1] = end #so that the last element is exactly end
     return ans
 
-agrid2 = curvedspace(0., 100., 2., 40)
-# kapgrid2 = curvedspace(0., 2., 2., 20)
+agrid2 = curvedspace(0., 200., 2., 40)
+kapgrid2 = curvedspace(0., 2., 2., 20)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
 prob = np.load('./DeBacker/prob_epsz.npy')
@@ -52,7 +55,7 @@ data_rand = np.random.rand(num_pop, sim_time)
 calc_trans(data_i_s, data_rand, prob)
 
 np.save(input_path + 'data_i_s_tmp.npy', data_i_s[:,-1000:])
-split_shock(input_path + 'data_i_s_tmp', 100_000, 4)
+split_shock(input_path + 'data_i_s_tmp', 100_000, int(num_core))
 path_to_data_i_s = input_path + 'data_i_s_tmp'
 
 ### end generate shock sequence ###
@@ -72,7 +75,7 @@ def target(prices):
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, prob = prob, path_to_data_i_s = path_to_data_i_s)
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob, path_to_data_i_s = path_to_data_i_s)
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     

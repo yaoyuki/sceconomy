@@ -20,8 +20,8 @@ print('the code is running with ', num_core, 'cores...')
 prices_init = [w_init, p_init, rc_init]
 
 
-nd_log_file = '/home/ec2-user/Dropbox/case1/log.txt'
-detailed_output_file = '/home/ec2-user/Dropbox/case1/detailed_output.txt'
+nd_log_file = '/home/ec2-user/Dropbox/case1/log_alpha_03_chi_1_taum_02.txt'
+detailed_output_file = '/home/ec2-user/Dropbox/case1/detailed_output_alpha_03_chi_1_taum_02.txt'
 
 f = open(detailed_output_file, 'w')
 f.close()
@@ -98,7 +98,7 @@ def target(prices):
     ###set any additional condition/parameters
     econ = Economy(agrid = agrid, epsgrid = epsgrid, zgrid = zgrid,
                    is_to_iz = is_to_iz, is_to_ieps = is_to_ieps, prob = prob,
-                   path_to_data_i_s = path_to_data_i_s, alpha = 0.6, taum = 0.10)
+                   path_to_data_i_s = path_to_data_i_s, alpha = 0.3, taum = 0.20, chi = 1.0)
     
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
