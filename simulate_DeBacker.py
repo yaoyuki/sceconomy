@@ -17,7 +17,8 @@ if __name__ == '__main__':
         return ans
 
 
-    input_path = './input_data/'    
+    input_path = './input_data/'
+    num_core = 4
 
 
     ### additional info
@@ -40,17 +41,13 @@ if __name__ == '__main__':
     calc_trans(data_i_s, data_rand, prob)
 
     np.save(input_path + 'data_i_s_tmp.npy', data_i_s[:,-1000:])
-    split_shock(input_path + 'data_i_s_tmp', 100_000, 4)
+    split_shock(input_path + 'data_i_s_tmp', 100_000, num_core)
 
     path_to_data_i_s = input_path + 'data_i_s_tmp'
 
-
-
-    ###define additional parameters###
-    num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
-
     # prices
-    w_, p_, rc_ = 3.12366865942638, 0.995310563254898, 0.0632793680096833
+    w_, p_, rc_ = 3.1529396907242555, 0.7362549279771939, 0.06176895413151351
+
     
     ###end defining additional parameters###
 
