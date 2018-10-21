@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import subprocess
-from SCEconomy_give_A import Economy
+from SCEconomy_s_emp import Economy
 
 import pickle
 
@@ -17,12 +17,12 @@ if __name__ == '__main__':
 
     ### additional info
     agrid2 = curvedspace(0., 100., 2., 40)
-#    kapgrid2 = curvedspace(0., 2., 2., 20)
+    # kapgrid2 = curvedspace(0., 2., 2., 20)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
     
-#    agrid2 = curvedspace(0., 100., 2., 40)
-#    kapgrid2 = curvedspace(0., 2.0, 2., 20)
+    # agrid2 = curvedspace(0., 100., 2., 40)
+    # kapgrid2 = curvedspace(0., 2.0, 2., 20)
     
     # zgrid2 = np.load('./input_data/zgrid09.npy') ** 2.
     # prob2 = np.load('./input_data/transition_matrix_0709.npy')
@@ -30,27 +30,27 @@ if __name__ == '__main__':
     # zgrid2 = np.load('./input_data/zgrid_09_0075.npy') ** 2.
     # prob2 = np.load('./input_data/prob_epsz_07_09_01_0075.npy')
 
-    
+
 
     ###define additional parameters###
     num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
 
     # prices
-    w_, p_, rc_ = 3.1216736833017955, 0.9899802236108449, 0.06339512027753003
+    w_, p_, rc_ = 3.123668659426386, 0.995310563254898, 0.06327936800968331
     
     ###end defining additional parameters###
 
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01, ome = 0.72, path_to_data_i_s = './input_data/data_i_s')
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, varpi = 0.0, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(w = w_, p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
 
     t0 = time.time()
 
-    result = subprocess.run(['mpiexec', '-n', str(num_core), 'python', 'SCEconomy_give_A.py'], stdout=subprocess.PIPE)
+    result = subprocess.run(['mpiexec', '-n', str(num_core), 'python', 'SCEconomy_s_emp.py'], stdout=subprocess.PIPE)
     
     t1 = time.time()
 

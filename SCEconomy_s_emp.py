@@ -55,6 +55,7 @@ class Economy:
                  ome = None,
                  phi = None,
                  rho = None,
+                 varpi = None,
                  tauc = None,
                  taud = None,
                  taum = None,
@@ -242,7 +243,7 @@ class Economy:
         self.xi2 = (self.ome + (1. - self.ome) * self.xi1**self.rho)**(1./self.rho)
         self.xi3 = self.eta/(1. - self.eta) * self.ome * (1. - self.taun) / (1. + self.tauc) * self.w / self.xi2**self.rho
         
-        self.xi9 = self.eta / (1. - self.eta) * self.ome * self.p * self.nu * (1. - self.taum) / (1. + self.tauc) * self.xi8**self.alpha / self.xi2**self.rho
+        
 
         self.denom = (1. + self.p*self.xi1)*(1. + self.tauc)
         self.xi4 = (1. + self.rbar) / self.denom
@@ -254,8 +255,11 @@ class Economy:
         self.xi13 = self.varpi * (self.rs + self.delk)/(self.alpha_tilde * self.w)
         self.xi8 = ((self.p*self.alpha_tilde*(self.xi13)**self.varpi)/(self.rs + self.delk) )**(1./(1.-self.alpha_tilde-self.varpi))
 
+        #check xi9
+        self.xi9 = self.eta / (1. - self.eta) * self.ome * self.p * self.nu * (1. - self.taum) / (1. + self.tauc) * self.xi8**self.alpha / self.xi2**self.rho
+
         self.xi14 = (self.xi13**self.varpi)*(self.xi8**(self.alpha_tilde + self.varpi))
-        self.xi10 = (self.p * self.14 - (self.rs + self.delk + self.w * self.xi13)*self.xi8)/self.denom
+        self.xi10 = (self.p * self.xi14 - (self.rs + self.delk + self.w * self.xi13)*self.xi8)*(1. - self.taum)/self.denom
         self.xi12 = (self.vthet/self.veps) * self.p * self.nu_tilde * self.xi14
 
         # the old formula
@@ -361,8 +365,8 @@ class Economy:
 
         
     def generate_util(self):
-        
-        self.declare_vars()
+
+        for variable in self.__dict__ : exec(variable+'= self.'+variable)
         
         
         """
@@ -455,7 +459,7 @@ class Economy:
     
     def generate_dc_util(self):
 
-        self.declare_vars()
+        for variable in self.__dict__ : exec(variable+'= self.'+variable)
 
            
         #this is in the original form
@@ -475,7 +479,7 @@ class Economy:
         
     def generate_cstatic(self):
 
-        self.declare_vars()        
+        for variable in self.__dict__ : exec(variable+'= self.'+variable)        
         
         util = self.generate_util()
             
@@ -517,7 +521,7 @@ class Economy:
     
     def generate_sstatic(self):
         
-        self.declare_vars()                        
+        for variable in self.__dict__ : exec(variable+'= self.'+variable)                        
         util = self.generate_util()
         
         @nb.jit(nopython = True)
@@ -848,7 +852,7 @@ class Economy:
                     
 
                     #feasibility check
-                    if cagg > 0.0 and l > 0.0 and l <= 1.0 and an >= chi * ks:; #the last condition varies across notes,...
+                    if cagg > 0.0 and l > 0.0 and l <= 1.0 and an >= chi * ks: #the last condition varies across notes,...
                         u = util(cagg, l)
 
             return u, cc, cs, cagg, l, mx, my, x, ks, ys, ns
@@ -856,12 +860,11 @@ class Economy:
         return get_sstatic
     
     def get_policy(self):
-        self.declare_vars()
-        
+        for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())
+
         Econ = self
 
         ###parameters for MPI###
-
         num_total_state = num_a * num_kap * num_s
         m = num_total_state // size
         r = num_total_state % size
@@ -1737,7 +1740,8 @@ class Economy:
         
     #def get_obj(w, p, rc, vc_an, vs_an, vs_kapn, vcn, vsn):
     def simulate_model(self):
-        self.declare_vars()
+        for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())
+        
         
         Econ = self
 
@@ -2017,7 +2021,7 @@ class Economy:
         
     def calc_moments(self):
 
-        self.declare_vars()
+        for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())
         Econ = self
 
         #load main simlation result
@@ -2065,7 +2069,7 @@ class Economy:
             Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * (1. - data_ss[:,0]))
 
             ETn = np.mean((taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0])
-            ETm = np.mean((taum*np.fmax(p*data_ss[:,14] - (rs + delk)*data_ss[:,13]; - w*data_ss[:,15] - data_ss[:,12], 0.) - tran)*(1. - data_ss[:,0]) )
+            ETm = np.mean((taum*np.fmax(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - w*data_ss[:,15] - data_ss[:,12], 0.) - tran)*(1. - data_ss[:,0]) )
 
 
             # yc = 1.0 #we can do this by choosing C-corp firm productivity A
@@ -2252,7 +2256,7 @@ class Economy:
 
         """
 
-        self.declare_vars()
+        for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())
 
 
         #load the value functions
@@ -2479,7 +2483,7 @@ class Economy:
         
     def simulate_other_vars(self):
 
-        self.declare_vars()
+        for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())
         Econ = self
 
         data_a = Econ.data_a
