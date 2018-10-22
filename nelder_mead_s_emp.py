@@ -5,7 +5,7 @@ import numpy as np
 import time
 import subprocess
 ### use modified version of SCEConomy module
-from SCEconomy_give_A import Economy
+from SCEconomy_s_emp import Economy
 
 import pickle
 
@@ -53,7 +53,7 @@ def target(prices):
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(rho = 0.01, agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = './input_data/data_i_s', ome = 0.7)
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = './input_data/data_i_s', varpi = 0.1)
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
@@ -61,7 +61,7 @@ def target(prices):
     #with open('econ.pickle', mode='rb') as f: econ = pickle.load(f)
     t0 = time.time()
 
-    result = subprocess.run(['mpiexec', '-n', num_core, 'python', 'SCEconomy_give_A.py'], stdout=subprocess.PIPE)
+    result = subprocess.run(['mpiexec', '-n', num_core, 'python', 'SCEconomy_s_emp.py'], stdout=subprocess.PIPE)
     t1 = time.time()
     
 
