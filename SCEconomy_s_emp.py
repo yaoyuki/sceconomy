@@ -740,12 +740,13 @@ class Economy:
                 maxit = 400
                 val_m = 10000.
                 diff = 1.0e10
+                
                 while it < maxit:
                     it = it + 1
                     if my > 0. and my < 1.0e-6:
                         tol = 1.0e-20
 
-                    val_m = alp1*(1. - my - alp5*my**varrho) - alp2 * my**(1. - nu_tilde/(1. - alpha - varpi)) - alp3*my + alp4*my**varrho  
+                    val_m = alp1*(1. - my - alp5*my**varrho) - alp2 * my**(1. - nu_tilde/(1. - alpha_tilde - varpi)) - alp3*my + alp4*my**varrho  
 
 
                     if sign * val_m > 0.:
@@ -762,7 +763,7 @@ class Economy:
                 #convergence check
                 if it == maxit:
                     print('err: bisection method for my did not converge.')
-                    
+                    # print('it = ', it)
                     # print('tol = ', tol)
                     # print('diff = ', diff)
                     # print('alp1 = ', alp1)
@@ -1742,7 +1743,6 @@ class Economy:
     def simulate_model(self):
         for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())
         
-        
         Econ = self
 
 
@@ -2224,7 +2224,7 @@ class Economy:
 
             for t in range(40):
                 print(' N = ', t, ', with = {:f}'.format((np.mean(np.all(data_is_c[:,-(t+2):-1] == False, axis = 1)) - np.mean(np.all(data_is_c[:,-(t+3):-1] == False, axis = 1)) )/ np.mean(1. - data_ss[:,0]))) 
-            # print(np.mean(data_is_c[:,-21:-1] == False)/np.mean(1. - data_ss[:,0]))
+
 
             print('')
             print('Labor Market')
