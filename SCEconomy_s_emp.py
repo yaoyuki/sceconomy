@@ -763,17 +763,17 @@ class Economy:
                 #convergence check
                 if it == maxit:
                     print('err: bisection method for my did not converge.')
-                    # print('it = ', it)
-                    # print('tol = ', tol)
-                    # print('diff = ', diff)
-                    # print('alp1 = ', alp1)
-                    # print('alp2 = ', alp2)
-                    # print('alp3 = ', alp3)
-                    # print('alp4 = ', alp4)
-                    # print('alp5 = ', alp5)
-                    # print('val_m = ', val_m)
-                    # print('my = ', my)
-                    # print('mymax = ', mymax)
+                    print('it = ', it)
+                    print('tol = ', tol)
+                    print('diff = ', diff)
+                    print('alp1 = ', alp1)
+                    print('alp2 = ', alp2)
+                    print('alp3 = ', alp3)
+                    print('alp4 = ', alp4)
+                    print('alp5 = ', alp5)
+                    print('val_m = ', val_m)
+                    print('my = ', my)
+                    print('mymax = ', mymax)
 
                 ans = my
                 #### bisection end ####
