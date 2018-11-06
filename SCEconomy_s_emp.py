@@ -1,7 +1,7 @@
 
 #import Yuki's library in the directory ./library
 import sys
-sys.path.insert(0, './library/')
+sys.path.insert(0, '/home/yaoxx366/sceconomy/library/')
 
 
 import numpy as np
@@ -859,6 +859,21 @@ class Economy:
             return u, cc, cs, cagg, l, mx, my, x, ks, ys, ns
         
         return get_sstatic
+
+
+    def get_my_job(self):
+
+        for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())        
+
+        num_total_state = num_a * num_kap * num_s
+        m = num_total_state // size
+        r = num_total_state % size
+
+        assigned_state_range = (rank*m+min(rank,r),(rank+1)*m+min(rank+1,r))
+        num_assigned = assigned_state_range[1] - assigned_state_range[0]
+
+        print(f'rank {rank}: from {assigned_state_range[0]} to {assigned_state_range[1]}, assigned = {num_assigned}')
+
     
     def get_policy(self):
         for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())
@@ -1014,11 +1029,12 @@ class Economy:
 
         #define inner loop functions
 
-        @nb.jit(nopython = True)
+        @nb.njit
         def _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ip,
                                      _num_cached_,
                                      _ind_s_util_finemesh_cached_ = ind_s_util_finemesh_cached,
                                      _s_util_finemesh_cached_ = s_util_finemesh_cached):
+            print('test')
 
             ian_c = ian_hi - 1
             ikapn_c = ikapn_hi - 1
@@ -1118,7 +1134,7 @@ class Economy:
             return ans_some[0], ans_some[1], _num_cached_ ,_an_tmp_, _kapn_tmp_, _val_tmp_, _u_tmp_
 
 
-        @nb.jit(nopython = True)    
+        #@nb.jit(nopython = True)    
         def _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_): #, an_tmp, kapn_tmp, _val_tmp_, u_tmp):
 
             istate, ia, ikap = unravel_ip(ipar_loop)
@@ -1291,7 +1307,7 @@ class Economy:
             return an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_
 
 
-        @nb.jit(nopython = True) 
+        #@nb.jit(nopython = True) 
         def _inner_loop_s_with_range_(assigned_indexes, _EV_, _vs_an_, _vs_kapn_, _vsn_, _vs_util_, _num_cached_):
 
 
@@ -1316,7 +1332,8 @@ class Economy:
                 val_tmp = -3.0
                 u_tmp = -3.0
 
-                an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_ = _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_)#, an_tmp, kapn_tmp, val_tmp, u_tmp)
+                an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_ = _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_)
+                #, an_tmp, kapn_tmp, val_tmp, u_tmp)
 
                 _vs_an_[ind] = an_tmp
                 _vs_kapn_[ind] = kapn_tmp
@@ -1613,7 +1630,7 @@ class Economy:
         vsn = np.ones((num_a, num_kap, num_s))*100.0
         vs_util = np.ones((num_a, num_kap, num_s))*100.0
 
-        max_iter = 50
+        max_iter = 20
         max_howard_iter = 200
         tol = 1.0e-5
         dist = 10000.0
@@ -1626,22 +1643,24 @@ class Economy:
             t1 = time.time()
 
         ###main VFI iteration###
+        
         while it < max_iter and dist > tol:
 
 
 
             if rank == 0:
-                it = it + 1
+                it = it + 1 #will be bcast
                 EV[:] = bh*((vmax**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s))
 
             comm.Bcast([EV, MPI.DOUBLE])
-
-
+            
+            
             if rank == 0:
                 tc1 = time.time()
+                
             ###c-loop begins####
-            _inner_loop_c_with_range_(assigned_state_range, EV, vc_an_tmp, vcn_tmp, vc_util_tmp)
-
+            _inner_loop_c_with_range_(assigned_state_range, EV, vc_an_tmp, vcn_tmp, vc_util_tmp)            
+            comm.barrier()
 
             ###c-loop ends####
             if rank == 0:
@@ -1651,9 +1670,20 @@ class Economy:
 
             if rank == 0:
                 ts1 = time.time()
+                
             ###s-loop begins####
 
+            comm.barrier()
+            # print(f'rank = {rank}: start s_loop')
+
+            if rank == 112:
+                pass
             num_cached = _inner_loop_s_with_range_(assigned_state_range, EV, vs_an_tmp ,vs_kapn_tmp, vsn_tmp, vs_util_tmp, num_cached)
+                    
+
+            
+            comm.barrier()
+
 
 
             ###s-loop ends####
@@ -2764,6 +2794,8 @@ def split_shock(path_to_data_shock, num_total_pop, size):
 if __name__ == '__main__':
     econ = import_econ()
 
+
+    # econ.get_my_job()
     econ.get_policy()
     econ.simulate_model()
 
