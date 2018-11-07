@@ -5,7 +5,8 @@ import numpy as np
 import time
 import subprocess
 ### use modified version of SCEConomy module
-from SCEconomy_give_A import Economy
+from SCEconomy_give_A import Economy, split_shock
+
 
 import pickle
 
@@ -18,8 +19,9 @@ print('the code is running with ', num_core, 'cores...')
 prices_init = [w_init, p_init, rc_init]
 
 
-nd_log_file = '/home/ec2-user/Dropbox/case0/log.txt'
-detailed_output_file = '/home/ec2-user/Dropbox/case0/detailed_output.txt'
+nd_log_file = '/home/yaoxx366/sceconomy/log/log.txt'
+detailed_output_file = '/home/yaoxx366/sceconomy/log/detail.txt'
+path_to_data_i_s = '/home/yaoxx366/sceconomy/input_data/data_i_s'
 
 f = open(detailed_output_file, 'w')
 f.close()
@@ -53,7 +55,7 @@ def target(prices):
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(rho = 0.01, agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = './input_data/data_i_s', ome = 0.7)
+    econ = Economy(rho = 0.01, agrid = agrid2, zgrid = zgrid2, path_to_data_i_s =  path_to_data_i_s, ome = 0.7)
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
@@ -101,6 +103,8 @@ def target(prices):
     return dist
 
 if __name__ == '__main__':
+
+    split_shock(path_to_data_i_s, 100_000, int(num_core))
 
     f = open(nd_log_file, 'w')
     f.writelines('w, p, rc, dist, mom0, mom1, mom2, mom3\n')

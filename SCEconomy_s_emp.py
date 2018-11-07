@@ -1032,9 +1032,9 @@ class Economy:
         @nb.njit
         def _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ip,
                                      _num_cached_,
-                                     _ind_s_util_finemesh_cached_ = ind_s_util_finemesh_cached,
-                                     _s_util_finemesh_cached_ = s_util_finemesh_cached):
-            print('test')
+                                     _ind_s_util_finemesh_cached_,
+                                     _s_util_finemesh_cached_):
+
 
             ian_c = ian_hi - 1
             ikapn_c = ikapn_hi - 1
@@ -1087,9 +1087,10 @@ class Economy:
 
                                 s_util_fine_mesh[ian_ind, ikapn_ind] = get_sstatic(state)[0]
 
+
         #                         print('sutil = ', s_util_fine_mesh[ian_ind, ikapn_ind])
 
-                        if _num_cached_ < num_prealloc:
+                        if (_num_cached_ < num_prealloc):
                             ind_new_entry = _num_cached_  #this is inefficient. just keep track using another var.
                             #this should be less than something...
                             _s_util_finemesh_cached_[ind_new_entry, :, :] =                    s_util_fine_mesh[(ia_to_isuba[ian] - ia_to_isuba[ian_lo]):(ia_to_isuba[ian+1]+1 - ia_to_isuba[ian_lo]),                                                          (ikap_to_isubkap[ikapn] - ikap_to_isubkap[ikapn_lo]):(ikap_to_isubkap[ikapn+1]+1 - ikap_to_isubkap[ikapn_lo])]
@@ -1098,7 +1099,7 @@ class Economy:
 
                             _num_cached_ = _num_cached_ +1
 
-        #                     print('cached')
+        #                     Print('cached')
         #                     print(_s_util_finemesh_cached_[ind_new_entry, :, :])
         #                     print('')
         #                     print('fine_mesh')
@@ -1135,7 +1136,7 @@ class Economy:
 
 
         #@nb.jit(nopython = True)    
-        def _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_): #, an_tmp, kapn_tmp, _val_tmp_, u_tmp):
+        def _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_, _ind_s_util_finemesh_cached_, _s_util_finemesh_cached_): #, an_tmp, kapn_tmp, _val_tmp_, u_tmp):
 
             istate, ia, ikap = unravel_ip(ipar_loop)
 
@@ -1214,7 +1215,7 @@ class Economy:
 
 
                 ans = np.array([0, 0])
-                ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp =                      _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ipar_loop, _num_cached_)    
+                ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp =  _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ipar_loop, _num_cached_, _ind_s_util_finemesh_cached_, _s_util_finemesh_cached_)    
 
 
                 # move to an adjacent mesh or leave
@@ -1308,7 +1309,7 @@ class Economy:
 
 
         #@nb.jit(nopython = True) 
-        def _inner_loop_s_with_range_(assigned_indexes, _EV_, _vs_an_, _vs_kapn_, _vsn_, _vs_util_, _num_cached_):
+        def _inner_loop_s_with_range_(assigned_indexes, _EV_, _vs_an_, _vs_kapn_, _vsn_, _vs_util_, _num_cached_, _ind_s_util_finemesh_cached_, _s_util_finemesh_cached_):
 
 
         #     for istate in range(num_s):
@@ -1332,7 +1333,7 @@ class Economy:
                 val_tmp = -3.0
                 u_tmp = -3.0
 
-                an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_ = _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_)
+                an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_ = _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_, _ind_s_util_finemesh_cached_, _s_util_finemesh_cached_)
                 #, an_tmp, kapn_tmp, val_tmp, u_tmp)
 
                 _vs_an_[ind] = an_tmp
@@ -1630,8 +1631,8 @@ class Economy:
         vsn = np.ones((num_a, num_kap, num_s))*100.0
         vs_util = np.ones((num_a, num_kap, num_s))*100.0
 
-        max_iter = 20
-        max_howard_iter = 200
+        max_iter = 50
+        max_howard_iter = 50
         tol = 1.0e-5
         dist = 10000.0
         dist_sub = 10000.0
@@ -1676,9 +1677,7 @@ class Economy:
             comm.barrier()
             # print(f'rank = {rank}: start s_loop')
 
-            if rank == 112:
-                pass
-            num_cached = _inner_loop_s_with_range_(assigned_state_range, EV, vs_an_tmp ,vs_kapn_tmp, vsn_tmp, vs_util_tmp, num_cached)
+            num_cached = _inner_loop_s_with_range_(assigned_state_range, EV, vs_an_tmp ,vs_kapn_tmp, vsn_tmp, vs_util_tmp, num_cached, ind_s_util_finemesh_cached, s_util_finemesh_cached)
                     
 
             

@@ -35,12 +35,12 @@ if __name__ == '__main__':
 
 
     ###define additional parameters###
-    num_core = 119 #crash at 119
-    # num_core = 12*64
+    # num_core = 119 #crash at 119
+    num_core = 10*64
     
 
     # prices
-    w_, p_, rc_ = 3.127597658786753, 1.5519966677904877, 0.06307790562642202
+    w_, p_, rc_ = 3.174938062439759, 1.6495810958078987, 0.06065566627223727
 
     split_shock('./input_data/data_i_s', 100_000, num_core)
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01, ome = 0.5, varpi = 0.1, path_to_data_i_s = './input_data/data_i_s')
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01, ome = 0.1, varpi = 0.1, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(w = w_, p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
@@ -84,6 +84,7 @@ if __name__ == '__main__':
         print('p = ', p, ', p_ = ', p_)
         print('rc = ', rc, ', rc_ = ', rc_)
 
+    
     
     #calc main moments
     econ.calc_moments()

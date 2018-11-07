@@ -1221,6 +1221,7 @@ class Economy:
 
         #prepare for caching data
         num_prealloc = int(num_assigned * (num_a-1)* (num_kap - 1) * 0.05) #assign 5%
+        # print(f'num_pre_alloc = {num_prealloc}')
         num_cached = 0
         ind_s_util_finemesh_cached = np.ones((num_assigned * (num_a-1)* (num_kap - 1)), dtype = int)*(-1)
         s_util_finemesh_cached = np.zeros((num_prealloc, num_suba_inner, num_subkap_inner))
@@ -1827,12 +1828,14 @@ class Economy:
         vsn = np.ones((num_a, num_kap, num_s))*100.0
         vs_util = np.ones((num_a, num_kap, num_s))*100.0
 
-        max_iter = 50
+        max_iter = 20
         max_howard_iter = 200
         tol = 1.0e-5
         dist = 10000.0
         dist_sub = 10000.0
         it = 0
+
+        print(assigned_state_range)
 
         ###record some time###
         t1, t2, t3, t4,tc1, tc2, ts1, ts2 = 0., 0., 0., 0., 0., 0., 0., 0.,
@@ -1847,6 +1850,7 @@ class Economy:
             if rank == 0:
                 it = it + 1
                 EV[:] = bh*((vmax**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s))
+                print('EV:done')
 
             comm.Bcast([EV, MPI.DOUBLE])
 
@@ -1856,6 +1860,8 @@ class Economy:
             ###c-loop begins####
             _inner_loop_c_with_range_(assigned_state_range, EV, vc_an_tmp, vcn_tmp, vc_util_tmp)
 
+            if rank == 0:
+                print('C:done')
 
             ###c-loop ends####
             if rank == 0:
@@ -3260,9 +3266,18 @@ def split_shock(path_to_data_shock, num_total_pop, size):
 
 
 if __name__ == '__main__':
-    econ = import_econ()
 
+    print('importing....')
+    econ = import_econ()
+    print('done importing....')    
+
+    print('solving the model....')
     econ.get_policy()
+    print('done solving the model....')
+
+
+    print('simulating...')
     econ.simulate_model()
+    print('done simulating...')    
 
     export_econ(econ)
