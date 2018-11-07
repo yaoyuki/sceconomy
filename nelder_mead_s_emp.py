@@ -5,7 +5,7 @@ import numpy as np
 import time
 import subprocess
 ### use modified version of SCEConomy module
-from SCEconomy_s_emp import Economy
+from SCEconomy_s_emp import Economy, split_shock
 
 import pickle
 
@@ -18,8 +18,9 @@ print('the code is running with ', num_core, 'cores...')
 prices_init = [w_init, p_init, rc_init]
 
 
-nd_log_file = '/home/ec2-user/Dropbox/case0/log.txt'
-detailed_output_file = '/home/ec2-user/Dropbox/case0/detailed_output.txt'
+nd_log_file = '/home/yaoxx366/sceconomy/log/log.txt'
+detailed_output_file = '/home/yaoxx366/sceconomy/log/detail.txt'
+
 
 f = open(detailed_output_file, 'w')
 f.close()
@@ -38,6 +39,8 @@ agrid2 = curvedspace(0., 100., 2., 40)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 # prob2 = np.load('./input_data/transition_matrix_0709.npy')
 
+path_to_data_i_s = '/home/yaoxx366/sceconomy/input_data/data_i_s'
+
 
 
 
@@ -53,7 +56,7 @@ def target(prices):
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = './input_data/data_i_s', varpi = 0.1)
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.1, varpi = 0.1)
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
@@ -61,7 +64,8 @@ def target(prices):
     #with open('econ.pickle', mode='rb') as f: econ = pickle.load(f)
     t0 = time.time()
 
-    result = subprocess.run(['mpiexec', '-n', num_core, 'python', 'SCEconomy_s_emp.py'], stdout=subprocess.PIPE)
+    #result = subprocess.run(['mpiexec', '-n', num_core, '--machinefile=node.hf' ,'python', 'SCEconomy_s_emp.py'], stdout=subprocess.PIPE)
+    result = subprocess.run(['mpiexec', '-n', num_core ,'python', 'SCEconomy_s_emp.py'], stdout=subprocess.PIPE)
     t1 = time.time()
     
 
@@ -101,6 +105,8 @@ def target(prices):
     return dist
 
 if __name__ == '__main__':
+
+    split_shock(path_to_data_i_s, 100_000, int(num_core))
 
     f = open(nd_log_file, 'w')
     f.writelines('w, p, rc, dist, mom0, mom1, mom2, mom3\n')
