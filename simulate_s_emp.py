@@ -36,9 +36,8 @@ if __name__ == '__main__':
 
     ###define additional parameters###
     # num_core = 119 #crash at 119
-    num_core = 10*64
+    num_core = 12*64
     
-
     # prices
     w_, p_, rc_ = 3.174938062439759, 1.6495810958078987, 0.06065566627223727
 

@@ -56,7 +56,7 @@ def target(prices):
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.1, varpi = 0.1)
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.3, varpi = 0.3)
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     for i in range(5):
         nm_result = minimize(target,prices_init, method='Nelder-Mead')
 
-        if nm_result.fun < 1.0e-3:
+        if nm_result.fun < 1.0e-2: #1.0e-3
             break
         else:
             prices_init = nm_result.x #restart
