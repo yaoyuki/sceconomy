@@ -39,7 +39,8 @@ if __name__ == '__main__':
     num_core = 12*64
     
     # prices
-    w_, p_, rc_ = 3.174938062439759, 1.6495810958078987, 0.06065566627223727
+    w_, p_, rc_ =3.1417940612434894, 2.5998957975002766, 0.06172073962014754
+
 
     split_shock('./input_data/data_i_s', 100_000, num_core)
 
@@ -50,7 +51,7 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01, ome = 0.1, varpi = 0.1, path_to_data_i_s = './input_data/data_i_s')
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01, ome = 0.3, varpi = 0.3, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(w = w_, p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)

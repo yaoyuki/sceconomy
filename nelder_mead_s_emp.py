@@ -56,7 +56,7 @@ def target(prices):
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.3, varpi = 0.3)
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.7, varpi = 0.3)
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     from scipy.optimize import minimize
 
     for i in range(5):
-        nm_result = minimize(target,prices_init, method='Nelder-Mead')
+        nm_result = minimize(target,prices_init, method='Nelder-Mead', tol = 1.0e-2)
 
         if nm_result.fun < 1.0e-2: #1.0e-3
             break
@@ -127,11 +127,33 @@ if __name__ == '__main__':
     f.write(str(nm_result))
     f.close()
 
-
     
     ###calculate other important variables###
     econ = econ_save
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
+
+    e = econ
+
+    print('')
+
+    print('agrid')
+    print(e.agrid)
+
+    print('kapgrid')
+    print(e.kapgrid)
+
+    print('zgrid')
+    print(e.zgrid)
+
+    print('epsgrid')
+    print(e.epsgrid)
+
+    print('prob')
+    print(e.prob)
+
+    e.print_parameters()
+    e.calc_moments()
+
 
     #
     #econ.calc_sweat_eq_value()
