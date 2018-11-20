@@ -36,10 +36,10 @@ if __name__ == '__main__':
 
     ###define additional parameters###
     # num_core = 119 #crash at 119
-    num_core = 12*64
-    
+    num_core = 4    
     # prices
-    w_, p_, rc_ =3.1417940612434894, 2.5998957975002766, 0.06172073962014754
+    w_, p_, rc_ = 3.1417940612434894, 2.5998957975002766, 0.06172073962014754
+
 
 
     split_shock('./input_data/data_i_s', 100_000, num_core)
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     
     t1 = time.time()
 
-    detailed_output_file = '/home/yaoxx366/sceconomy/log/test.txt'
+    detailed_output_file = './log/test.txt'
     f = open(detailed_output_file, 'ab') #use byte mode
     f.write(result.stdout)
     f.close()
@@ -90,10 +90,10 @@ if __name__ == '__main__':
     econ.calc_moments()
     
     # # ###calculate other important variables###
-    # econ.calc_sweat_eq_value()
-    # econ.calc_age()
-    # econ.simulate_other_vars()
-    # econ.save_result()
+    econ.calc_sweat_eq_value()
+    econ.calc_age()
+    econ.simulate_other_vars()
+    econ.save_result()
     
 
     

@@ -2107,6 +2107,10 @@ class Economy:
             #(I think) unless we inpose yc = 1, nc or kc or yc can't be identified from prices,
             nc = En - Ens
             
+            self.nc = nc
+            self.En = En
+            self.Ens = Ens
+            
             kc = ((w/(1. - theta)/A)**(1./theta))*nc
 
             yc = A * (kc**theta)*(nc**(1.-theta))
@@ -2219,6 +2223,9 @@ class Economy:
             print('  NonBusiness income(yn) = {}'.format(yn/GDP))
             print('    Sum = {}'.format((w*nc + rc*kc + rs*Eks+ p*Eys - (rs+delk)*Eks + delk*(kc+Eks) + yn)/GDP))
 
+            self.puresweat = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
+            mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
+
             print('')
             print('National Product Shares (./GDP):')
             print('  Consumption(C) = {}'.format(C/GDP))
@@ -2268,13 +2275,18 @@ class Economy:
             print('  Labor Demand of S(Ens) = {}'.format(Ens))
             print('')
 
+            mom4 = Ens/En
+
             
         mom0 = comm.bcast(mom0)
         mom1 = comm.bcast(mom1)
         mom2 = comm.bcast(mom2)
         mom3 = comm.bcast(mom3)
+        mom4 = comm.bcast(mom4) #Ens/En
+        mom5 = comm.bcast(mom5) #(p*Eys - (rs+delk)*Eks - w*Ens)/GDP
+        
 
-        self.moms = [mom0, mom1, mom2, mom3]
+        self.moms = [mom0, mom1, mom2, mom3, mom4, mom5]
 
         return
 
