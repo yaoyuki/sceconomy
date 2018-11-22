@@ -2067,6 +2067,8 @@ class Economy:
         mom1 = None
         mom2 = None
         mom3 = None
+        mom4 = None
+        mom5 = None
 
         if rank == 0:
             print('amax = {}'.format(np.max(data_a)))
@@ -2816,5 +2818,6 @@ if __name__ == '__main__':
     # econ.get_my_job()
     econ.get_policy()
     econ.simulate_model()
+
 
     export_econ(econ)

@@ -12,10 +12,13 @@ import pickle
 w_init = float(args[1])
 p_init = float(args[2])
 rc_init = float(args[3])
-num_core = args[4]
+varpi_init = float(args[4])
+ome_init = float(args[5])
+
+num_core = args[6]
 
 print('the code is running with ', num_core, 'cores...')
-prices_init = [w_init, p_init, rc_init]
+prices_init = [w_init, p_init, rc_init, varpi_init , ome_init]
 
 
 nd_log_file = '/home/yaoxx366/sceconomy/log/log.txt'
@@ -51,12 +54,16 @@ def target(prices):
     w_ = prices[0]
     p_ = prices[1]
     rc_ = prices[2]
+    varpi_ = prices[3]
+    ome_ = prices[4]
     
-    print('computing for the case w = {:f}, p = {:f}, rc = {:f}'.format(w_, p_, rc_), end = ', ')
+    # print('computing for the case w = {:f}, p = {:f}, rc = {:f}'.format(w_, p_, rc_), end = ', ')
+    print('computing for the case w = {:f}, p = {:f}, rc = {:f}, varpi = {:f}, ome = {:f}'.format(w_, p_, rc_, varpi_, ome_), end = ', ')
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.6, varpi = 0.1)
+    #econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.6, varpi = 0.1)
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = ome_, varpi = varpi_)    
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
@@ -82,21 +89,30 @@ def target(prices):
     w = econ.w
     p = econ.p
     rc = econ.rc
+    varpi = econ.varpi
+    ome = econ.ome
     moms = econ.moms
+
+    # mom4: Ens/En
+    # mom5: (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
+    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0 + (moms[4] - 0.09)**2.0 + (moms[5]-0.3)**2.0) #mom3 should be missing.
+    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0 + (moms[4] - 0.3)**2.0 + (moms[5]-0.09)**2.0) #mom3 should be missing.
     
-    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0)
-    
-    if w != w_ or  p != p_ or  rc != rc_:
+    if w != w_ or  p != p_ or  rc != rc_ or varpi != varpi_ or  ome != ome_:
         print('err: input prices and output prices do not coincide.')
         print('w = ', w, ', w_ = ', w_)
         print('p = ', p, ', p_ = ', p_)
         print('rc = ', rc, ', rc_ = ', rc_)
+        print('varpip = ',varpi, ', varpi_ = ', varpi_)
+        print('ome = ', ome, ', ome_ = ', ome_)
+        
        # return
     
     print('dist = {:f}'.format(dist))
 
     f = open(nd_log_file, 'a')
-    f.writelines(str(w) + ', ' + str(p) + ', ' + str(rc) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + '\n')
+    # f.writelines(str(w) + ', ' + str(p) + ', ' + str(rc) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + '\n')
+    f.writelines(str(w) + ', ' + str(p) + ', ' + str(rc) + ', ' + str(varpi) + ', ' + str(ome) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + ', ' +str(moms[4]) + ', ' + str(moms[5]) + '\n')
     f.close()
     
     if dist < dist_min:
@@ -109,7 +125,8 @@ if __name__ == '__main__':
     split_shock(path_to_data_i_s, 100_000, int(num_core))
 
     f = open(nd_log_file, 'w')
-    f.writelines('w, p, rc, dist, mom0, mom1, mom2, mom3\n')
+    # f.writelines('w, p, rc, dist, mom0, mom1, mom2, mom3\n')
+    f.writelines('w, p, rc, varpi, ome, dist, mom0, mom1, mom2, mom3, mom4, mom5\n')
     f.close()
 
     nm_result = None
@@ -118,7 +135,7 @@ if __name__ == '__main__':
     tol_nm = 1.0e-4
 
     for i in range(5):
-        nm_result = minimize(target,prices_init, method='Nelder-Mead', tol = tol_nm)
+        nm_result = minimize(target, prices_init, method='Nelder-Mead', tol = tol_nm)
 
         if nm_result.fun < tol_nm: #1.0e-3
             break
