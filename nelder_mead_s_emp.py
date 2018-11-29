@@ -14,11 +14,12 @@ p_init = float(args[2])
 rc_init = float(args[3])
 varpi_init = float(args[4])
 ome_init = float(args[5])
+theta_init = float(args[6])
 
-num_core = args[6]
+num_core = args[7]
 
 print('the code is running with ', num_core, 'cores...')
-prices_init = [w_init, p_init, rc_init, varpi_init , ome_init]
+prices_init = [w_init, p_init, rc_init, varpi_init , ome_init, theta_init]
 
 
 nd_log_file = '/home/yaoxx366/sceconomy/log/log.txt'
@@ -56,14 +57,15 @@ def target(prices):
     rc_ = prices[2]
     varpi_ = prices[3]
     ome_ = prices[4]
+    theta_ = prices[5]
     
     # print('computing for the case w = {:f}, p = {:f}, rc = {:f}'.format(w_, p_, rc_), end = ', ')
-    print('computing for the case w = {:f}, p = {:f}, rc = {:f}, varpi = {:f}, ome = {:f}'.format(w_, p_, rc_, varpi_, ome_), end = ', ')
+    print('computing for the case w = {:f}, p = {:f}, rc = {:f}, varpi = {:f}, ome = {:f}, theta = {:f}'.format(w_, p_, rc_, varpi_, ome_, theta_), end = ', ')
     
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
     #econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.6, varpi = 0.1)
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = ome_, varpi = varpi_)    
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = ome_, varpi = varpi_, theta = theta_)    
 
     econ.set_prices(w = w_, p = p_, rc = rc_)
     
@@ -91,20 +93,23 @@ def target(prices):
     rc = econ.rc
     varpi = econ.varpi
     ome = econ.ome
+    theta = econ.theta
     moms = econ.moms
 
     # mom4: Ens/En
     # mom5: (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0 + (moms[4] - 0.09)**2.0 + (moms[5]-0.3)**2.0) #mom3 should be missing.
-    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0 + (moms[4] - 0.3)**2.0 + (moms[5]-0.09)**2.0) #mom3 should be missing.
+    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0 + 100.0*(moms[4] - 0.3)**2.0 +500.* (moms[5]-0.09)**2.0 + 100.*(moms[6] - 0.11)**2.0) #mom3 should be missing.
+    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0 + 100.0*(moms[4] - 0.3)**2.0 +500.* (moms[5]-0.09)**2.0 + 100.*(moms[7] - 0.37)**2.0) #mom3 should be missing.
     
-    if w != w_ or  p != p_ or  rc != rc_ or varpi != varpi_ or  ome != ome_:
+    if w != w_ or  p != p_ or  rc != rc_ or varpi != varpi_  or ome != ome_ or theta != theta_:
         print('err: input prices and output prices do not coincide.')
         print('w = ', w, ', w_ = ', w_)
         print('p = ', p, ', p_ = ', p_)
         print('rc = ', rc, ', rc_ = ', rc_)
         print('varpip = ',varpi, ', varpi_ = ', varpi_)
         print('ome = ', ome, ', ome_ = ', ome_)
+        print('theta = ', theta, ', theta_ = ', theta_)        
         
        # return
     
@@ -112,7 +117,8 @@ def target(prices):
 
     f = open(nd_log_file, 'a')
     # f.writelines(str(w) + ', ' + str(p) + ', ' + str(rc) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + '\n')
-    f.writelines(str(w) + ', ' + str(p) + ', ' + str(rc) + ', ' + str(varpi) + ', ' + str(ome) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + ', ' +str(moms[4]) + ', ' + str(moms[5]) + '\n')
+    f.writelines(str(w) + ', ' + str(p) + ', ' + str(rc) + ', ' + str(varpi) + ', ' + str(ome) + ', ' + str(theta) + ', ' +  str(dist) + ', ' +\
+                 str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + ', ' +str(moms[4]) + ', ' + str(moms[5]) + ', ' + str(moms[6]) + ', ' + str(moms[7]) + '\n')
     f.close()
     
     if dist < dist_min:
@@ -126,7 +132,7 @@ if __name__ == '__main__':
 
     f = open(nd_log_file, 'w')
     # f.writelines('w, p, rc, dist, mom0, mom1, mom2, mom3\n')
-    f.writelines('w, p, rc, varpi, ome, dist, mom0, mom1, mom2, mom3, mom4, mom5\n')
+    f.writelines('w, p, rc, varpi, ome, dist, mom0, mom1, mom2, mom3, mom4, mom5, mom6, mom7\n')
     f.close()
 
     nm_result = None

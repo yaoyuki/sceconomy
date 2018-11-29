@@ -2069,6 +2069,8 @@ class Economy:
         mom3 = None
         mom4 = None
         mom5 = None
+        mom6 = None
+        mom7 = None
 
         if rank == 0:
             print('amax = {}'.format(np.max(data_a)))
@@ -2279,6 +2281,9 @@ class Economy:
 
             mom4 = Ens/En
 
+            mom6 = nc
+            mom7 = 1. - EIc
+
             
         mom0 = comm.bcast(mom0)
         mom1 = comm.bcast(mom1)
@@ -2286,9 +2291,11 @@ class Economy:
         mom3 = comm.bcast(mom3)
         mom4 = comm.bcast(mom4) #Ens/En
         mom5 = comm.bcast(mom5) #(p*Eys - (rs+delk)*Eks - w*Ens)/GDP
+        mom6 = comm.bcast(mom6) #nc
+        mom7 = comm.bcast(mom7) #1. - EIc
         
 
-        self.moms = [mom0, mom1, mom2, mom3, mom4, mom5]
+        self.moms = [mom0, mom1, mom2, mom3, mom4, mom5, mom6, mom7]
 
         return
 

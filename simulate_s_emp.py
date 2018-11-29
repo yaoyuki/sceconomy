@@ -36,9 +36,10 @@ if __name__ == '__main__':
 
     ###define additional parameters###
     # num_core = 119 #crash at 119
-    num_core = 4    
+    num_core = 1024    
     # prices
-    w_, p_, rc_ = 3.1417940612434894, 2.5998957975002766, 0.06172073962014754
+    w_, p_, rc_ =3.13363002, 2.99478141, 0.0617749
+
 
 
 
@@ -51,7 +52,7 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01, ome = 0.3, varpi = 0.3, path_to_data_i_s = './input_data/data_i_s')
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01, ome = 0.53872715, varpi = 0.44293628, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(w = w_, p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
