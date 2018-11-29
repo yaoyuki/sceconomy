@@ -226,14 +226,10 @@ class Economy:
         
         
         
-    def set_prices(self, p, rc):
-        
+    def set_prices(self, w, p, rc):
+        self.w = w
         self.p = p
         self.rc = rc
-
-        #use CRS production function
-        self.kcnc_ratio = ((self.theta * self.A)/(self.rc + self.delk))**(1./(self.theta - 1.))
-        self.w = (1.-self.theta)*self.A*self.kcnc_ratio**self.theta
         
         self.__is_price_set__ = True
         
@@ -311,7 +307,7 @@ class Economy:
             
             print('')
             print('Prices')
-            print('w = ', self.w, ' #implied from CRS production function ')
+            print('w = ', self.w)
             print('p = ', self.p)
             print('rc = ', self.rc)
             print('')
@@ -327,7 +323,6 @@ class Economy:
             print('nu_tilde = ', self.nu_tilde)            
             print('bh (beta_tilde) = ', self.bh)
             print('varrho = ', self.varrho)
-            print('kcnc_ratio = ', self.kcnc_ratio)
 
 
             print('')
