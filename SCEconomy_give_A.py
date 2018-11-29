@@ -218,9 +218,14 @@ class Economy:
         
         
     def set_prices(self, w, p, rc):
-        self.w = w
+
         self.p = p
         self.rc = rc
+
+        #using CRS technology
+        self.kcnc_ratio = ((self.theta * self.A)/(self.delk + self.rc))**(1./(self.theta - 1))
+        self.w = (1. - self.theta)*self.A*self.kcnc_ratio**self.theta
+
         
         self.__is_price_set__ = True
         
@@ -285,7 +290,7 @@ class Economy:
             
             print('')
             print('Prices')
-            print('w = ', self.w)
+            print('w (implied) = ', self.w)
             print('p = ', self.p)
             print('rc = ', self.rc)
             print('')
@@ -298,6 +303,7 @@ class Economy:
             print('nu = ', self.nu)
             print('bh (beta_tilde) = ', self.bh)
             print('varrho = ', self.varrho)
+            print('kcnc_ratio = ', self.kcnc_ratio)            
 
 
             print('')
@@ -2351,6 +2357,7 @@ class Economy:
 
         #new!
         A = Econ.A
+        kcnc_ratio = Econ.kcnc_ratio
 
         agrid = Econ.agrid
         kapgrid = Econ.kapgrid
@@ -2450,11 +2457,12 @@ class Economy:
             # yc = 1.0 #we can do this by choosing C-corp firm productivity A
 
             nc = En
-            kc = ((w/(1. - theta)/A)**(1./theta))*nc
+            kc = nc*kcnc_ratio
+            # kc = ((w/(1. - theta)/A)**(1./theta))*nc
 
-            yc = A * (kc**theta)*(nc**(1.-theta))
+            yc = A * (kc**theta)*(nc**(1.-theta)) #supply
 
-            yc_sub = Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn
+            yc_sub = Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn #demand
 
             Tc = tauc*(Ecc + p*Ecs)
             Tp = taup*(yc - w*nc - delk*kc)
@@ -2504,15 +2512,19 @@ class Economy:
             print('')
             print('Prices')
 
-            print('Wage (w) = {}'.format(w))
+            print('Wage (implied) (w) = {}'.format(w))
             print('S-good price (p) = {}'.format(p))
             print('Interest rate (r_c) = {}'.format(rc))
 
-            # mom0 = 1. - (1. - theta)*yc/(w*nc)
-            mom0 = 1. - theta/(rc + delk) * yc/kc
-            mom1 = 1. - Ecs/Eys
-            mom2 = 1. - (tax_rev - tran - netb)/g
-            mom3 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            
+            
+            # mom0 = 1. - (1. - theta)*yc/(w*nc)            
+            # mom0 = 1. - theta/(rc + delk) * yc/kc
+            
+            mom0 = 1. - Ecs/Eys #corresponds to p
+            mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc #maybe rc
+            mom2 = 1. - (tax_rev - tran - netb)/g # rc
+
             print('')
 
             # print('1-(1-thet)*yc/(E[w*eps*n]) = {}'.format(mom0))

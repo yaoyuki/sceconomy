@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import subprocess
-from SCEconomy_give_A import Economy
+from SCEconomy_give_A import Economy, split_shock
 
 import pickle
 
@@ -36,7 +36,10 @@ if __name__ == '__main__':
     num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
 
     # prices
-    w_, p_, rc_ = 3.1216736833017955, 0.9899802236108449, 0.06339512027753003
+    # w_, p_, rc_ = 3.1216736833017955, 0.9899802236108449, 0.06339512027753003
+    p_, rc_ =  0.9899802236108449, 0.06339512027753003
+    
+    split_shock('./input_data/data_i_s', 100_000, num_core)
     
     ###end defining additional parameters###
 
@@ -45,7 +48,7 @@ if __name__ == '__main__':
 
     econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01, ome = 0.72, path_to_data_i_s = './input_data/data_i_s')
     
-    econ.set_prices(w = w_, p = p_, rc = rc_)
+    econ.set_prices(p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
 
     t0 = time.time()
@@ -57,16 +60,15 @@ if __name__ == '__main__':
     with open('econ.pickle', mode='rb') as f: econ = pickle.load(f)
 
 
-    w = econ.w
     p = econ.p
     rc = econ.rc
     moms = econ.moms
     
-    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0)
+    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0)
+    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0)
     
-    if w != w_ or  p != p_ or  rc != rc_:
+    if p != p_ or  rc != rc_:
         print('err: input prices and output prices do not coincide.')
-        print('w = ', w, ', w_ = ', w_)
         print('p = ', p, ', p_ = ', p_)
         print('rc = ', rc, ', rc_ = ', rc_)
 
