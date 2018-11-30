@@ -1,4 +1,3 @@
-
 #import Yuki's library in the directory ./library
 import sys
 sys.path.insert(0, '/home/yaoxx366/sceconomy/library/')
@@ -226,10 +225,15 @@ class Economy:
         
         
         
-    def set_prices(self, w, p, rc):
-        self.w = w
+    def set_prices(self, p, rc):
+
         self.p = p
         self.rc = rc
+
+        #using CRS technology
+        self.kcnc_ratio = ((self.theta * self.A)/(self.delk + self.rc))**(1./(1. - self.theta))
+        self.w = (1. - self.theta)*self.A*self.kcnc_ratio**self.theta
+        
         
         self.__is_price_set__ = True
         
@@ -237,6 +241,8 @@ class Economy:
         #implied prices
         self.rbar = (1. - self.taup) * self.rc
         self.rs = (1. - self.taup) * self.rc
+
+
 
         #set Xi-s.
         self.xi1 = ((self.ome*self.p)/(1. - self.ome))**(1./(self.rho-1.0))
@@ -2114,8 +2120,11 @@ class Economy:
             self.nc = nc
             self.En = En
             self.Ens = Ens
+
+            kc = nc*kcnc_ratio
             
-            kc = ((w/(1. - theta)/A)**(1./theta))*nc
+            # kc = ((w/(1. - theta)/A)**(1./theta))*nc
+            
 
             yc = A * (kc**theta)*(nc**(1.-theta))
             yc_sub = Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn
@@ -2174,18 +2183,17 @@ class Economy:
 
             #instead of imposing labor market clearing condition
             # mom0 = 1. - (1. - theta)*yc/(w*nc)
-            mom0 = 1. - theta/(rc + delk) * yc/kc 
-            mom1 = 1. - Ecs/Eys
-            mom2 = 1. - (tax_rev - tran - netb)/g
-            mom3 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            mom0 = 1. - Ecs/Eys
+            mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            mom2 = 1. - (tax_rev - tran - netb)/g            
             print('')
 
             # print('1-(1-thet)*yc/(E[w*eps*n]) = {}'.format(mom0))
-            print('1-thet/(rc+delk)*yc/kc = {}'.format(mom0))
-            print('1-E(cs)/E(ys) = {}'.format(mom1))
+            print('1-E(cs)/E(ys) = {}'.format(mom0))
+            print('1-(Ecc+Ex+(grate+delk)*(kc + Eks)+ g + xnb - yn)/yc = {}'.format(mom1))            
             #print('1-((1-taud)kc+E(ks)+b)/Ea = {}'.format(1. - (b + (1.- taud)*kc + Eks)/Ea))
             print('1-(tax-tran-netb)/g = {}'.format(mom2))
-            print('1-(Ecc+Ex+(grate+delk)*(kc + Eks)+ g + xnb - yn)/yc = {}'.format(mom3))
+
 
             print('')
             print('Important Moments')
@@ -2228,7 +2236,7 @@ class Economy:
             print('    Sum = {}'.format((w*nc + rc*kc + rs*Eks+ p*Eys - (rs+delk)*Eks + delk*(kc+Eks) + yn)/GDP))
 
             self.puresweat = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
-            mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
+            
 
             print('')
             print('National Product Shares (./GDP):')
@@ -2279,15 +2287,21 @@ class Economy:
             print('  Labor Demand of S(Ens) = {}'.format(Ens))
             print('')
 
-            mom4 = Ens/En
 
+
+            mom0 = 1. - Ecs/Eys
+            mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            mom2 = 1. - (tax_rev - tran - netb)/g            
+            mom3 = 0.0
+            mom4 = Ens/En
+            mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
             mom6 = nc
             mom7 = 1. - EIc
             
-        mom0 = comm.bcast(mom0) # 1. - theta/(rc + delk) * yc/kc 
-        mom1 = comm.bcast(mom1) # 1. - Ecs/Eys
+        mom0 = comm.bcast(mom0) #1. - Ecs/Eys
+        mom1 = comm.bcast(mom1) # 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
         mom2 = comm.bcast(mom2) # 1. - (tax_rev - tran - netb)/g
-        mom3 = comm.bcast(mom3) # 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+        mom3 = comm.bcast(mom3) # 0.0
         mom4 = comm.bcast(mom4) # Ens/En
         mom5 = comm.bcast(mom5) # (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
         mom6 = comm.bcast(mom6) # nc

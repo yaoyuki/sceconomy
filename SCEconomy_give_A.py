@@ -217,13 +217,13 @@ class Economy:
         
         
         
-    def set_prices(self, w, p, rc):
+    def set_prices(self, p, rc):
 
         self.p = p
         self.rc = rc
 
         #using CRS technology
-        self.kcnc_ratio = ((self.theta * self.A)/(self.delk + self.rc))**(1./(self.theta - 1))
+        self.kcnc_ratio = ((self.theta * self.A)/(self.delk + self.rc))**(1./(1. - self.theta))
         self.w = (1. - self.theta)*self.A*self.kcnc_ratio**self.theta
 
         
@@ -1237,9 +1237,7 @@ class Economy:
 
         @nb.jit(nopython = True)
         def _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ip,
-                                     _num_cached_,
-                                     _ind_s_util_finemesh_cached_ = ind_s_util_finemesh_cached,
-                                     _s_util_finemesh_cached_ = s_util_finemesh_cached):
+                                     _num_cached_, _ind_s_util_finemesh_cached_, _s_util_finemesh_cached_):
 
             ian_c = ian_hi - 1
             ikapn_c = ikapn_hi - 1
@@ -1340,7 +1338,7 @@ class Economy:
 
 
         @nb.jit(nopython = True)    
-        def _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_): #, an_tmp, kapn_tmp, _val_tmp_, u_tmp):
+        def _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_, _ind_s_util_finemesh_cached_, _s_util_finemesh_cached_): #, an_tmp, kapn_tmp, _val_tmp_, u_tmp):
 
             istate, ia, ikap = unravel_ip(ipar_loop)
 
@@ -1419,7 +1417,7 @@ class Economy:
 
 
                 ans = np.array([0, 0])
-                ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp =                      _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ipar_loop, _num_cached_)    
+                ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp = _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ipar_loop, _num_cached_, _ind_s_util_finemesh_cached_, _s_util_finemesh_cached_)    
 
 
                 # move to an adjacent mesh or leave
@@ -1513,7 +1511,7 @@ class Economy:
 
 
         @nb.jit(nopython = True) 
-        def _inner_loop_s_with_range_(assigned_indexes, _EV_, _vs_an_, _vs_kapn_, _vsn_, _vs_util_, _num_cached_):
+        def _inner_loop_s_with_range_(assigned_indexes, _EV_, _vs_an_, _vs_kapn_, _vsn_, _vs_util_, _num_cached_, _ind_s_util_finemesh_cached_, _s_util_finemesh_cached_):
 
 
         #     for istate in range(num_s):
@@ -1537,7 +1535,7 @@ class Economy:
                 val_tmp = -3.0
                 u_tmp = -3.0
 
-                an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_ = _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_)#, an_tmp, kapn_tmp, val_tmp, u_tmp)
+                an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_ = _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_, _ind_s_util_finemesh_cached_, _s_util_finemesh_cached_)#, an_tmp, kapn_tmp, val_tmp, u_tmp)
 
                 _vs_an_[ind] = an_tmp
                 _vs_kapn_[ind] = kapn_tmp
@@ -1879,7 +1877,7 @@ class Economy:
                 ts1 = time.time()
             ###s-loop begins####
 
-            num_cached = _inner_loop_s_with_range_(assigned_state_range, EV, vs_an_tmp ,vs_kapn_tmp, vsn_tmp, vs_util_tmp, num_cached)
+            num_cached = _inner_loop_s_with_range_(assigned_state_range, EV, vs_an_tmp ,vs_kapn_tmp, vsn_tmp, vs_util_tmp, num_cached, ind_s_util_finemesh_cached, s_util_finemesh_cached)
 
 
             ###s-loop ends####
@@ -2420,7 +2418,7 @@ class Economy:
         mom0 = None
         mom1 = None
         mom2 = None
-        mom3 = None
+
 
         if rank == 0:
             print('amax = {}'.format(np.max(data_a)))
@@ -2528,11 +2526,10 @@ class Economy:
             print('')
 
             # print('1-(1-thet)*yc/(E[w*eps*n]) = {}'.format(mom0))
-            print('1-thet/(rc+delk)*yc/kc = {}'.format(mom0))
-            print('1-E(cs)/E(ys) = {}'.format(mom1))
+            print('1-E(cs)/E(ys) = {}'.format(mom0))
             #print('1-((1-taud)kc+E(ks)+b)/Ea = {}'.format(1. - (b + (1.- taud)*kc + Eks)/Ea))
-            print('1-(tax-tran-netb)/g = {}'.format(mom2))
-            print('1-(Ecc+Ex+(grate+delk)*(kc + Eks)+ g + xnb - yn)/yc = {}'.format(mom3))
+            print('1-(Ecc+Ex+(grate+delk)*(kc + Eks)+ g + xnb - yn)/yc = {}'.format(mom1))
+            print('1-(tax-tran-netb)/g = {}'.format(mom2))            
 
             print('')
             print('Important Moments')
@@ -2616,9 +2613,9 @@ class Economy:
         mom0 = comm.bcast(mom0)
         mom1 = comm.bcast(mom1)
         mom2 = comm.bcast(mom2)
-        mom3 = comm.bcast(mom3)
 
-        self.moms = [mom0, mom1, mom2, mom3]
+
+        self.moms = [mom0, mom1, mom2]
 
         return
 

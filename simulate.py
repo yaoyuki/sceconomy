@@ -33,11 +33,12 @@ if __name__ == '__main__':
     
 
     ###define additional parameters###
-    num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
+    num_core = 1024 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
 
     # prices
     # w_, p_, rc_ = 3.1216736833017955, 0.9899802236108449, 0.06339512027753003
-    p_, rc_ =  0.9899802236108449, 0.06339512027753003
+    p_, rc_ = 0.995310563254898, 0.0632793680096833
+
     
     split_shock('./input_data/data_i_s', 100_000, num_core)
     
@@ -46,7 +47,7 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01, ome = 0.72, path_to_data_i_s = './input_data/data_i_s')
+    econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
@@ -76,10 +77,10 @@ if __name__ == '__main__':
     
     econ.calc_moments()
     ###calculate other important variables###
-    econ.calc_sweat_eq_value()
-    econ.calc_age()
-    econ.simulate_other_vars()
-    econ.save_result()
+    # econ.calc_sweat_eq_value()
+    # econ.calc_age()
+    # econ.simulate_other_vars()
+    # econ.save_result()
     
 
     
