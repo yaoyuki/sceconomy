@@ -157,7 +157,6 @@ class Economy:
         self.la       = 0.5 #lambda
         self.mu       = 1.5 
         self.ome      = 0.6 #omega
-        self.upsilon  = 0.5
         self.phi      = 0.15 #nu will be defined as 1. - alpha - nu
         self.upsilon  = 0.5 #this code assumes upsilon < 1.0 for Inada condition(?)
         self.rho      = 0.5
@@ -310,6 +309,7 @@ class Economy:
         print('la = ', self.la)
         print('mu = ', self.mu)
         print('ome = ', self.ome)
+        print('upsilon = ', self.upsilon)        
         print('phi = ', self.phi)
         print('rho = ', self.rho)
         print('varpi = ', self.varpi)
@@ -2117,7 +2117,7 @@ class Economy:
 
         #data container for each node
         data_a_elem = np.ones((num_pop_assigned, sim_time))*4.0
-        data_kap_elem = np.ones((num_pop_assigned, sim_time))*0.01
+        data_kap_elem = np.ones((num_pop_assigned, sim_time))*0.0
         data_i_s_elem = np.ones((num_pop_assigned, sim_time), dtype = int)*7
         data_is_c_elem = np.zeros((num_pop_assigned, sim_time), dtype = bool) 
         data_is_c_elem[0:int(num_pop_assigned*0.7), 0] = True
