@@ -1016,7 +1016,7 @@ class Economy:
 
                 #convergence check
                 if it == maxit:
-                    print('err: bisection method for my did not converge.')
+                    print('err: bisection method for hy did not converge.')
                     # print('it = ', it)
                     # print('tol = ', tol)
                     # print('diff = ', diff)
