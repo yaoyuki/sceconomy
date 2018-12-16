@@ -279,7 +279,7 @@ class Economy:
         # ((self.p*self.alpha_tilde*(self.xi13)**self.varpi)/(self.rs + self.delk) )**(1./(1.-self.alpha_tilde-self.varpi))
 
 
-        self.xi9 = (self.eta*self.w*self.nu*(1.-self.varpi)*(1.-self.taum)*self.p*self.xi8**self.alpha)/((1.-self.eta)*(1+self.tauc)*self.xi2**self.rho)
+        self.xi9 = (self.eta*self.ome*self.nu*(1.-self.varpi)*(1.-self.taum)*self.p*self.xi8**self.alpha)/((1.-self.eta)*(1.+self.tauc)*self.xi2**self.rho)
         # self.eta / (1. - self.eta) * self.ome * self.p * self.nu * (1. - self.taum) / (1. + self.tauc) * self.xi8**self.alpha / self.xi2**self.rho
 
 
@@ -845,6 +845,11 @@ class Economy:
                 alp2 = vthet*(xi4*a - xi5*an + xi6)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet)
                 alp3 = vthet/(veps*denom)
 
+                # alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc) * (1. - taum)
+                # alp2 = vthet*(xi4*a - xi5*an + xi6)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet)
+                # alp3 = vthet/(veps*((1. + p*xi1)*(1. + tauc))) * (1. - taum)
+
+                
                 if alp2 == alp3:
                     print('warning: alp2 == alp3')
                     return 0.0, 0.0, 1.0 #in this case, utility must be -inf
@@ -872,7 +877,7 @@ class Economy:
                 it = 0
                 maxit = 100 #scipy's newton use maxit = 50
                 tol = 1.0e-15
-                dist = 10000
+                dist = 10000.
 
                 while it < maxit:
                     it = it + 1
@@ -895,6 +900,7 @@ class Economy:
                 
 
                 ans = mx    
+
                 ###end newton method
 
                 return 0., 0., ans
@@ -911,7 +917,7 @@ class Economy:
                 alp2 = (xi4*a - xi5*an + xi6)/((z*kap**phi)**(1./(1.- alpha)))
                 alp3 = xi10
                 alp5 = (((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))/(xi12 * (z*kap**phi)**(1./(1.-alpha))))**(vthet/(vthet + veps))
-                alp4 = xi11 * xi12 * alp5;
+                alp4 = xi11 * xi12 * alp5
                 alp6 = varpi*(xi13**upsilon)*(xi8*(z*kap**phi)**(1./(1.-alpha)))**(upsilon/(1.-upsilon))
 
                 h_lbar = get_h_lbar(alp6)
