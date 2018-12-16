@@ -36,9 +36,9 @@ if __name__ == '__main__':
 
     ###define additional parameters###
     # num_core = 119 #crash at 119
-    num_core = 1024    
+    num_core = 960    
     # prices
-    p_, rc_ = 2.929376148720982, 0.063
+    p_, rc_ = 2.0, 0.063
 
     split_shock('./input_data/data_i_s', 100_000, num_core)
 

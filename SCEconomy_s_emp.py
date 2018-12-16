@@ -885,7 +885,7 @@ class Economy:
                     return alp5*mymax**varrho, mymax
 
                 if obj_find_my(mymax, alp1, alp2, alp3, alp4, alp5) > 0:
-                    print('my does not exist')
+                    # print('my does not exist')
                     return -1., -1.
 
 
