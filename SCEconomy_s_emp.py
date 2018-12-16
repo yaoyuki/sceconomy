@@ -151,7 +151,7 @@ class Economy:
         self.ome      = 0.6 #omega
         self.phi      = 0.15 
         self.rho      = 0.5
-        self.varpi    = 0.0
+        self.varpi    = 0.2
         self.tauc     = 0.06
         self.taud     = 0.14
         self.taum     = 0.20
@@ -210,7 +210,7 @@ class Economy:
 
         
         #implied parameters
-        self.nu = 1. - self.alpha - self.phi;
+        self.nu = 1. - self.alpha - self.phi
         
         self.alpha_tilde = self.alpha*(1. - self.varpi)
         self.phi_tilde = self.phi*(1. - self.varpi)
@@ -259,12 +259,15 @@ class Economy:
         self.xi11 = (1. - self.taum) / self.denom
 
         self.xi13 = self.varpi * (self.rs + self.delk)/(self.alpha_tilde * self.w)
-        self.xi8 = ((self.p*self.alpha_tilde*(self.xi13)**self.varpi)/(self.rs + self.delk) )**(1./(1.-self.alpha_tilde-self.varpi))
+        self.xi8 = ((self.p*self.alpha_tilde*(self.xi13**self.varpi))/(self.rs + self.delk) )**(1./(1.-self.alpha_tilde-self.varpi))
 
         #check xi9
-        self.xi9 = self.eta / (1. - self.eta) * self.ome * self.p * self.nu * (1. - self.taum) / (1. + self.tauc) * self.xi8**self.alpha / self.xi2**self.rho
+        #this is wrong
+        # self.xi9 = self.eta / (1. - self.eta) * self.ome * self.p * self.nu * (1. - self.taum) / (1. + self.tauc) * self.xi8**self.alpha / self.xi2**self.rho
+        self.xi14 = (self.xi13**self.varpi)*(self.xi8**(self.alpha_tilde + self.varpi))        
+        self.xi9 = self.eta / (1. - self.eta) * self.ome * self.p * self.nu_tilde * (1. - self.taum) / (1. + self.tauc) * self.xi14 / self.xi2**self.rho
 
-        self.xi14 = (self.xi13**self.varpi)*(self.xi8**(self.alpha_tilde + self.varpi))
+
         self.xi10 = (self.p * self.xi14 - (self.rs + self.delk + self.w * self.xi13)*self.xi8)*(1. - self.taum)/self.denom
         self.xi12 = (self.vthet/self.veps) * self.p * self.nu_tilde * self.xi14
 
@@ -372,10 +375,10 @@ class Economy:
         
     def generate_util(self):
 
-        for variable in self.__dict__ : exec(variable+'= self.'+variable)
+#        for variable in self.__dict__ : exec(variable+'= self.'+variable)
         
         
-        """
+        
         alpha = self.alpha
         beta = self.beta
         chi = self.chi
@@ -452,7 +455,7 @@ class Economy:
         xi14 = self.xi14
 
         
-        """
+        
         
         @nb.jit(nopython = True)
         def util(c, l):
@@ -485,7 +488,83 @@ class Economy:
         
     def generate_cstatic(self):
 
-        for variable in self.__dict__ : exec(variable+'= self.'+variable)        
+        # for variable in self.__dict__ : exec(variable+'= self.'+variable)
+
+        alpha = self.alpha
+        beta = self.beta
+        chi = self.chi
+        delk = self.delk
+        delkap = self.delkap
+        eta = self.eta
+        g = self.g
+        grate = self.grate
+        la = self.la
+        mu = self.mu
+        ome = self.ome
+        phi = self.phi
+        rho = self.rho
+        varpi = self.varpi
+        tauc = self.tauc
+        taud = self.taud
+        taum = self.taum
+        taun = self.taun
+        taup = self.taup
+        theta = self.theta
+        tran = self.tran
+        veps = self.veps
+        vthet = self.vthet
+        xnb = self.xnb
+        yn = self.yn
+        zeta= self.zeta
+
+        agrid = self.agrid
+        kapgrid = self.kapgrid
+        epsgrid = self.epsgrid
+        zgrid = self.zgrid
+
+        prob = self.prob
+
+        is_to_iz = self.is_to_iz
+        is_to_ieps = self.is_to_ieps
+
+        amin = self.amin
+        num_suba_inner = self.num_suba_inner
+        num_subkap_inne = self.num_subkap_inner
+
+        num_a = self.num_a
+        num_kap = self.num_kap
+        num_eps = self.num_eps
+        num_z = self.num_z
+
+        nu = self.nu
+        alpha_tilde = self.alpha_tilde
+        phi_tilde = self.phi_tilde
+        nu_tilde = self.nu_tilde
+        bh = self.bh
+        varrho = self.varrho
+
+        w = self.w
+        p = self.p
+        rc = self.rc
+
+        rbar = self.rbar
+        rs = self.rs
+
+        xi1 = self.xi1
+        xi2 = self.xi2
+        xi3 = self.xi3
+        xi4 = self.xi4
+        xi5 = self.xi5
+        xi6 = self.xi6
+        xi7 = self.xi7
+        xi8 = self.xi8
+        xi9 = self.xi9
+        xi10 = self.xi10
+        xi11 = self.xi11
+        xi12 = self.xi12
+        xi13 = self.xi13
+        xi14 = self.xi14
+        
         
         util = self.generate_util()
             
@@ -527,7 +606,83 @@ class Economy:
     
     def generate_sstatic(self):
         
-        for variable in self.__dict__ : exec(variable+'= self.'+variable)                        
+        # for variable in self.__dict__ : exec(variable+'= self.'+variable)
+        alpha = self.alpha
+        beta = self.beta
+        chi = self.chi
+        delk = self.delk
+        delkap = self.delkap
+        eta = self.eta
+        g = self.g
+        grate = self.grate
+        la = self.la
+        mu = self.mu
+        ome = self.ome
+        phi = self.phi
+        rho = self.rho
+        varpi = self.varpi
+        tauc = self.tauc
+        taud = self.taud
+        taum = self.taum
+        taun = self.taun
+        taup = self.taup
+        theta = self.theta
+        tran = self.tran
+        veps = self.veps
+        vthet = self.vthet
+        xnb = self.xnb
+        yn = self.yn
+        zeta= self.zeta
+
+        agrid = self.agrid
+        kapgrid = self.kapgrid
+        epsgrid = self.epsgrid
+        zgrid = self.zgrid
+
+        prob = self.prob
+
+        is_to_iz = self.is_to_iz
+        is_to_ieps = self.is_to_ieps
+
+        amin = self.amin
+        num_suba_inner = self.num_suba_inner
+        num_subkap_inne = self.num_subkap_inner
+
+        num_a = self.num_a
+        num_kap = self.num_kap
+        num_eps = self.num_eps
+        num_z = self.num_z
+
+        nu = self.nu
+        alpha_tilde = self.alpha_tilde
+        phi_tilde = self.phi_tilde
+        nu_tilde = self.nu_tilde
+        bh = self.bh
+        varrho = self.varrho
+
+        w = self.w
+        p = self.p
+        rc = self.rc
+
+        rbar = self.rbar
+        rs = self.rs
+
+        denom = self.denom
+        xi1 = self.xi1
+        xi2 = self.xi2
+        xi3 = self.xi3
+        xi4 = self.xi4
+        xi5 = self.xi5
+        xi6 = self.xi6
+        xi7 = self.xi7
+        xi8 = self.xi8
+        xi9 = self.xi9
+        xi10 = self.xi10
+        xi11 = self.xi11
+        xi12 = self.xi12
+        xi13 = self.xi13
+        xi14 = self.xi14
+        
         util = self.generate_util()
         
         @nb.jit(nopython = True)
@@ -582,7 +737,10 @@ class Economy:
             kapn = s[3]
             z = s[4]
 
-            if kap == 0.0 and kapn > 0.0: 
+            if (kap == 0.0) and kapn > 0.0:            
+            #if (kap < 1.0e-10) and kapn >= 1.0e-10:
+                #
+
                 alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc)
                 alp2 = vthet*(xi4*a - xi5*an + xi6)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet)
                 alp3 = vthet/(veps*denom)
@@ -596,6 +754,11 @@ class Economy:
 
                 mx_lb = max( (alp3*vthet/(alp2*(vthet + veps)))**(vthet/veps), (alp3/alp2) )
 
+                # print('alp1 = ' , alp1)
+                # print('alp2 = ' , alp2)
+                # print('alp2 = ' , alp3)
+                # print('kapn = ' , kapn)                                
+
         #         obj = lambda mx: alp1*(1. - mx) - alp2*mx**((vthet + veps)/vthet) + alp3*mx
         #         objprime = lambda mx: -alp1 - alp2*((vthet + veps)/vthet)*mx**(veps/vthet) + alp3
         #         ans = newton(obj_find_mx, mx_lb , fprime = d_obj_find_mx, args = (alp1, alp2, alp3), tol = 1.0e-15)
@@ -603,6 +766,8 @@ class Economy:
 
                 ###start newton method
                 mx = mx_lb
+                # print('mx = ', mx_lb)
+                
                 it = 0
                 maxit = 100 #scipy's newton use maxit = 50
                 tol = 1.0e-15
@@ -625,13 +790,17 @@ class Economy:
                 #convergence check
                 if it == maxit:
                     print('err: newton method for mx did not converge.')
+                    print('mx = ', mx)
 
                 ans = mx    
                 ###end newton method
 
                 return ans, 0.
+            
+            #elif kap < 1.0e-10 and kapn >= 1.0e-10:
 
             elif kap == 0.0 and kapn == 0.0:
+
 
                 #m=0.0, my = 0.0, x = 0.0
                 #x = 0.0 should be designated outside of this function.
@@ -640,7 +809,7 @@ class Economy:
 
             elif kap > 0.0 and kapn > (1. - delkap)/(1. + grate) * kap: ##>=
                 alp1 = xi9
-                alp2 = (xi4 * a - xi5*an + xi6)/((z*kap**phi_tilde)**(1./(1.- alpha_tilde - varpi )))
+                alp2 = (xi4*a - xi5*an + xi6)/((z*kap**phi_tilde)**(1./(1.- alpha_tilde - varpi)))
                 alp3 = xi10
 
                 #old
@@ -675,7 +844,7 @@ class Economy:
                 it = 0
                 tol = 1.0e-12
                 maxit = 200
-                val_m = 10000
+                val_m = 10000.
                 while it < maxit:
                     it = it + 1
                     val_m = 1. - mymax - alp5*mymax**varrho
@@ -708,15 +877,15 @@ class Economy:
         #         obj = lambda my: alp1*(1. - my - alp5*my**varrho) - alp2 * my**(1. - nu/(1. - alpha)) - alp3*my + alp4*my**varrho
 
                 if obj_find_my(0.0, alp1, alp2, alp3, alp4, alp5)  == 0.0:
-                    #print('my = 0.0')
+                    print('my = 0.0')
                     return 0.0, 0.0
 
                 if obj_find_my(mymax, alp1, alp2, alp3, alp4, alp5) == 0.0:
-                    #print('my = mymax')
+                    print('my = mymax')
                     return alp5*mymax**varrho, mymax
 
                 if obj_find_my(mymax, alp1, alp2, alp3, alp4, alp5) > 0:
-                    #print('my does not exist')
+                    print('my does not exist')
                     return -1., -1.
 
 
@@ -749,6 +918,7 @@ class Economy:
                 
                 while it < maxit:
                     it = it + 1
+                    
                     if my > 0. and my < 1.0e-6:
                         tol = 1.0e-20
 
@@ -781,6 +951,20 @@ class Economy:
                     print('my = ', my)
                     print('mymax = ', mymax)
 
+                    print('val_lb = ', val_lb)
+                    print('val_ub = ', val_ub)
+
+                    print('a = ', a)
+                    print('an = ', an)
+                    print('kap = ', kap)
+                    print('kapn = ', kapn)
+                    print('z = ', z)
+                    print('mx = ', alp5*ans**varrho) 
+
+                    # my = 0.0
+                    
+                    
+
                 ans = my
                 #### bisection end ####
 
@@ -812,8 +996,8 @@ class Economy:
 
 
             u = -np.inf
-            mx = -1.0
-            my = -1.0
+            mx = -2.0
+            my = -2.0
             l = -1.0
             x = -1.0
             cc = -1.0
@@ -823,8 +1007,8 @@ class Economy:
             ys = -1.0
             ns = -1.0
 
-
             if kapn >= (1. - delkap)/(1. + grate) * kap:
+#            if kapn >= (1. - delkap)/(1. + grate) * kap or kap < 1.0e-10:
                 mx, my = solve_mxmy(s)
 
                 if mx >= 0. and my >= 0.:
@@ -838,8 +1022,9 @@ class Economy:
 
 
                     l = 1.0 - mx - my
-
+                    
                     if kap == 0.0:
+#                    if kap == 0.0 or kap < 1.0e-8:
                         #T^m (y) = -transfer if they do not operate
                         cc = xi4*a - xi5*an + xi6 - xi11*x / (1. - taum) + xi10*(z*kap**phi_tilde)**(1./(1.- alpha_tilde - varpi)) * my**(nu_tilde/(1. - alpha_tilde - varpi))
                     else:
@@ -852,9 +1037,19 @@ class Economy:
                     ks = xi8 * (z*(kap**phi_tilde)* (my**nu_tilde)) ** (1./(1. - alpha_tilde - varpi))
 
                     ys = (xi14)*(z*(kap**phi_tilde)*(my**nu_tilde))**(1./(1.- alpha_tilde - varpi))
-                    # or , ys = z*(ks**alpha_tilde)*(kap**phi_tilde)*(my**nu_tilde)*(ns**varpi)
-
+                    # or , ys = z*(ks**alpha_tilde)*(kap**phi_tilde)*(my**nu_tilde)*(ns**varpi)                    
                     ns = xi13 * ks
+                    
+                    ys_tmp = z*(ks**alpha_tilde)*(kap**phi_tilde)*(my**nu_tilde)*(ns**varpi)
+
+                    # #ys and ys_tmp are often slightly different
+                    if np.abs(ys - ys_tmp) > 1.0e-6:
+                        print('err: ys does not match')
+                        print('ys = ', ys)
+                        print('ys_tmp = ', ys_tmp)                        
+
+
+
                     
                     
 
