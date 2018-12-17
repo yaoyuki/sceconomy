@@ -739,11 +739,17 @@ class Economy:
 
             if (kap == 0.0) and kapn > 0.0:            
             #if (kap < 1.0e-10) and kapn >= 1.0e-10:
-                #
+                
+                # #old version that is inconsistent in limit
+                # alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc)
+                # alp2 = vthet*(xi4*a - xi5*an + xi6)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet)
+                # alp3 = vthet/(veps*denom)
 
-                alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc)
+                #New version which is consistent with kap>0 version in limit
+                alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc) * (1. - taum)
                 alp2 = vthet*(xi4*a - xi5*an + xi6)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet)
-                alp3 = vthet/(veps*denom)
+                alp3 = vthet/(veps*((1. + p*xi1)*(1. + tauc))) * (1. - taum)
+                
 
                 if alp2 == alp3:
                     return 1.0, 0.0 #in this case, utility must be -inf

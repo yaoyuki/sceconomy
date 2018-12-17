@@ -139,7 +139,7 @@ if __name__ == '__main__':
 
     f = open(nd_log_file, 'w')
     # f.writelines('w, p, rc, dist, mom0, mom1, mom2, mom3\n')
-    f.writelines('p, rc, varpi, ome, dist, mom0, mom1, mom2, mom4, mom5, mom6, mom7\n')
+    f.writelines('p, rc, varpi, ome, theta, dist, mom0, mom1, mom2, mom4, mom5, mom6, mom7\n')
     f.close()
 
     nm_result = None
