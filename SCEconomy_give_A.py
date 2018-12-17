@@ -739,10 +739,17 @@ class Economy:
             kapn = s[3]
             z = s[4]
 
-            if kap == 0.0 and kapn > 0.0: 
-                alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc)
+            if kap == 0.0 and kapn > 0.0:
+                
+                # alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc)
+                # alp2 = vthet*(xi4*a - xi5*an + xi6)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet)
+                # alp3 = vthet/(veps*denom)
+
+                #New version which is consistent with kap>0 version in limit
+                alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc) * (1. - taum)
                 alp2 = vthet*(xi4*a - xi5*an + xi6)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet)
-                alp3 = vthet/(veps*denom)
+                alp3 = vthet/(veps*((1. + p*xi1)*(1. + tauc))) * (1. - taum)
+                
 
                 if alp2 == alp3:
                     return 1.0, 0.0 #in this case, utility must be -inf
@@ -989,11 +996,14 @@ class Economy:
 
                     l = 1.0 - mx - my
 
-                    if kap == 0.0:
-                        #T^m if they do not operate
-                        cc = xi4*a - xi5*an + xi6 - xi11*x / (1. - taum) + xi10*(z*kap**phi)**(1./(1.- alpha)) * my**(nu/(1. - alpha))
-                    else:
-                        cc = xi4*a - xi5*an + xi6 - xi11*x  + xi10*(z*kap**phi)**(1./(1.- alpha)) * my**(nu/(1. - alpha))
+                    cc = xi4*a - xi5*an + xi6 - xi11*x  + xi10*(z*kap**phi)**(1./(1.- alpha)) * my**(nu/(1. - alpha))
+
+                    # This is an inconsistent old version
+                    # if kap == 0.0:
+                    #     #T^m if they do not operate
+                    #     cc = xi4*a - xi5*an + xi6 - xi11*x / (1. - taum) + xi10*(z*kap**phi)**(1./(1.- alpha)) * my**(nu/(1. - alpha))
+                    # else:
+                    #     cc = xi4*a - xi5*an + xi6 - xi11*x  + xi10*(z*kap**phi)**(1./(1.- alpha)) * my**(nu/(1. - alpha))
 
 
                     cs = xi1 * cc
@@ -2449,7 +2459,9 @@ class Economy:
             Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * (1. - data_ss[:,0]))
 
             ETn = np.mean((taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0])
-            ETm = np.mean((taum*np.fmax(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - data_ss[:,12], 0.) - tran)*(1. - data_ss[:,0]) )
+            ETm = np.mean((taum*(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - w*data_ss[:,15] - data_ss[:,12]) - tran)*(1. - data_ss[:,0]) )
+            # old, inconsistent version 
+            # ETm = np.mean((taum*np.fmax(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - data_ss[:,12], 0.) - tran)*(1. - data_ss[:,0]) )
 
 
             # yc = 1.0 #we can do this by choosing C-corp firm productivity A

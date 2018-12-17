@@ -1109,15 +1109,17 @@ class Economy:
 
 
                     l = 1.0 - hy - hkap
+
+                    cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.-alpha))*h**(nu/(1.-alpha))
                     
-                    if kap == 0.0:
-#                    if kap == 0.0 or kap < 1.0e-8:
-                        #T^m (y) = -transfer if they do not operate
-                        cc = xi4*a - xi5*an + xi6 - xi11*x / (1. - taum) + xi10*(z*kap**phi)**(1./(1.- alpha))*h**(nu/(1.-alpha))
-                        # cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.- alpha))*h**(nu/(1. - alpha))
-                    else:
-                        #T^m (y) = taum*y - transfer if they opoerate
-                        cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.-alpha))*h**(nu/(1.-alpha))
+#                     if kap == 0.0:
+# #                    if kap == 0.0 or kap < 1.0e-8:
+#                         #T^m (y) = -transfer if they do not operate
+#                         cc = xi4*a - xi5*an + xi6 - xi11*x / (1. - taum) + xi10*(z*kap**phi)**(1./(1.- alpha))*h**(nu/(1.-alpha))
+#                         # cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.- alpha))*h**(nu/(1. - alpha))
+#                     else:
+#                         #T^m (y) = taum*y - transfer if they opoerate
+#                         cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.-alpha))*h**(nu/(1.-alpha))
                         
 
 
@@ -2446,7 +2448,11 @@ class Economy:
             Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * (1. - data_ss[:,0]))
 
             ETn = np.mean((taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0])
-            ETm = np.mean((taum*np.fmax(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13], 0.) - tran)*(1. - data_ss[:,0]) )
+
+            ETm = np.mean((taum*(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - w*data_ss[:,15] - data_ss[:,12]) - tran)*(1. - data_ss[:,0]) )
+            # old, inconsistent version 
+                   
+            # ETm = np.mean((taum*np.fmax(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13], 0.) - tran)*(1. - data_ss[:,0]) )
 
 
             # yc = 1.0 #we can do this by choosing C-corp firm productivity A

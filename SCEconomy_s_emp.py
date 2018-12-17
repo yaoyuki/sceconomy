@@ -1028,14 +1028,16 @@ class Economy:
 
 
                     l = 1.0 - mx - my
+
+                    cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi_tilde)**(1./(1.- alpha_tilde - varpi)) * my**(nu_tilde/(1. - alpha_tilde - varpi))
                     
-                    if kap == 0.0:
-#                    if kap == 0.0 or kap < 1.0e-8:
-                        #T^m (y) = -transfer if they do not operate
-                        cc = xi4*a - xi5*an + xi6 - xi11*x / (1. - taum) + xi10*(z*kap**phi_tilde)**(1./(1.- alpha_tilde - varpi)) * my**(nu_tilde/(1. - alpha_tilde - varpi))
-                    else:
-                        #T^m (y) = taum*y - transfer if they opoerate
-                        cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi_tilde)**(1./(1.- alpha_tilde - varpi)) * my**(nu_tilde/(1. - alpha_tilde - varpi))
+#                     if kap == 0.0:
+# #                    if kap == 0.0 or kap < 1.0e-8:
+#                         #T^m (y) = -transfer if they do not operate
+#                         cc = xi4*a - xi5*an + xi6 - xi11*x / (1. - taum) + xi10*(z*kap**phi_tilde)**(1./(1.- alpha_tilde - varpi)) * my**(nu_tilde/(1. - alpha_tilde - varpi))
+#                     else:
+#                         #T^m (y) = taum*y - transfer if they opoerate
+#                         cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi_tilde)**(1./(1.- alpha_tilde - varpi)) * my**(nu_tilde/(1. - alpha_tilde - varpi))
 
 
                     cs = xi1 * cc
@@ -1765,7 +1767,7 @@ class Economy:
 
                                 #obj = lambda x: (get_util_c(np.array([agrid[ia], x, epsgrid[is_to_ieps[istate]]])) + obj2(x))**(1./(1. - mu))
                                 #vcn[ia, ikap, istate] = (vc_util[ia, ikap, istate] + obj2(vc_an[ia, ikap, istate]))**(1./(1. - mu))
-                                _vcn_[ia, ikap, istate] = (_vc_util_[ia, ikap, istate] +                                                          fem2d_peval(_vc_an_[ia, ikap, istate], la*kapgrid[ikap], agrid, kapgrid, __EV__[0,0,:,:,istate])                                                          )**(1./(1. - mu))
+                                _vcn_[ia, ikap, istate] = (_vc_util_[ia, ikap, istate] +  fem2d_peval(_vc_an_[ia, ikap, istate], la*kapgrid[ikap], agrid, kapgrid, __EV__[0,0,:,:,istate]))**(1./(1. - mu))
 
 
 
@@ -1773,7 +1775,7 @@ class Economy:
                                 #update S
 
                                 #vsn[ia, ikap, istate] = (vs_util[ia, ikap, istate] + EV_interp_f(vs_an[ia, ikap, istate] , vs_kapn[ia, ikap, istate]))**(1./(1. - mu))
-                                _vsn_[ia, ikap, istate] = (_vs_util_[ia, ikap, istate] +                                                          fem2d_peval(_vs_an_[ia, ikap, istate] , _vs_kapn_[ia, ikap, istate], agrid, kapgrid, __EV__[0,0,:,:,istate])                                                          )**(1./(1. - mu))
+                                _vsn_[ia, ikap, istate] = (_vs_util_[ia, ikap, istate] + fem2d_peval(_vs_an_[ia, ikap, istate] , _vs_kapn_[ia, ikap, istate], agrid, kapgrid, __EV__[0,0,:,:,istate]) )**(1./(1. - mu))
 
                 #after 
 
@@ -2309,7 +2311,9 @@ class Economy:
             Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * (1. - data_ss[:,0]))
 
             ETn = np.mean((taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0])
-            ETm = np.mean((taum*np.fmax(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - w*data_ss[:,15] - data_ss[:,12], 0.) - tran)*(1. - data_ss[:,0]) )
+            ETm = np.mean((taum*(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - w*data_ss[:,15] - data_ss[:,12]) - tran)*(1. - data_ss[:,0]) )
+            # old, inconsistent version 
+            # ETm = np.mean((taum*np.fmax(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - w*data_ss[:,15] - data_ss[:,12], 0.) - tran)*(1. - data_ss[:,0]) )
 
 
             # yc = 1.0 #we can do this by choosing C-corp firm productivity A
