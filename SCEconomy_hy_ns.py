@@ -271,11 +271,11 @@ class Economy:
         self.xi11 = (1. - self.taum) / self.denom
         self.xi10 = (self.p*self.xi8**self.alpha - (self.rs + self.delk)*self.xi8)*(1. - self.taum)/self.denom
 
+
         self.xi13 = (self.nu*self.varpi*(self.rs + self.delk)/(self.alpha * self.w))**(1./(1.- self.upsilon));
-        
 
+        self.xi14 = (1. - self.taum)*self.w*self.xi13*(self.xi8**(1./(1.-self.upsilon)))/self.denom
         
-
         # ((self.p*self.alpha_tilde*(self.xi13)**self.varpi)/(self.rs + self.delk) )**(1./(1.-self.alpha_tilde-self.varpi))
 
 
@@ -793,19 +793,12 @@ class Economy:
         xi11 = self.xi11
         xi12 = self.xi12
         xi13 = self.xi13
+        xi14 = self.xi14        
 
         
         util = self.generate_util()
 
 
-        def Hy(h):
-
-            tmp = (1. - alp6*h**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))
-            #tmp = h**upsilon - varpi*(xi13**upsilon)*(xi8*(z*kap**phi)**(1./(1.-alpha))*h**(nu/(1.-alpha) - upsilon))**(upsilon/(1.-upsilon))
-            tmp = tmp / (1. - varpi)
-            tmp = (tmp**(1./upsilon))*h
-
-            return tmp
 
         
         @nb.jit(nopython = True)
@@ -920,6 +913,7 @@ class Economy:
                 alp5 = (((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))/(xi12 * (z*kap**phi)**(1./(1.-alpha))))**(vthet/(vthet + veps))
                 alp4 = xi11 * xi12 * alp5
                 alp6 = varpi*(xi13**upsilon)*(xi8*(z*kap**phi)**(1./(1.-alpha)))**(upsilon/(1.-upsilon))
+                alp7 = xi14*(z*kap**phi)**((1./(1.-alpha))*(upsilon/(1.-upsilon)))
 
                 h_lbar = get_h_lbar(alp6)
 
@@ -978,12 +972,23 @@ class Economy:
                 h_ub = hmax
 
                 #check bracketting
-                val_lb = alp1*(1. - Hy(h_lb, alp6) - alp5*g(h_lb, alp6))\
-                    - (alp2*h_lb**(-nu/(1.-alpha)) + alp3)*(h_lb**upsilon)*(Hy(h_lb, alp6)**(1.-upsilon)) + alp4*g(h_lb, alp6)
+                # val_lb = alp1*(1. - Hy(h_lb, alp6) - alp5*g(h_lb, alp6))\
+                #     - (alp2*h_lb**(-nu/(1.-alpha)) + alp3 - alp7*h_lb**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))*(h_lb**upsilon)*(Hy(h_lb, alp6)**(1.-upsilon)) + alp4*g(h_lb, alp6)
                 val_ub = alp1*(1. - Hy(h_ub, alp6) - alp5*g(h_ub, alp6))\
-                    - (alp2*h_ub**(-nu/(1.-alpha)) + alp3)*(h_ub**upsilon)*(Hy(h_ub, alp6)**(1.-upsilon)) + alp4*g(h_ub, alp6)
+                    - (alp2*h_ub**(-nu/(1.-alpha)) + alp3 - alp7*h_ub**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))*(h_ub**upsilon)*(Hy(h_ub, alp6)**(1.-upsilon)) + alp4*g(h_ub, alp6)
 
-                if val_lb *val_ub > 0.0:
+                # print('val_lb = ', val_lb)
+                # print('val_ub = ', val_ub)
+                # print('h_lbar = ', h_lbar)
+                # print('alp1 = ', alp1)
+                # print('alp2 = ', alp2)
+                # print('alp3 = ', alp3)
+                # print('alp4 = ', alp4)
+                # print('alp5 = ', alp5)
+                # print('alp6 = ', alp6)                    
+                
+                
+                if val_ub > 0.0: #we know that val_lb < 0.0
                     # print('no bracket for h. Infer no solution')
                     return -1., -1., -1.
                 
@@ -1008,7 +1013,7 @@ class Economy:
                         tol = 1.0e-20
 
                     val_m = alp1*(1. - Hy(h, alp6) - alp5*g(h, alp6))\
-                            - (alp2*h**(-nu/(1.-alpha)) + alp3)*(h**upsilon)*(Hy(h, alp6)**(1.-upsilon)) + alp4*g(h, alp6)
+                            - (alp2*h**(-nu/(1.-alpha)) + alp3 - alp7*h**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))*(h**upsilon)*(Hy(h, alp6)**(1.-upsilon)) + alp4*g(h, alp6)
 
                     if sign * val_m > 0.:
                         h_ub = h
@@ -1110,7 +1115,8 @@ class Economy:
 
                     l = 1.0 - hy - hkap
 
-                    cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.-alpha))*h**(nu/(1.-alpha))
+                    cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.-alpha))*(h**(nu/(1.-alpha))) \
+                        - xi14*(z*kap**phi)**(1./((1. - alpha)*(1.-upsilon)))*h**((nu/(1.-alpha) - upsilon)*(1./(1.-upsilon)))
                     
 #                     if kap == 0.0:
 # #                    if kap == 0.0 or kap < 1.0e-8:
@@ -1121,6 +1127,17 @@ class Economy:
 #                         #T^m (y) = taum*y - transfer if they opoerate
 #                         cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.-alpha))*h**(nu/(1.-alpha))
                         
+
+                    # alp5 = (((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))/(xi12 * (z*kap**phi)**(1./(1.-alpha))))**(vthet/(vthet + veps))
+                    # alp6 = varpi*(xi13**upsilon)*(xi8*(z*kap**phi)**(1./(1.-alpha)))**(upsilon/(1.-upsilon))
+                    
+                    # tmp = (1. - alp6*h**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))
+                    # tmp = tmp / (1. - varpi)
+                    # Hy = (tmp**(1./upsilon))*h
+                    
+                    # g = ((h**(upsilon - nu/(1.-alpha)))*(hy**(1.-upsilon)))**(vthet/(veps+vthet))
+                        
+                    
 
 
                     cs = xi1 * cc
@@ -1139,6 +1156,8 @@ class Economy:
                         ys_tmp = 0.0
                         h_tmp = 0.0
 
+
+
                     # #ys and ys_tmp are often slightly different, so tolerate small difference
                     if (np.abs(ys - ys_tmp) > 1.0e-6) and (ys >= 0.0):
                         print('err: ys does not match')
@@ -1149,7 +1168,21 @@ class Economy:
                         print('err: h does not match')
                         print('h = ', h)
                         print('h_tmp = ', h_tmp)                        
-                        
+
+                    if h > 0.0:
+                        cc_tmp = xi9*(z*kap**phi)**(1./(1.-alpha))*(h**(nu/(1.-alpha) - upsilon))*(hy**(upsilon  - 1.0))*(1. - hy - hkap)                        
+                        if (np.abs(cc - cc_tmp) > 1.0e-3):
+                            print('err: cc does not match')
+                            print('cc = ', cc)
+                            print('cc_tmp = ', cc_tmp)
+                            print('a = ', a)
+                            print('an = ', an)
+                            print('kap = ', kap)
+                            print('kapn = ', kapn)
+                            print('z = ', z)                            
+                            
+
+                    
 
 
                     #feasibility check

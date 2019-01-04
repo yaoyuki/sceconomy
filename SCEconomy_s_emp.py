@@ -211,6 +211,10 @@ class Economy:
         
         #implied parameters
         self.nu = 1. - self.alpha - self.phi
+        if self.nu <= 0.0 or self.nu >= 1.0:
+            print('Error: nu must be in (0, 1) but bh = ', self.bh)
+        
+
         
         self.alpha_tilde = self.alpha*(1. - self.varpi)
         self.phi_tilde = self.phi*(1. - self.varpi)
@@ -1030,6 +1034,7 @@ class Economy:
                     l = 1.0 - mx - my
 
                     cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi_tilde)**(1./(1.- alpha_tilde - varpi)) * my**(nu_tilde/(1. - alpha_tilde - varpi))
+                   
                     
 #                     if kap == 0.0:
 # #                    if kap == 0.0 or kap < 1.0e-8:
@@ -1050,11 +1055,19 @@ class Economy:
                     
                     ys_tmp = z*(ks**alpha_tilde)*(kap**phi_tilde)*(my**nu_tilde)*(ns**varpi)
 
+                    cc_tmp = xi9*(z*kap**phi_tilde)**(1./(1.-alpha_tilde - varpi))*(my**(nu_tilde/(1.-alpha_tilde - varpi) - 1.0))*(1. - my - mx)
+
                     # #ys and ys_tmp are often slightly different
                     if np.abs(ys - ys_tmp) > 1.0e-6:
                         print('err: ys does not match')
                         print('ys = ', ys)
-                        print('ys_tmp = ', ys_tmp)                        
+                        print('ys_tmp = ', ys_tmp)
+
+                        
+                    if (np.abs(cc - cc_tmp) > 1.0e-4):
+                        print('err: cc does not match')
+                        print('cc = ', cc)
+                        print('cc_tmp = ', cc_tmp)                        
 
 
 
