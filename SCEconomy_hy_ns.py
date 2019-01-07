@@ -3241,6 +3241,7 @@ if __name__ == '__main__':
 
     # econ.get_my_job()
     econ.get_policy()
+    econ.print_parameters()
     econ.simulate_model()
 
 
