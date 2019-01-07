@@ -2482,7 +2482,7 @@ class Economy:
 
             ETn = np.mean((taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0])
 
-            ETm = np.mean((taum*(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - w*data_ss[:,15] - data_ss[:,12]) - tran)*(1. - data_ss[:,0]) )
+            ETm = np.mean((taum*(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13]) - tran)*(1. - data_ss[:,0]) )
             # old, inconsistent version 
                    
             # ETm = np.mean((taum*np.fmax(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13], 0.) - tran)*(1. - data_ss[:,0]) )
