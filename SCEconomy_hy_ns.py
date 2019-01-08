@@ -830,7 +830,7 @@ class Economy:
             z = s[4]
 
             #case 0
-            if (kap == 0.0) and (kapn > 0.0):            
+            if (kap == 0.0 and kapn > 0.0) or (kap > 0.0 and kap < 1.0e-9 and kapn > (1. - delkap)/(1. + grate) * kap):
             #if (kap < 1.0e-10) and kapn >= 1.0e-10:
 
                 # #old version that is inconsistent in limit                
@@ -1009,8 +1009,8 @@ class Economy:
                 while it < maxit:
                     it = it + 1
                     
-                    if h > 0. and h < 1.0e-6:
-                        tol = 1.0e-20
+                    # if h > 0. and h < 1.0e-6:
+                    #     tol = 1.0e-20
 
                     val_m = alp1*(1. - Hy(h, alp6) - alp5*g(h, alp6))\
                             - (alp2*h**(-nu/(1.-alpha)) + alp3 - alp7*h**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))*(h**upsilon)*(Hy(h, alp6)**(1.-upsilon)) + alp4*g(h, alp6)
@@ -1118,27 +1118,6 @@ class Economy:
                     cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.-alpha))*(h**(nu/(1.-alpha))) \
                         - xi14*(z*kap**phi)**(1./((1. - alpha)*(1.-upsilon)))*h**((nu/(1.-alpha) - upsilon)*(1./(1.-upsilon)))
                     
-#                     if kap == 0.0:
-# #                    if kap == 0.0 or kap < 1.0e-8:
-#                         #T^m (y) = -transfer if they do not operate
-#                         cc = xi4*a - xi5*an + xi6 - xi11*x / (1. - taum) + xi10*(z*kap**phi)**(1./(1.- alpha))*h**(nu/(1.-alpha))
-#                         # cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.- alpha))*h**(nu/(1. - alpha))
-#                     else:
-#                         #T^m (y) = taum*y - transfer if they opoerate
-#                         cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.-alpha))*h**(nu/(1.-alpha))
-                        
-
-                    # alp5 = (((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))/(xi12 * (z*kap**phi)**(1./(1.-alpha))))**(vthet/(vthet + veps))
-                    # alp6 = varpi*(xi13**upsilon)*(xi8*(z*kap**phi)**(1./(1.-alpha)))**(upsilon/(1.-upsilon))
-                    
-                    # tmp = (1. - alp6*h**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))
-                    # tmp = tmp / (1. - varpi)
-                    # Hy = (tmp**(1./upsilon))*h
-                    
-                    # g = ((h**(upsilon - nu/(1.-alpha)))*(hy**(1.-upsilon)))**(vthet/(veps+vthet))
-                        
-                    
-
 
                     cs = xi1 * cc
                     cagg = xi2 * cc
@@ -1181,9 +1160,6 @@ class Economy:
                             print('kapn = ', kapn)
                             print('z = ', z)                            
                             
-
-                    
-
 
                     #feasibility check
                     if cagg > 0.0 and l > 0.0 and l <= 1.0 and an >= chi * ks: #the last condition varies across notes,...
