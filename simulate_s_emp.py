@@ -8,6 +8,11 @@ import pickle
 
 if __name__ == '__main__':
 
+    import sys
+    args = sys.argv    
+    num_core = int(args[1])
+ 
+
     
 
     def curvedspace(begin, end, curve, num=100):
@@ -18,27 +23,22 @@ if __name__ == '__main__':
 
 
     # additional info
-    agrid2 = curvedspace(0., 100., 2., 40)
-    # kapgrid2 = curvedspace(0., 2., 2., 20)
+    agrid2 = curvedspace(0., 200., 2., 40)
+    kapgrid2 = curvedspace(0., 2., 2., 20)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
-    
-    # agrid2 = curvedspace(0., 100., 2., 40)
-    # kapgrid2 = curvedspace(0., 2.0, 2., 20)
-    
-    # zgrid2 = np.load('./input_data/zgrid09.npy') ** 2.
-    # prob2 = np.load('./input_data/transition_matrix_0709.npy')
-   
-    # zgrid2 = np.load('./input_data/zgrid_09_0075.npy') ** 2.
-    # prob2 = np.load('./input_data/prob_epsz_07_09_01_0075.npy')
-
-
-
-    ###define additional parameters###
-    # num_core = 119 #crash at 119
-    num_core = 4
     # prices
-    p_, rc_ = 2.6190764164632157, 0.062096365682493694
+    p_, rc_, ome_, varpi_p = 1.3519953608929385, 0.06117532373046963, 0.3915961239352689, 0.7037502296213269
+    alpha_p, phi_p =  0.4, 0.15
+    nu_p = 1. - alpha_p - phi_p
+
+    varpi = nu_p*varpi_p
+    nu = nu_p * (1.0 - varpi_p)/(1.- varpi)
+    phi = phi_p/(1.- varpi)
+    alpha = alpha_p/(1.- varpi)
+
+    print('nu + phi + alpha = ', nu+phi+alpha)
+    
 
     split_shock('./input_data/data_i_s', 100_000, num_core)
 
@@ -49,9 +49,11 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, zgrid = zgrid2, rho = 0.01, varpi = 0.42948396838871494, ome = 0.5292937106655093, path_to_data_i_s = './input_data/data_i_s')
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01,\
+                   ome = ome_, varpi = varpi, alpha = alpha, phi= phi, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(p = p_, rc = rc_)
+
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
 
     t0 = time.time()
@@ -86,10 +88,10 @@ if __name__ == '__main__':
     econ.calc_moments()
     
     # # ###calculate other important variables###
-    econ.calc_sweat_eq_value()
-    econ.calc_age()
-    econ.simulate_other_vars()
-    econ.save_result()
+    # econ.calc_sweat_eq_value()
+    # econ.calc_age()
+    # econ.simulate_other_vars()
+    # econ.save_result()
     
 
     

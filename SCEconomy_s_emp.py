@@ -3055,6 +3055,10 @@ if __name__ == '__main__':
 
     # econ.get_my_job()
     econ.get_policy()
+    
+    if rank == 0:
+        econ.print_parameters()
+        
     econ.simulate_model()
 
 

@@ -7,6 +7,10 @@ import pickle
 
 
 if __name__ == '__main__':
+    
+    import sys
+    args = sys.argv    
+    num_core = int(args[1])
 
     
 
@@ -22,23 +26,19 @@ if __name__ == '__main__':
     kapgrid2 = curvedspace(0., 2., 2., 20)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
-    ###define additional parameters###
-    # num_core = 119 #crash at 119
-    num_core = 4    
     # prices
-    p_, rc_ = 1.3444481511528166, 0.061488058639202293
-
+    p_, rc_, ome_, varpi_ = 1.3519953608929385, 0.06117532373046963, 0.3915961239352689, 0.7037502296213269
+    
 
     split_shock('./input_data/data_i_s', 100_000, num_core)
-
-
     
     ###end defining additional parameters###
 
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2,  path_to_data_i_s = './input_data/data_i_s')
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.0001,\
+                   ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
