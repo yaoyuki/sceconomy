@@ -1008,9 +1008,10 @@ class Economy:
                 
                 while it < maxit:
                     it = it + 1
-                    
-                    # if h > 0. and h < 1.0e-6:
-                    #     tol = 1.0e-20
+
+                    # a bit crazy tol...
+                    if h > 0. and h < 1.0e-6:
+                        tol = 1.0e-20
 
                     val_m = alp1*(1. - Hy(h, alp6) - alp5*g(h, alp6))\
                             - (alp2*h**(-nu/(1.-alpha)) + alp3 - alp7*h**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))*(h**upsilon)*(Hy(h, alp6)**(1.-upsilon)) + alp4*g(h, alp6)
@@ -2408,10 +2409,18 @@ class Economy:
         mom7 = None
 
         if rank == 0:
+            print('Entire Simulation Path')
             print('amax = {}'.format(np.max(data_a)))
             print('amin = {}'.format(np.min(data_a)))
             print('kapmax = {}'.format(np.max(data_kap)))
             print('kapmin = {}'.format(np.min(data_kap)))
+            print('')
+            print('Last 10 Periods')            
+            print('amax = {}'.format(np.max(data_a[:,-10:])))
+            print('amin = {}'.format(np.min(data_a[:,-10:])))
+            print('kapmax = {}'.format(np.max(data_kap[:,-10:])))
+            print('kapmin = {}'.format(np.min(data_kap[:,-10:])))
+            
 
             t = -1
 

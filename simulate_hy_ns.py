@@ -27,7 +27,7 @@ if __name__ == '__main__':
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
     # prices
-    p_, rc_, ome_, varpi_ = 1.3519953608929385, 0.06117532373046963, 0.3915961239352689, 0.7037502296213269
+    p_, rc_, ome_, varpi_ = 1.3131905728793247, 0.06137130136742981, 0.43620530793522466, 0.6594681373882632
     
 
     split_shock('./input_data/data_i_s', 100_000, num_core)
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.0001,\
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.5,\
                    ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(p = p_, rc = rc_)
