@@ -22,12 +22,13 @@ if __name__ == '__main__':
 
 
     # additional info
+    
     agrid2 = curvedspace(0., 200., 2., 40)
-    kapgrid2 = curvedspace(0., 2., 2., 20)
+    kapgrid2 = curvedspace(0., 2.5, 1.5, 40)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
     # prices
-    p_, rc_, ome_, varpi_ = 1.3131905728793247, 0.06137130136742981, 0.43620530793522466, 0.6594681373882632
+    p_, rc_, ome_, varpi_ = 1.347434787993277, 0.06148943609627755, 0.3996339901220936, 0.545313496582086
     
 
     split_shock('./input_data/data_i_s', 100_000, num_core)
@@ -37,7 +38,7 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.5,\
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.75,\
                    ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(p = p_, rc = rc_)

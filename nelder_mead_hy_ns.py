@@ -34,7 +34,7 @@ def curvedspace(begin, end, curve, num=100):
     return ans
 
 agrid2 = curvedspace(0., 200., 2., 40)
-kapgrid2 = curvedspace(0., 2.0, 2., 20)
+kapgrid2 = curvedspace(0., 2.5, 1.5, 40)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 # prob2 = np.load('./input_data/transition_matrix_0709.npy')
 
@@ -56,7 +56,10 @@ def target(prices):
     ###set any additional condition/parameters
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
     #econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.6, varpi = 0.1)
-    econ = Economy(agrid = agrid2, kapgrid = kapgrid2,  zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s)    
+
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.75,\
+                   ome = 0.3996339901220936, varpi = 0.545313496582086, path_to_data_i_s = './input_data/data_i_s')
+
 
     econ.set_prices(p = p_, rc = rc_)
     
