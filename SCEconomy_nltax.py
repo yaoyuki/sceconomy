@@ -12,9 +12,11 @@ import numba as nb
 #my library
 #import
 #from FEM import fem_peval #1D interpolation
+from orderedTableSearch import locate, hunt
 from FEM_2D import fem2d_peval, fem2deval_mesh
 from markov import Stationary
 from ravel_unravel_nb import unravel_index_nb
+
 
 
 from mpi4py import MPI
@@ -58,8 +60,6 @@ class Economy:
                  varpi = None,
                  tauc = None,
                  taud = None,
-                 taum = None,
-                 taun = None,
                  taup = None,
                  theta = None,
                  tran = None,
@@ -81,7 +81,14 @@ class Economy:
                  sim_time = None,
                  num_total_pop = None,
                  A = None,
-                 path_to_data_i_s = None):
+                 path_to_data_i_s = None,
+
+                 taun = None,
+                 psin = None,
+                 nbracket = None,
+                 taub = None,
+                 psib = None,
+                 bbracket = None):
         
 
         
@@ -107,8 +114,6 @@ class Economy:
         if varpi is not None: self.varpi = varpi
         if tauc is not None: self.tauc = tauc
         if taud is not None: self.taud = taud
-        if taum is not None: self.taum = taum
-        if taun is not None: self.taun = taun
         if taup is not None: self.taup = taup
         if theta is not None: self.theta = theta
         if tran is not None: self.tran = tran
@@ -131,6 +136,14 @@ class Economy:
         if num_total_pop is not None: self.num_total_pop = num_total_pop
         if A is not None: self.A = A
         if path_to_data_i_s is not None: self.path_to_data_i_s = path_to_data_i_s
+        if taun is not None: self.taun = taun
+        if psin is not None: self.psin = psin
+        if nbracket is not None: self.nbracket = nbracket
+
+        if taub is not None: self.taub = taub
+        if psib is not None: self.psib = psib
+        if bbracket is not None: self.bbracket = bbracket
+                
 
 
         #check
@@ -163,8 +176,6 @@ class Economy:
         self.varpi    = 0.5 #share parameter of ns
         self.tauc     = 0.06
         self.taud     = 0.14
-        self.taum     = 0.20
-        self.taun     = 0.40
         self.taup     = 0.30
         self.theta    = 0.41
         self.tran     = 0.15 #psi
@@ -179,6 +190,15 @@ class Economy:
         self.path_to_data_i_s = './input_data/data_i_s.npy'
 
 
+        self.taub = np.array([0.05, 0.1, 0.18, 0.20, 0.22, 0.24, 0.25])
+        self.psib = np.array([0.1395, 0.1420, 0.1500, 0.1540, 0.1640, 0.1840, 0.2340])
+        self.bbracket = np.array([-np.inf, 0.05, 0.1, 0.20, 0.50, 1.0, 5.0, np.inf])
+
+        self.taun = np.array([0.2])
+        self.psin = np.array([0.15])
+        self.nbracket = np.array([-np.inf, np.inf])
+        
+        
 
 
         self.agrid = np.load('./input_data/agrid.npy')
@@ -256,41 +276,26 @@ class Economy:
         #set Xi-s.
         self.xi1 = ((self.ome*self.p)/(1. - self.ome))**(1./(self.rho-1.0))
         self.xi2 = (self.ome + (1. - self.ome) * self.xi1**self.rho)**(1./self.rho)
-        self.xi3 = self.eta/(1. - self.eta) * self.ome * (1. - self.taun) / (1. + self.tauc) * self.w / self.xi2**self.rho
+        self.xi3 = self.eta/(1. - self.eta) * self.ome / (1. + self.tauc) / self.xi2**self.rho #changed
         
-        
-
         self.denom = (1. + self.p*self.xi1)*(1. + self.tauc)
         
         self.xi4 = (1. + self.rbar) / self.denom
         self.xi5 = (1. + self.grate) / self.denom
-        self.xi6 = (self.tran + self.yn - self.xnb) / self.denom
-        self.xi7 = (1. - self.taun)*self.w/self.denom
+        self.xi6 = (self.yn - self.xnb) / self.denom #changed
+        self.xi7 = 1./ self.denom #changed
 
+        
+        ### to be updated ###
         self.xi8 = ((self.alpha * self.p)/(self.rs + self.delk))**(1./(1.-self.alpha))        
-        self.xi11 = (1. - self.taum) / self.denom
-        self.xi10 = (self.p*self.xi8**self.alpha - (self.rs + self.delk)*self.xi8)*(1. - self.taum)/self.denom
-
-
-        self.xi13 = (self.nu*self.varpi*(self.rs + self.delk)/(self.alpha * self.w))**(1./(1.- self.upsilon));
-
-        self.xi14 = (1. - self.taum)*self.w*self.xi13*(self.xi8**(1./(1.-self.upsilon)))/self.denom
-        
-        # ((self.p*self.alpha_tilde*(self.xi13)**self.varpi)/(self.rs + self.delk) )**(1./(1.-self.alpha_tilde-self.varpi))
-
-
-        self.xi9 = (self.eta*self.ome*self.nu*(1.-self.varpi)*(1.-self.taum)*self.p*self.xi8**self.alpha)/((1.-self.eta)*(1.+self.tauc)*self.xi2**self.rho)
-        # self.eta / (1. - self.eta) * self.ome * self.p * self.nu * (1. - self.taum) / (1. + self.tauc) * self.xi8**self.alpha / self.xi2**self.rho
-
-
-        
+        self.xi11 = self.xi7 #modified
+        self.xi10 = (self.p*self.xi8**self.alpha - (self.rs + self.delk)*self.xi8)/self.denom
+        self.xi13 = (self.nu*self.varpi*(self.rs + self.delk)/(self.alpha * self.w))**(1./(1.- self.upsilon)) #same
+        self.xi14 = self.w*self.xi13*(self.xi8**(1./(1.-self.upsilon)))/self.denom #updated
+        self.xi9 = (self.eta*self.ome*self.nu*(1.-self.varpi)*self.p*self.xi8**self.alpha)\
+                   /((1.-self.eta)*(1.+self.tauc)*self.xi2**self.rho)
         self.xi12 = (self.vthet/self.veps)*self.nu*(1.-self.varpi)*self.p*self.xi8**self.alpha
-        # (self.vthet/self.veps) * self.p * self.nu_tilde * self.xi14
-
-        # the old formula
-        # self.xi10 = (self.p*self.xi8**self.alpha - (self.rs + self.delk)*self.xi8)*(1. - self.taum)/self.denom
-        # self.xi8 = (self.alpha*self.p/(self.rs + self.delk))**(1./(1. - self.alpha))
-        # self.xi12 = self.vthet/self.veps*self.nu*self.p*self.xi8**self.alpha
+        ### end to be updated ###
         
 
 
@@ -315,8 +320,6 @@ class Economy:
         print('varpi = ', self.varpi)
         print('tauc = ', self.tauc)
         print('taud = ', self.taud)
-        print('taum = ', self.taum)
-        print('taun = ', self.taun)
         print('taup = ', self.taup)
         print('theta = ', self.theta)
         print('tran (transfer) = ', self.tran)
@@ -326,6 +329,15 @@ class Economy:
         print('yn = ', self.yn)
         print('zeta = ', self.zeta)
         print('A = ', self.A)
+
+        print('taub = ', self.taub)
+        print('psib = ', self.psib)
+        print('bbracket = ', self.bbracket)                
+
+        print('taun = ', self.taun)
+        print('psin = ', self.psin)
+        print('nbracket = ', self.nbracket)
+
         
         
         
@@ -404,8 +416,6 @@ class Economy:
         varpi = self.varpi
         tauc = self.tauc
         taud = self.taud
-        taum = self.taum
-        taun = self.taun
         taup = self.taup
         theta = self.theta
         tran = self.tran
@@ -508,8 +518,6 @@ class Economy:
         varpi = self.varpi
         tauc = self.tauc
         taud = self.taud
-        taum = self.taum
-        taun = self.taun
         taup = self.taup
         theta = self.theta
         tran = self.tran
@@ -518,6 +526,10 @@ class Economy:
         xnb = self.xnb
         yn = self.yn
         zeta= self.zeta
+
+        taun = self.taun
+        psin = self.psin
+        nbracket = self.nbracket
 
         agrid = self.agrid
         kapgrid = self.kapgrid
@@ -578,20 +590,37 @@ class Economy:
 
             l = -1.0
 
+            n = -1.0
+            
+            #repeat until n falls in bracket nuber i (i=0,1,2,..,I-1)
+            i = 0
+            for i in range(len(taxn)):
+                n = (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*psin[i])/(w*eps*(1.-taun[i])*(xi3 + xi7))
+                wepsn = w*eps*n #wageincome
 
-            n = (xi3*eps - xi4*a + xi5*an - xi6)/(eps*(xi3 + xi7))
+                if i == 0:
+                    if wepsn < nbracket[0]:
+                        break
+
+                elif i <= I-2:
+                    if (nbracket[i-1] <= wepsn) and (nbracket[i] < wepsn):
+                        break
+                elif i == I-1:
+                    if nbracket[i] < wepsn:
+                        break
+                else:
+                    print('err: cstatic: no bracket for n')
+                        
 
             if n < 0.0:
                 n = 0.0
-
 
             if n >= 0. and n <= 1.:
 
                 l = 1. - n
 
-                #cc = xi3*eps*(1. - temp_n) #this is wrong at the corner.
-                cc = xi4*a - xi5*an + xi6 + xi7*eps*n
-
+                #cc from FOC  is wrong at the corner.
+                cc = xi4*a - xi5*an + xi6 + xi7*((1.-taun[i])*w*eps*n + psin[i])
                 cs = xi1*cc
                 cagg = xi2*cc
                 u = util(cagg, 1. - n)
@@ -600,123 +629,6 @@ class Economy:
             return u, cc, cs, cagg, l ,n
         return get_cstatic
 
-
-    def test(self, h, a, an, kap, kapn, z):
-        # a = s[0]
-        # an = s[1]
-        # kap = s[2]
-        # kapn = s[3]
-        # z = s[4]
-
-        
-        # for variable in self.__dict__ : exec(variable+'= self.'+variable)
-        alpha = self.alpha
-        beta = self.beta
-        chi = self.chi
-        delk = self.delk
-        delkap = self.delkap
-        eta = self.eta
-        g = self.g
-        grate = self.grate
-        la = self.la
-        mu = self.mu
-        ome = self.ome
-        upsilon = self.upsilon        
-        phi = self.phi
-        upsilon = self.upsilon        
-        rho = self.rho
-        varpi = self.varpi
-        tauc = self.tauc
-        taud = self.taud
-        taum = self.taum
-        taun = self.taun
-        taup = self.taup
-        theta = self.theta
-        tran = self.tran
-        veps = self.veps
-        vthet = self.vthet
-        xnb = self.xnb
-        yn = self.yn
-        zeta= self.zeta
-
-
-        agrid = self.agrid
-        kapgrid = self.kapgrid
-        epsgrid = self.epsgrid
-        zgrid = self.zgrid
-
-        prob = self.prob
-
-        is_to_iz = self.is_to_iz
-        is_to_ieps = self.is_to_ieps
-
-        amin = self.amin
-        num_suba_inner = self.num_suba_inner
-        num_subkap_inne = self.num_subkap_inner
-
-        num_a = self.num_a
-        num_kap = self.num_kap
-        num_eps = self.num_eps
-        num_z = self.num_z
-
-        nu = self.nu
-        bh = self.bh
- 
-        w = self.w
-        p = self.p
-        rc = self.rc
-
-        rbar = self.rbar
-        rs = self.rs
-
-        denom = self.denom
-        xi1 = self.xi1
-        xi2 = self.xi2
-        xi3 = self.xi3
-        xi4 = self.xi4
-        xi5 = self.xi5
-        xi6 = self.xi6
-        xi7 = self.xi7
-        xi8 = self.xi8
-        xi9 = self.xi9
-        xi10 = self.xi10
-        xi11 = self.xi11
-        xi12 = self.xi12
-        xi13 = self.xi13
-
-        alp1 = xi9
-        alp2 = (xi4*a - xi5*an + xi6)/((z*kap**phi)**(1./(1.- alpha)))
-        alp3 = xi10
-        alp5 = (((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))/(xi12 * (z*kap**phi)**(1./(1.-alpha))))**(vthet/(vthet + veps))
-        alp4 = xi11 * xi12 * alp5;
-        alp6 = varpi*(xi13**upsilon)*(xi8*(z*kap**phi)**(1./(1.-alpha)))**(upsilon/(1.-upsilon))
-
-        def Hy(h):
-
-            tmp = (1. - alp6*h**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))
-            #tmp = h**upsilon - varpi*(xi13**upsilon)*(xi8*(z*kap**phi)**(1./(1.-alpha))*h**(nu/(1.-alpha) - upsilon))**(upsilon/(1.-upsilon))
-            tmp = tmp / (1. - varpi)
-            tmp = (tmp**(1./upsilon))*h
-
-            return tmp
-
-        def g(h):
-
-            return ((h**(upsilon - nu/(1.-alpha)))*(Hy(h)**(1.-upsilon)))**(vthet/(veps+vthet))
-
-        
-
-        lhs = alp1*(1. - Hy(h) - alp5*g(h))
-        rhs = (alp2*h**(-nu/(1.-alpha)) + alp3)*(h**upsilon)*(Hy(h)**(1.-upsilon)) - alp4*g(h)
-
-        ks = xi8*(z*(kap**phi)*(h**nu))**(1./(1.-alpha)) 
-        ys = (xi8**alpha)*(z*(kap**phi)*(h**nu))**(1./(1.-alpha))
-        ns = xi13*(ks/(h**upsilon))**(1./(1.-upsilon))
-       
-
-
-        return Hy(h), lhs, rhs, ns
-    
     
     def generate_sstatic(self):
         
@@ -738,8 +650,6 @@ class Economy:
         varpi = self.varpi
         tauc = self.tauc
         taud = self.taud
-        taum = self.taum
-        taun = self.taun
         taup = self.taup
         theta = self.theta
         tran = self.tran
@@ -748,6 +658,11 @@ class Economy:
         xnb = self.xnb
         yn = self.yn
         zeta= self.zeta
+
+        taub = self.taub
+        psib = self.psib
+        bbracket = self.bbracket
+        
 
         agrid = self.agrid
         kapgrid = self.kapgrid
@@ -833,71 +748,116 @@ class Economy:
             if (kap == 0.0 and kapn > 0.0) or (kap > 0.0 and kap < 1.0e-9 and kapn > (1. - delkap)/(1. + grate) * kap):
             #if (kap < 1.0e-10) and kapn >= 1.0e-10:
 
-                # #old version that is inconsistent in limit                
-                # alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc)
-                # alp2 = vthet*(xi4*a - xi5*an + xi6)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet)
-                # alp3 = vthet/(veps*denom)
-
                 #New version which is consistent with kap>0 version in limit                
-                alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc) * (1. - taum)
-                alp2 = vthet*(xi4*a - xi5*an + xi6)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet)
-                alp3 = vthet/(veps*((1. + p*xi1)*(1. + tauc))) * (1. - taum)
+                alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc) #updated
+                # alp2 = vthet*(xi4*a - xi5*an + xi6 + xi7*phib[ib])/(1.-taub[ib])/veps/ ((1.+grate)*kapn/zeta)**(1./vthet) #updated
+                alp2 = vthet*(xi4*a - xi5*an + xi6 + xi7*psib)/(1.-taub)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet) #updated
+                alp3 = vthet/(veps*((1. + p*xi1)*(1. + tauc))) #updated
 
                 
-                if alp2 == alp3:
-                    print('warning: alp2 == alp3')
-                    return 0.0, 0.0, 1.0 #in this case, utility must be -inf
+                # if alp2 == alp3:
+                #     print('warning: alp2 == alp3')
+                #     return 0.0, 0.0, 1.0 #in this case, utility must be -inf
 
-                if (alp2< alp3) or (alp2 <=0):
-                    return -1., -1., -1. #the solution does not exist
+                # if (alp2< alp3) or (alp2 <=0):
+                #     return -1., -1., -1.  #the solution does not exist
 
-
-                mx_lb = max( (alp3*vthet/(alp2*(vthet + veps)))**(vthet/veps), (alp3/alp2) )
-
-                # print('alp1 = ' , alp1)
-                # print('alp2 = ' , alp2)
-                # print('alp2 = ' , alp3)
-                # print('kapn = ' , kapn)                                
-
-        #         obj = lambda mx: alp1*(1. - mx) - alp2*mx**((vthet + veps)/vthet) + alp3*mx
-        #         objprime = lambda mx: -alp1 - alp2*((vthet + veps)/vthet)*mx**(veps/vthet) + alp3
-        #         ans = newton(obj_find_mx, mx_lb , fprime = d_obj_find_mx, args = (alp1, alp2, alp3), tol = 1.0e-15)
-
-
-                ###start newton method
-                mx = mx_lb
-                # print('mx = ', mx_lb)
+                hk_min = 0.0
+                hk_max = 1.0
                 
+
+                ####bisection start
+                x_lb = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk_min**(-veps/vthet)
+                ib_lb = locate(x_lb, bbracket)
+                val_lb = alp1*(1. - hk_min) - alp2[ib_lb]*hk_min**((vthet + veps)/vthet) + alp3*hk_min
+
+                x_ub = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk_max**(-veps/vthet)                
+                ib_ub = locate(x_ub, bbracket)                
+                val_ub = alp1*(1. - hk_max) - alp2[ib_ub]*hk_max**((vthet + veps)/vthet) + alp3*hk_max
+
+                
+                if val_lb *val_ub > 0.0:
+                    print('error: no bracket')
+                    return -1., -1., -1.
+                
+                sign = -1.0
+                if val_ub > 0.:
+                    sign = 1.0
+
+                hk = (hk_max + hk_min)/2.
+                ib = locate(hk, bbracket)
+
                 it = 0
-                maxit = 100 #scipy's newton use maxit = 50
-                tol = 1.0e-15
-                dist = 10000.
+                tol = 1.0e-12
+                maxit = 200
+                val_m = 10000.
 
+                ib = ib_lb // 2
                 while it < maxit:
                     it = it + 1
-                    res = alp1*(1. - mx) - alp2*mx**((vthet + veps)/vthet) + alp3*mx
+                    
+                    val_m = alp1*(1. - hk) - alp2[ib]*hk**((vthet + veps)/vthet) + alp3*hk
 
-                    dist = abs(res)
 
-                    if dist < tol:
+                    if sign * val_m > 0.:
+                        hk_max = hk
+                    elif sign * val_m < 0.:
+                        hk_min = hk
+
+                    diff = abs((hk_max + hk_min)/2 - hk)
+                    hk = (hk_max + hk_min)/2.
+                    x = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk**(-veps/vthet)
+                    ib = hunt(x, bbracket, ib)
+
+                    if diff < tol:
                         break
-
-                    dres= -alp1 - alp2*((vthet + veps)/vthet)*mx**(veps/vthet) + alp3
-                    diff = res/dres
-                    mx = mx - res/dres
 
                 #convergence check
                 if it == maxit:
-                    print('err: newton method for mx did not converge.')
-                    print('mx = ', mx)
-
+                    print('err: bisection method for hmax did not converge.')
+                    print('val_m = ', val_m)
+                    print('hk = ', hk)                    
+                    print('hk_max = ', hk_max)
+                    print('diff = ', diff)                    
+                    
+                ####bisection end
                 
 
-                ans = mx    
+                # # mx_lb = max( (alp3*vthet/(alp2*(vthet + veps)))**(vthet/veps), (alp3/alp2) ) #typo?
+                # # mx_lb = max( (alp3*vthet/(alp2*(vthet + veps)))**(vthet/veps), (alp3/alp2)**(vthet/veps) )
 
-                ###end newton method
+                # ###start newton method
+                # mx = mx_lb
+                # # print('mx = ', mx_lb)
+                
+                # it = 0
+                # maxit = 100 #scipy's newton use maxit = 50
+                # tol = 1.0e-15
+                # dist = 10000000.
 
-                return 0., 0., ans
+                # while it < maxit:
+                #     it = it + 1
+                #     res = alp1*(1. - mx) - alp2*mx**((vthet + veps)/vthet) + alp3*mx
+
+                #     dist = abs(res)
+
+                #     if dist < tol:
+                #         break
+
+                #     dres= -alp1 - alp2*((vthet + veps)/vthet)*mx**(veps/vthet) + alp3
+                #     diff = res/dres
+                #     mx = mx - res/dres
+
+                # #convergence check
+                # if it == maxit:
+                #     print('err: newton method for mx did not converge.')
+                #     print('mx = ', mx)
+
+                # ans = mx    
+
+                # ###end newton method
+
+                return 0., 0., hk
             
             #case 1            
             elif kap == 0.0 and kapn == 0.0:
@@ -907,15 +867,15 @@ class Economy:
             #case 2 -- the main --
             elif kap > 0.0 and kapn > (1. - delkap)/(1. + grate) * kap:
 
-                alp1 = xi9
-                alp2 = (xi4*a - xi5*an + xi6)/((z*kap**phi)**(1./(1.- alpha)))
-                alp3 = xi10
+                alp1 = xi9 
+                alp2 = (xi4*a - xi5*an + xi6 + xi7*psib)/(1.-taub)/((z*kap**phi)**(1./(1.- alpha))) #updated
+                alp3 = xi10 
                 alp5 = (((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))/(xi12 * (z*kap**phi)**(1./(1.-alpha))))**(vthet/(vthet + veps))
                 alp4 = xi11 * xi12 * alp5
                 alp6 = varpi*(xi13**upsilon)*(xi8*(z*kap**phi)**(1./(1.-alpha)))**(upsilon/(1.-upsilon))
-                alp7 = xi14*(z*kap**phi)**((1./(1.-alpha))*(upsilon/(1.-upsilon)))
+                alp7 = xi14*(z*kap**phi)**((1./(1.-alpha))*(upsilon/(1.-upsilon))) #              
 
-                h_lbar = get_h_lbar(alp6)
+                h_lbar = alp6**(1./(upsilon + (upsilon - nu/(1.-alpha))*(upsilon/(1.-upsilon))))
 
                 ### we can do better ###
                 tmp = (alp6 + 1. - varpi)
@@ -972,10 +932,38 @@ class Economy:
                 h_ub = hmax
 
                 #check bracketting
-                # val_lb = alp1*(1. - Hy(h_lb, alp6) - alp5*g(h_lb, alp6))\
-                #     - (alp2*h_lb**(-nu/(1.-alpha)) + alp3 - alp7*h_lb**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))*(h_lb**upsilon)*(Hy(h_lb, alp6)**(1.-upsilon)) + alp4*g(h_lb, alp6)
+                hk_lb = alp5*g(h_lb, alp6)
+                x_lb = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk_lb**(-veps/vthet)
+                ys_lb = (xi8**alpha)*(z*(kap**phi)*(h_lb**nu))**(1./(1.-alpha))
+                ks_lb = xi8*(z*(kap**phi)*(h_lb**nu))**(1./(1.-alpha))
+                if h_lb > 0.0:
+                    ns_lb = xi13*(ks_lb/(h_lb**upsilon))**(1./(1.-upsilon))
+                else:
+                    ns_lb = 0.0
+
+                bizinc_lb = p*ys_lb - (rs + delk)*ks_lb - x_lb - w*ns_lb
+                
+                
+                ib_lb = locate(bizinc_lb, bbracket) 
+                val_lb = alp1*(1. - Hy(h_lb, alp6) - alp5*g(h_lb, alp6))\
+                         - (alp2[ib_lb]*h_lb**(-nu/(1.-alpha)) + alp3 - alp7*h_lb**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))*(h_lb**upsilon)*(Hy(h_lb, alp6)**(1.-upsilon)) + alp4*g(h_lb, alp6)
+
+
+                hk_ub = alp5*g(h_ub, alp6)
+                x_ub = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk_ub**(-veps/vthet)
+                ys_ub = (xi8**alpha)*(z*(kap**phi)*(h_ub**nu))**(1./(1.-alpha))
+                ks_ub = xi8*(z*(kap**phi)*(h_ub**nu))**(1./(1.-alpha))
+                if h_ub > 0.0:
+                    ns_ub = xi13*(ks_ub/(h_ub**upsilon))**(1./(1.-upsilon))
+                else:
+                    ns_ub = 0.0
+
+                bizinc_ub = p*ys_ub - (rs + delk)*ks_ub - x_ub - w*ns_ub
+                
+
+                ib_ub = locate(bizinc_ub, bbracket) 
                 val_ub = alp1*(1. - Hy(h_ub, alp6) - alp5*g(h_ub, alp6))\
-                    - (alp2*h_ub**(-nu/(1.-alpha)) + alp3 - alp7*h_ub**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))*(h_ub**upsilon)*(Hy(h_ub, alp6)**(1.-upsilon)) + alp4*g(h_ub, alp6)
+                         - (alp2[ib_ub]*h_ub**(-nu/(1.-alpha)) + alp3 - alp7*h_ub**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))*(h_ub**upsilon)*(Hy(h_ub, alp6)**(1.-upsilon)) + alp4*g(h_ub, alp6)
 
                 # print('val_lb = ', val_lb)
                 # print('val_ub = ', val_ub)
@@ -988,8 +976,8 @@ class Economy:
                 # print('alp6 = ', alp6)                    
                 
                 
-                if val_ub > 0.0: #we know that val_lb < 0.0
-                    # print('no bracket for h. Infer no solution')
+                if val_ub*val_lb > 0.0: 
+                    print('no bracket for h. Infer no solution')
                     return -1., -1., -1.
                 
                 sign = -1.0
@@ -997,6 +985,7 @@ class Economy:
                     sign = 1.0
 
                 h = (h_lb + h_ub)/2.
+                ib = locate(h, bbracket) 
 
                 it = 0
                 tol = 1.0e-12
@@ -1013,7 +1002,7 @@ class Economy:
                     #     tol = 1.0e-20
 
                     val_m = alp1*(1. - Hy(h, alp6) - alp5*g(h, alp6))\
-                            - (alp2*h**(-nu/(1.-alpha)) + alp3 - alp7*h**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))*(h**upsilon)*(Hy(h, alp6)**(1.-upsilon)) + alp4*g(h, alp6)
+                            - (alp2[ib]*h**(-nu/(1.-alpha)) + alp3 - alp7*h**((nu/(1.-alpha) - upsilon)*(upsilon/(1.-upsilon))-upsilon))*(h**upsilon)*(Hy(h, alp6)**(1.-upsilon)) + alp4*g(h, alp6)
 
                     if sign * val_m > 0.:
                         h_ub = h
@@ -1023,12 +1012,27 @@ class Economy:
                     diff = abs((h_lb + h_ub)/2 - h)
                     h = (h_lb + h_ub)/2.
 
+
+                    hk = alp5*g(h, alp6)
+                    x = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk**(-veps/vthet)
+                    ys = (xi8**alpha)*(z*(kap**phi)*(h**nu))**(1./(1.-alpha))
+                    ks = xi8*(z*(kap**phi)*(h**nu))**(1./(1.-alpha))
+                    
+                    if h > 0.0:
+                        ns = xi13*(ks/(h**upsilon))**(1./(1.-upsilon))
+                    else:
+                        ns = 0.0
+
+                    bizinc = p*ys - (rs + delk)*ks - x - w*ns
+                    
+                    ib = hunt(bizinc, bbracket, ib) 
+
                     if diff < tol and abs(val_m) < rtol:
                         break
 
                 #convergence check
                 if it == maxit:
-                    print('err: bisection method for hy did not converge.')
+                    print('err: bisection method for h did not converge.')
                     # print('it = ', it)
                     # print('tol = ', tol)
                     # print('diff = ', diff)
@@ -1115,13 +1119,6 @@ class Economy:
 
                     l = 1.0 - hy - hkap
 
-                    cc = xi4*a - xi5*an + xi6 - xi11*x + xi10*(z*kap**phi)**(1./(1.-alpha))*(h**(nu/(1.-alpha))) \
-                        - xi14*(z*kap**phi)**(1./((1. - alpha)*(1.-upsilon)))*h**((nu/(1.-alpha) - upsilon)*(1./(1.-upsilon)))
-                    
-
-                    cs = xi1 * cc
-                    cagg = xi2 * cc
-
                     ks = xi8*(z*(kap**phi)*(h**nu))**(1./(1.-alpha)) 
                     ys = (xi8**alpha)*(z*(kap**phi)*(h**nu))**(1./(1.-alpha))
 
@@ -1135,6 +1132,16 @@ class Economy:
                         ys_tmp = 0.0
                         h_tmp = 0.0
 
+                    bizinc = p*ys - (rs + delk)*ks - x - w*ns
+                    ib = locate(bizinc, bbracket)
+
+                    
+                    cc = xi4*a - xi5*an + xi6 + xi7*psib[ib] - xi11*(1.-taub[ib])*x \
+                        + xi10*(1.-taub[ib])*(z*kap**phi)**(1./(1.-alpha))*(h**(nu/(1.-alpha))) \
+                        - xi14*(1.-taub[ib])*(z*kap**phi)**(1./((1. - alpha)*(1.-upsilon)))*h**((nu/(1.-alpha) - upsilon)*(1./(1.-upsilon)))
+
+                    cs = xi1 * cc
+                    cagg = xi2 * cc
 
 
                     # #ys and ys_tmp are often slightly different, so tolerate small difference
@@ -1149,7 +1156,7 @@ class Economy:
                         print('h_tmp = ', h_tmp)                        
 
                     if h > 0.0:
-                        cc_tmp = xi9*(z*kap**phi)**(1./(1.-alpha))*(h**(nu/(1.-alpha) - upsilon))*(hy**(upsilon  - 1.0))*(1. - hy - hkap)                        
+                        cc_tmp = xi9*(1.-taub[ib])*(z*kap**phi)**(1./(1.-alpha))*(h**(nu/(1.-alpha) - upsilon))*(hy**(upsilon  - 1.0))*(1. - hy - hkap)                        
                         if (np.abs(cc - cc_tmp) > 1.0e-3):
                             print('err: cc does not match')
                             print('cc = ', cc)
