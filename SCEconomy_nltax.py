@@ -768,11 +768,11 @@ class Economy:
 
                 ####bisection start
                 x_lb = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk_min**(-veps/vthet)
-                ib_lb = locate(x_lb, bbracket)
+                ib_lb = locate(-x_lb, bbracket)
                 val_lb = alp1*(1. - hk_min) - alp2[ib_lb]*hk_min**((vthet + veps)/vthet) + alp3*hk_min
 
                 x_ub = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk_max**(-veps/vthet)                
-                ib_ub = locate(x_ub, bbracket)                
+                ib_ub = locate(-x_ub, bbracket)                
                 val_ub = alp1*(1. - hk_max) - alp2[ib_ub]*hk_max**((vthet + veps)/vthet) + alp3*hk_max
 
                 
@@ -785,14 +785,14 @@ class Economy:
                     sign = 1.0
 
                 hk = (hk_max + hk_min)/2.
-                ib = locate(hk, bbracket)
+                x = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk**(-veps/vthet)
+                ib = locate(-x, bbracket)
 
                 it = 0
                 tol = 1.0e-12
                 maxit = 200
                 val_m = 10000.
 
-                ib = ib_lb // 2
                 while it < maxit:
                     it = it + 1
                     
@@ -807,7 +807,7 @@ class Economy:
                     diff = abs((hk_max + hk_min)/2 - hk)
                     hk = (hk_max + hk_min)/2.
                     x = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk**(-veps/vthet)
-                    ib = hunt(x, bbracket, ib)
+                    ib = hunt(-x, bbracket, ib)
 
                     if diff < tol:
                         break
