@@ -322,7 +322,7 @@ class Economy:
         print('taud = ', self.taud)
         print('taup = ', self.taup)
         print('theta = ', self.theta)
-        print('tran (transfer) = ', self.tran)
+        # print('tran (transfer) = ', self.tran)
         print('veps = ', self.veps)
         print('vthet = ', self.vthet)
         print('xnb = ', self.xnb)
@@ -626,7 +626,7 @@ class Economy:
                 u = util(cagg, 1. - n)
 
 
-            return u, cc, cs, cagg, l ,n
+            return u, cc, cs, cagg, l ,n, i, taun[i], psin[i]
         return get_cstatic
 
     
@@ -1173,7 +1173,7 @@ class Economy:
                         u = util(cagg, l)
 
 
-            return u, cc, cs, cagg, l, hy, hkap, h ,x, ks, ys, ns
+            return u, cc, cs, cagg, l, hy, hkap, h ,x, ks, ys, ns, ib, taub[ib], psib[ib]
         
         return get_sstatic
 
@@ -2257,7 +2257,7 @@ class Economy:
 
         if rank == 0:
 
-            data_ss = np.ones((num_total_pop, 17)) * (-2.0)
+            data_ss = np.ones((num_total_pop, 20)) * (-2.0)
 
             t = -1
             for i in range(num_total_pop):
@@ -2278,10 +2278,14 @@ class Economy:
                     data_ss[i,3] = an
                     data_ss[i,4] = kapn
                     data_ss[i,5] = eps
-                    data_ss[i,6:11] = get_cstatic([a, an, eps])[1:]
+                    tmp = get_cstatic([a, an, eps])
+                    data_ss[i,6:11] = tmp[1:6]
+                    data_ss[i,17:20] = tmp[6:9]
+                    
+                    
 
                     # cstatic returns
-                    # u cc, cs, cagg, l, n
+                    # u cc, cs, cagg, l, n, in_bracket(tax bracket), taun[], psin[]
                     # data_ss[10] can be n or hy, that is fairly consistent
 
                 else:
@@ -2298,8 +2302,10 @@ class Economy:
                     data_ss[i,3] = an
                     data_ss[i,4] = kapn
                     data_ss[i,5] = z
-                    data_ss[i,6:17] = get_sstatic([a, an, kap, kapn, z])[1:]
+                    tmp = get_sstatic([a, an, kap, kapn, z])
+                    data_ss[i,6:20] = tmp[1:]
 
+                    u, cc, cs, cagg, l, hy, hkap, h ,x, ks, ys, ns
                     # sstatic returns
                     # u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns
 
@@ -2321,6 +2327,9 @@ class Economy:
                     # 14: ks
                     # 15: ys
                     # 16: ns
+                    # 17: i_bracket
+                    # 18: taub[] or taun[]
+                    # 19: psib[] or psin[]
         
 
 
@@ -2440,6 +2449,10 @@ class Economy:
             # 14: ks
             # 15: ys
             # 16: ns
+            # 17: i_bracket
+            # 18: taub[] or taun[]
+            # 19: psib[] or psin[]
+            
             
 
             
@@ -2463,13 +2476,13 @@ class Economy:
             Ecagg_c = np.mean((data_ss[:,6] + p*data_ss[:,7] )* (data_ss[:,0]))
             Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * (1. - data_ss[:,0]))
 
-            ETn = np.mean((taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0])
+            # ETn = np.mean((taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0])
+            ETn = np.mean((data_ss[:,18]*w*data_ss[:,5]*data_ss[:,10] - data_ss[:,19])*data_ss[:,0])            
 
-            ETm = np.mean((taum*(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13]) - tran)*(1. - data_ss[:,0]) )
-            # old, inconsistent version 
-                   
-            # ETm = np.mean((taum*np.fmax(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13], 0.) - tran)*(1. - data_ss[:,0]) )
+            # ETm = np.mean((taum*(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13]) - tran)*(1. - data_ss[:,0]) )            
+            ETm = np.mean((data_ss[:,18]*(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13]) - data_ss[:,19])*(1. - data_ss[:,0]) )
 
+            E_transfer = np.mean(data_ss[:,19])
 
             # yc = 1.0 #we can do this by choosing C-corp firm productivity A
 
@@ -2497,7 +2510,7 @@ class Economy:
             b = Ea - (1. - taud)*kc - Eks
     #         netb = (grate + delk)*b ##typo
             netb = (rbar - grate)*b
-            tax_rev = Tc + ETn + ETm + Td + Tp + tran
+            tax_rev = Tc + ETn + ETm + Td + Tp + E_transfer
 
             GDP = yc + yn + p*Eys
             C = Ecc + p*Ecs
@@ -2545,7 +2558,7 @@ class Economy:
             # mom0 = 1. - (1. - theta)*yc/(w*nc)
             mom0 = 1. - Ecs/Eys
             mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
-            mom2 = 1. - (tax_rev - tran - netb)/g            
+            mom2 = 1. - (tax_rev - E_transfer - netb)/g            
             print('')
 
             # print('1-(1-thet)*yc/(E[w*eps*n]) = {}'.format(mom0))
@@ -2612,7 +2625,7 @@ class Economy:
             print('Govt Budget:')
             print('  Public Consumption(g) = {}'.format(g))
             print('  Net borrowing(netb) = {}'.format(netb))
-            print('  Transfer(tran) = {}'.format(tran))
+            print('  Transfer  = {}'.format(E_transfer))
             print('  Tax revenue(tax_rev) = {}'.format(tax_rev))
 
             print('')
@@ -2651,7 +2664,7 @@ class Economy:
 
             mom0 = 1. - Ecs/Eys
             mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
-            mom2 = 1. - (tax_rev - tran - netb)/g            
+            mom2 = 1. - (tax_rev - E_transfer - netb)/g            
             mom3 = 0.0
             mom4 = Ens/En
             mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
@@ -2933,7 +2946,7 @@ class Economy:
 
         @nb.jit(nopython = True, parallel = True)
         def calc_all(data_a_, data_kap_, data_i_s_, data_is_c_,
-                     data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_, data_hy_, data_hkap_, data_h_, data_x_, data_ks_, data_ys_, data_ns_):
+                     data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_, data_hy_, data_hkap_, data_h_, data_x_, data_ks_, data_ys_, data_ns_, data_i_tax_bracket_):
 
             for i in nb.prange(num_total_pop):
                 for t in range(1, sim_time):
@@ -2965,11 +2978,12 @@ class Economy:
 
                     is_c = data_is_c_[i, t]
 
+
                     # data_ss
                     # 0: is_c
                     # 1: a
-                    # 2: an
-                    # 3: kap
+                    # 2: kap
+                    # 3: an
                     # 4: kapn
                     # 5: eps or z
                     # 6: cc
@@ -2983,11 +2997,15 @@ class Economy:
                     # 14: ks
                     # 15: ys
                     # 16: ns
+                    # 17: i_bracket
+                    # 18: taub[] or taun[]
+                    # 19: psib[] or psin[]
+            
 
                     if is_c:
-                        u, cc, cs, cagg, l ,n = get_cstatic([a, an, eps])
+                        u, cc, cs, cagg, l , n, i, tau, psi = get_cstatic([a, an, eps])
                     else:
-                        u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns = get_sstatic([a, an, kap, kapn, z])
+                        u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns, i, tau, psi = get_sstatic([a, an, kap, kapn, z])
 
                     data_u_[i, t] = u
                     data_cc_[i, t] = cc
@@ -3001,7 +3019,8 @@ class Economy:
                     data_x_[i, t] = x
                     data_ks_[i, t] = ks
                     data_ys_[i, t] = ys
-                    data_ns_[i, t] = ns                    
+                    data_ns_[i, t] = ns
+                    data_i_tax_bracket_[i, t] = i
                     
         data_u = np.zeros(data_a.shape)
         data_cc = np.zeros(data_a.shape)
@@ -3015,11 +3034,12 @@ class Economy:
         data_x = np.zeros(data_a.shape)
         data_ks = np.zeros(data_a.shape)
         data_ys = np.zeros(data_a.shape)
-        data_ns = np.zeros(data_a.shape)        
+        data_ns = np.zeros(data_a.shape)
+        data_i_tax_bracket = np.zeros(data_a.shape)
 
         #note that this does not store some impolied values,,,, say div or value of sweat equity
         calc_all(data_a, data_kap, data_i_s, data_is_c, ##input
-                 data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_hy, data_hkap, data_h, data_x, data_ks, data_ys, data_ns ##output
+                 data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_hy, data_hkap, data_h, data_x, data_ks, data_ys, data_ns, data_i_tax_bracket ##output
             )
 
 
@@ -3080,7 +3100,8 @@ class Economy:
         self.data_x = data_x
         self.data_ks = data_ks
         self.data_ys = data_ys
-        self.data_ns = data_ns        
+        self.data_ns = data_ns
+        self.data_i_tax_bracket = data_i_tax_bracket
 
         # self.data_div_sweat = data_div_sweat
         # self.data_val_sweat = data_val_sweat        
@@ -3097,7 +3118,15 @@ class Economy:
             np.save(dir_path_save + 'agrid', self.agrid)
             np.save(dir_path_save + 'kapgrid', self.kapgrid)
             np.save(dir_path_save + 'zgrid', self.zgrid)
-            np.save(dir_path_save + 'epsgrid', self.epsgrid)                         
+            np.save(dir_path_save + 'epsgrid', self.epsgrid)
+
+            np.save(dir_path_save + 'taub', self.taub)
+            np.save(dir_path_save + 'psib', self.psib)
+            np.save(dir_path_save + 'bbracket', self.bbracket)                                                             
+
+            np.save(dir_path_save + 'taun', self.taun)
+            np.save(dir_path_save + 'psin', self.psin)
+            np.save(dir_path_save + 'nbracket', self.nbracket)                                                             
             
             np.save(dir_path_save + 'data_a', self.data_a[:, -100:])
             np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:])
@@ -3115,7 +3144,8 @@ class Economy:
             np.save(dir_path_save + 'data_x', self.data_x[:, -100:])
             np.save(dir_path_save + 'data_ks', self.data_ks[:, -100:])
             np.save(dir_path_save + 'data_ys', self.data_ys[:, -100:])
-            np.save(dir_path_save + 'data_ns', self.data_ns[:, -100:])            
+            np.save(dir_path_save + 'data_ns', self.data_ns[:, -100:])
+            np.save(dir_path_save + 'data_i_tax_bracket', self.data_i_tax_bracket[:, -100:])                        
             
             np.save(dir_path_save + 'data_ss', self.data_ss)
 
@@ -3124,9 +3154,6 @@ class Economy:
             np.save(dir_path_save + 'vs_kapn', self.vs_kapn)
             np.save(dir_path_save + 'vcn', self.vcn)
             np.save(dir_path_save + 'vsn', self.vsn)
-
-
-          
 
             # np.save(dir_path_save + 'sweat_div', self.sweat_div)
             # np.save(dir_path_save + 'sweat_val', self.sweat_val)
