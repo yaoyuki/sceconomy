@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import subprocess
-from SCEconomy_hy_ns import Economy, split_shock
+from SCEconomy_nltax import Economy, split_shock
 
 import pickle
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
     # prices
-    p_, rc_, ome_, varpi_ = 1.347434787993277, 0.06148943609627755, 0.3996339901220936, 0.545313496582086
+    p_, rc_, ome_, varpi_ = 1.3594680204658702, 0.06136345811360533, 0.40, 0.60
     
 
     split_shock('./input_data/data_i_s', 100_000, num_core)
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.75,\
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01,\
                    ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(p = p_, rc = rc_)
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     t0 = time.time()
 
     #don't forget to replace import argument
-    result = subprocess.run(['mpiexec', '-n', str(num_core), 'python', 'SCEconomy_hy_ns.py'], stdout=subprocess.PIPE)
+    result = subprocess.run(['mpiexec', '-n', str(num_core), 'python', 'SCEconomy_nltax.py'], stdout=subprocess.PIPE)
     
     t1 = time.time()
 

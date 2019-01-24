@@ -190,11 +190,15 @@ class Economy:
         self.path_to_data_i_s = './input_data/data_i_s.npy'
 
 
-        self.taub = np.array([0.05, 0.1, 0.18, 0.20, 0.22, 0.24, 0.25])
-        self.psib = np.array([0.1395, 0.1420, 0.1500, 0.1540, 0.1640, 0.1840, 0.2340])
-        self.bbracket = np.array([-np.inf, 0.05, 0.1, 0.20, 0.50, 1.0, 5.0, np.inf])
+        self.taub = np.array([0.2])
+        self.psib = np.array([0.15])
+        self.bbracket = np.array([-np.inf, np.inf])
+        
+        # self.taub = np.array([0.05, 0.1, 0.18, 0.20, 0.22, 0.24, 0.25])
+        # self.psib = np.array([0.1395, 0.1420, 0.1500, 0.1540, 0.1640, 0.1840, 0.2340])
+        # self.bbracket = np.array([-np.inf, 0.05, 0.1, 0.20, 0.50, 1.0, 5.0, np.inf])
 
-        self.taun = np.array([0.2])
+        self.taun = np.array([0.4])
         self.psin = np.array([0.15])
         self.nbracket = np.array([-np.inf, np.inf])
         
