@@ -2306,7 +2306,6 @@ class Economy:
                     tmp = get_sstatic([a, an, kap, kapn, z])
                     data_ss[i,6:20] = tmp[1:]
 
-                    u, cc, cs, cagg, l, hy, hkap, h ,x, ks, ys, ns
                     # sstatic returns
                     # u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns
 
