@@ -598,7 +598,7 @@ class Economy:
             
             #repeat until n falls in bracket nuber i (i=0,1,2,..,I-1)
             i = 0
-            for i in range(len(taxn)):
+            for i in range(len(taun)):
                 n = (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*psin[i])/(w*eps*(1.-taun[i])*(xi3 + xi7))
                 wepsn = w*eps*n #wageincome
 
@@ -2773,14 +2773,15 @@ class Economy:
                             kapn = kapn_s
 
 
-                            u, cc, cs, cagg, l, hy, hkap, hy, x, ks, ys, ns = get_sstatic([a, an, kap, kapn, z])
+                            u, cc, cs, cagg, l, hy, hkap, hy, x, ks, ys, ns, i, tau, psi = get_sstatic([a, an, kap, kapn, z])
 
 
                             #print(f'u = {u}')
                             u_c[ia, ikap, istate] = dc_util(cagg, l)
 
                             profit = p*ys - (rs + delk)*ks - x - w*ns #this can be nagative
-                            tax = taum * max(profit, 0.) #not sure this is correct. this should be (kap == 0 or kap > 0)
+                            tax = tau * profit # - psi
+                            # tax = taum * max(profit, 0.) #not sure this is correct. this should be (kap == 0 or kap > 0)
                             div = phi * p * ys - x - w*ns #div related to sweat equity
 
 
@@ -2798,7 +2799,7 @@ class Economy:
 
                             eps = epsgrid[is_to_ieps[istate]]
 
-                            u, cc, cs, cagg, l ,n = get_cstatic([a, an, eps])
+                            u, cc, cs, cagg, l ,n, inbracket, tau, tran   = get_cstatic([a, an, eps])
                             u_c[ia, ikap, istate] = dc_util(cagg, l)
 
                         an1[ia, ikap, istate] = an
