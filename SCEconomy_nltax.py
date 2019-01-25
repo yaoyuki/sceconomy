@@ -598,19 +598,16 @@ class Economy:
             
             #repeat until n falls in bracket nuber i (i=0,1,2,..,I-1)
             i = 0
+            num_taun = len(taun)
             for i in range(len(taun)):
                 n = (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*psin[i])/(w*eps*(1.-taun[i])*(xi3 + xi7))
                 wepsn = w*eps*n #wageincome
 
-                if i == 0:
-                    if wepsn < nbracket[0]:
+                if i <= num_taun-2:
+                    if (nbracket[i] <= wepsn) and (nbracket[i+1] < wepsn):
                         break
-
-                elif i <= I-2:
-                    if (nbracket[i-1] <= wepsn) and (nbracket[i] < wepsn):
-                        break
-                elif i == I-1:
-                    if nbracket[i] < wepsn:
+                elif i == num_taun-1:
+                    if nbracket[i] <= wepsn:
                         break
                 else:
                     print('err: cstatic: no bracket for n')
