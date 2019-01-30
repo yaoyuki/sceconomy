@@ -74,7 +74,7 @@ def target(prices):
     t0 = time.time()
 
     #result = subprocess.run(['mpiexec', '-n', num_core, '--machinefile=node.hf' ,'python', 'SCEconomy_s_emp.py'], stdout=subprocess.PIPE)
-    result = subprocess.run(['mpiexec', '-n', num_core ,'python', 'SCEconomy_hy_ns.py'], stdout=subprocess.PIPE)
+    result = subprocess.run(['mpiexec', '-n', num_core ,'python', 'SCEconomy_nltax.py'], stdout=subprocess.PIPE)
     t1 = time.time()
     
 
