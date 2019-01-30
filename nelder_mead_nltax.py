@@ -5,16 +5,19 @@ import numpy as np
 import time
 import subprocess
 ### use modified version of SCEConomy module
-from SCEconomy_hy_ns import Economy, split_shock
+from SCEconomy_nltax import Economy, split_shock
 
 import pickle
 
 p_init = float(args[1])
 rc_init = float(args[2])
-num_core = args[3]
+ome_init = float(args[3])
+varpi_init = float(args[4])
+
+num_core = args[5]
 
 print('the code is running with ', num_core, 'cores...')
-prices_init = [p_init, rc_init]
+prices_init = [p_init, rc_init, ome_init, varpi_init]
 
 
 nd_log_file = '/home/yaoxx366/sceconomy/log/log.txt'
@@ -49,6 +52,9 @@ def target(prices):
     
     p_ = prices[0]
     rc_ = prices[1]
+    ome_ = prices[2]
+    varpi_ = prices[3]
+    
     
     # print('computing for the case w = {:f}, p = {:f}, rc = {:f}'.format(w_, p_, rc_), end = ', ')
     print('computing for the case p = {:f}, rc = {:f}'.format(p_, rc_), end = ', ')
@@ -57,8 +63,8 @@ def target(prices):
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
     #econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.6, varpi = 0.1)
 
-    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.75,\
-                   ome = 0.3996339901220936, varpi = 0.545313496582086, path_to_data_i_s = './input_data/data_i_s')
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50,\
+                   ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
 
 
     econ.set_prices(p = p_, rc = rc_)
@@ -84,6 +90,9 @@ def target(prices):
         
     p = econ.p
     rc = econ.rc
+    ome = econ.ome
+    varpi = econ.varpi
+
     moms = econ.moms
 
             
@@ -98,19 +107,23 @@ def target(prices):
         
     
 
-    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0) #mom3 should be missing.
+    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0) #mom3 should be missing.
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0 + 100.0*(moms[4] - 0.3)**2.0 +500.* (moms[5]-0.09)**2.0 + 100.*(moms[6] - 0.11)**2.0) #mom3 should be missing.
-    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + 100.0*(moms[4] - 0.3)**2.0 +500.* (moms[5]-0.09)**2.0 + 100.*(moms[7] - 0.37)**2.0) #mom3 should be missing.
+    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + 100.0*(moms[4] - 0.3)**2.0 +500.* (moms[5]-0.09)**2.0 + 100.*(moms[7] - 0.37)**2.0) #mom3 should be missing.
     
-    if p != p_ or  rc != rc_:
+    if p != p_ or  rc != rc_ or ome != ome_ or varpi != varpi_:
         print('err: input prices and output prices do not coincide.')
         print('p = ', p, ', p_ = ', p_)
         print('rc = ', rc, ', rc_ = ', rc_)
-    
+        print('ome = ', ome, ', ome_ = ', ome_)
+        print('varpi = ', varpi, ', varpi_ = ', varpi_)
+
+
+        
     print('dist = {:f}'.format(dist))
 
     f = open(nd_log_file, 'a')
-    f.writelines(str(p) + ', ' + str(rc) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + '\n')
+    f.writelines(str(p) + ', ' + str(rc) + ', ' + str(ome) + ', ' + str(varpi) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[4]) + ', ' + str(moms[5]) + ', ' + str(moms[7]) +  '\n')
     # f.writelines(str(p) + ', ' + str(rc) + ', ' + str(varpi) + ', ' + str(ome) + ', ' + str(theta) + ', ' +  str(dist) + ', ' +\
   
     f.close()
