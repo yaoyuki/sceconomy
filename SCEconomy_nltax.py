@@ -190,17 +190,38 @@ class Economy:
         self.path_to_data_i_s = './input_data/data_i_s.npy'
 
 
-        self.taub = np.array([0.2])
-        self.psib = np.array([0.15])
-        self.bbracket = np.array([-np.inf, np.inf])
         
-        # self.taub = np.array([0.05, 0.1, 0.18, 0.20, 0.22, 0.24, 0.25])
-        # self.psib = np.array([0.1395, 0.1420, 0.1500, 0.1540, 0.1640, 0.1840, 0.2340])
-        # self.bbracket = np.array([-np.inf, 0.05, 0.1, 0.20, 0.50, 1.0, 5.0, np.inf])
+        self.taub = np.array([.137, .185, .202, .238, .266, .280])
+        self.bbracket = np.array([0.35, 0.755, 1.96, 4.955, 6.965])
 
-        self.taun = np.array([0.4])
-        self.psin = np.array([0.15])
-        self.nbracket = np.array([-np.inf, np.inf])
+        from LinearTax import get_consistent_phi
+        self.psib = get_consistent_phi(self.bbracket, self.taub, 0.15, 2)
+
+        tmp = self.bbracket
+        self.bbracket = np.zeros(len(tmp)+2)
+
+        self.bbracket[0] = -np.inf
+        self.bbracket[-1] = np.inf
+        self.bbracket[1:-1] = tmp[:]
+
+
+        # self.taub = np.array([0.2])
+        # self.psib = np.array([0.15])
+        # self.bbracket = np.array([-np.inf, np.inf])
+
+        self.taun = np.array([.2930, .3170, .3240, .3430, .3900, .4050, .4080, .4190])
+        self.nbracket = np.array([.3927, .4901, .6045, .9890, 1.3391, 3.2501, 6.2088])
+        self.psin = get_consistent_phi(self.nbracket, self.taun, 0.0719, 2)
+
+        tmp = self.nbracket
+        self.nbracket = np.zeros(len(tmp)+2)        
+        self.nbracket[0] = -np.inf
+        self.nbracket[-1] = np.inf
+        self.nbracket[1:-1] = tmp[:]
+        
+        # self.taun = np.array([0.4])
+        # self.psin = np.array([0.15])
+        # self.nbracket = np.array([-np.inf, np.inf])
         
         
 
