@@ -1258,7 +1258,10 @@ class Economy:
         for ia, a in enumerate(agrid):
                 for ieps, eps in enumerate(epsgrid):
 
-                    cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun)*w*eps + tran)/(1. + grate)
+                    # cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun)*w*eps + tran)/(1. + grate)
+
+                    #Here I assume this guy is in the lowest bracket
+                    cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun[0])*w*eps + psin[0])/(1. + grate)
 
 
         get_sstatic = Econ.generate_sstatic()
@@ -1699,7 +1702,7 @@ class Economy:
         @nb.jit(nopython = True)
         def _inner_inner_loop_c_(_an_sup_, _EV_, _ia_, _ikap_ ,_istate_):
 
-             #arguments
+            #arguments
             ax = 0.0
             cx = _an_sup_
             bx = 0.5*(ax + cx)
@@ -2134,12 +2137,13 @@ class Economy:
         get_cstatic = Econ.generate_cstatic()
         get_sstatic = Econ.generate_sstatic()
 
-        #do we need this one here...?
-        cvals_supan = np.ones((num_a, num_eps)) * (-2.)
-        for ia, a in enumerate(agrid):
-                for ieps, eps in enumerate(epsgrid):
+        # maybe we don't need this one.
+        # #do we need this one here...?
+        # cvals_supan = np.ones((num_a, num_eps)) * (-2.)
+        # for ia, a in enumerate(agrid):
+        #         for ieps, eps in enumerate(epsgrid):
 
-                    cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun)*w*eps + tran)/(1. + grate)
+        #             cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun)*w*eps + tran)/(1. + grate)
 
 
         ### start parameters for MPI ###
