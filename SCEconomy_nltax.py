@@ -153,8 +153,9 @@ class Economy:
         #check
         if self.upsilon >= 1.0:
             print('Error: upsilon must be < 1 but upsilon = ', upsilon)
-            
 
+        
+        self.__set_nltax_parameters__()
         self.__set_implied_parameters__()
     
     def __set_default_parameters__(self):
