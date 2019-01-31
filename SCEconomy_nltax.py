@@ -86,9 +86,11 @@ class Economy:
                  taun = None,
                  psin = None,
                  nbracket = None,
+                 scaling_n = None,
                  taub = None,
                  psib = None,
-                 bbracket = None):
+                 bbracket = None,
+                 scaling_b = None):
         
 
         
@@ -139,10 +141,12 @@ class Economy:
         if taun is not None: self.taun = taun
         if psin is not None: self.psin = psin
         if nbracket is not None: self.nbracket = nbracket
+        if scaling_n is not None: self.scaling_n = scaling_n
 
         if taub is not None: self.taub = taub
         if psib is not None: self.psib = psib
         if bbracket is not None: self.bbracket = bbracket
+        if scaling_b is not None: self.scaling_b = scaling_b        
                 
 
 
@@ -204,6 +208,9 @@ class Economy:
         self.bbracket[-1] = np.inf
         self.bbracket[1:-1] = tmp[:]
 
+        self.bbracket = self.bbracket * self.scaling_b
+        self.psib = self.psib * self.scaling_b
+
 
         # self.taub = np.array([0.2])
         # self.psib = np.array([0.15])
@@ -218,6 +225,10 @@ class Economy:
         self.nbracket[0] = -np.inf
         self.nbracket[-1] = np.inf
         self.nbracket[1:-1] = tmp[:]
+
+        self.nbracket = self.nbracket * self.scaling_n
+        self.psin = self.psin * self.scaling_n
+        
         
         # self.taun = np.array([0.4])
         # self.psin = np.array([0.15])
