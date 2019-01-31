@@ -74,8 +74,8 @@ def target(prices):
     GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
 
     econ = Economy(alpha = alpha, theta = theta, yn = ynb,
-                   scaling_n = (1.-theta)*yn, scaling_b = pure_sweat_share*GDP_implied 
-                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50,\
+                   scaling_n = (1.-theta)*yn, scaling_b = pure_sweat_share*GDP_implied,
+                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
 
 
