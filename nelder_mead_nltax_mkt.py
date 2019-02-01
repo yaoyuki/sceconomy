@@ -38,7 +38,7 @@ def curvedspace(begin, end, curve, num=100):
     return ans
 
 agrid2 = curvedspace(0., 200., 2., 40)
-kapgrid2 = curvedspace(0., 2.5, 1.5, 40)
+kapgrid2 = curvedspace(0., 2.5, 1.5, 20)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 # prob2 = np.load('./input_data/transition_matrix_0709.npy')
 
@@ -122,10 +122,10 @@ def target(prices):
         
     
 
-    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0) #mom3 should be missing.
+    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0)
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0 + 100.0*(moms[4] - 0.3)**2.0 +500.* (moms[5]-0.09)**2.0 + 100.*(moms[6] - 0.11)**2.0) #mom3 should be missing.
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + 100.0*(moms[4] - s_emp_share)**2.0 +500.* (moms[5]-pure_sweat_share)**2.0 + 100.*(moms[7] - 0.37)**2.0) #mom3 should be missing.
-    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0) #mom3 should be missing.
+    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0) #mom3 should be missing.
     
     if p != p_ or  rc != rc_ or ome != ome_ or varpi != varpi_:
         print('err: input prices and output prices do not coincide.')
