@@ -1037,7 +1037,7 @@ class Economy:
                 
                 
                 if val_ub*val_lb > 0.0: 
-                    print('no bracket for h. Infer no solution')
+                    # print('no bracket for h. Infer no solution')
                     return -1., -1., -1.
                 
                 sign = -1.0
@@ -1104,7 +1104,7 @@ class Economy:
                     # print('alp6 = ', alp6)                    
                     
                     # print('val_m = ', val_m)
-                    # print('h = ', h)
+                    print('h = ', h)
                     # print('h = ', hmax)
 
                     # print('val_lb = ', val_lb)
@@ -1217,15 +1217,15 @@ class Economy:
 
                     if h > 0.0:
                         cc_tmp = xi9*(1.-taub[ib])*(z*kap**phi)**(1./(1.-alpha))*(h**(nu/(1.-alpha) - upsilon))*(hy**(upsilon  - 1.0))*(1. - hy - hkap)                        
-                        if (np.abs(cc - cc_tmp) > 1.0e-3):
-                            print('err: cc does not match')
-                            print('cc = ', cc)
-                            print('cc_tmp = ', cc_tmp)
-                            print('a = ', a)
-                            print('an = ', an)
-                            print('kap = ', kap)
-                            print('kapn = ', kapn)
-                            print('z = ', z)                            
+                        # if (np.abs(cc - cc_tmp) > 1.0e-3):
+                        #     print('err: cc does not match')
+                        #     print('cc = ', cc)
+                        #     print('cc_tmp = ', cc_tmp)
+                        #     print('a = ', a)
+                        #     print('an = ', an)
+                        #     print('kap = ', kap)
+                        #     print('kapn = ', kapn)
+                        #     print('z = ', z)                            
                             
 
                     #feasibility check
