@@ -230,7 +230,6 @@ class Economy:
         self.taun = np.array([.2930, .3170, .3240, .3430, .3900, .4050, .4080, .4190])
         self.nbracket = np.array([.3927, .4901, .6045, .9890, 1.3391, 3.2501, 6.2088])
         self.scaling_n = -100.0
-
         self.psin_fixed = 0.0719
         self.nbracket_fixed = 2
 
@@ -854,7 +853,7 @@ class Economy:
 
                 
                 if val_lb *val_ub > 0.0:
-                    print(': no bracket')
+                    # print('warning : no bracket')
                     return -1., -1., -1.
                 
                 sign = -1.0
@@ -1110,28 +1109,28 @@ class Economy:
                 #convergence check
                 if it == maxit:
                     print('err: bisection method for h did not converge.')
-                    # print('it = ', it)
-                    # print('tol = ', tol)
-                    # print('diff = ', diff)
-                    # print('alp1 = ', alp1)
-                    # print('alp2 = ', alp2)
-                    # print('alp3 = ', alp3)
-                    # print('alp4 = ', alp4)
-                    # print('alp5 = ', alp5)
-                    # print('alp6 = ', alp6)                    
+                    print('it = ', it)
+                    print('tol = ', tol)
+                    print('diff = ', diff)
+                    print('alp1 = ', alp1)
+                    print('alp2 = ', alp2)
+                    print('alp3 = ', alp3)
+                    print('alp4 = ', alp4)
+                    print('alp5 = ', alp5)
+                    print('alp6 = ', alp6)                    
                     
-                    # print('val_m = ', val_m)
-                    # print('h = ', h)
-                    # print('h = ', hmax)
+                    print('val_m = ', val_m)
+                    print('h = ', h)
+                    print('h = ', hmax)
 
-                    # print('val_lb = ', val_lb)
-                    # print('val_ub = ', val_ub)
+                    print('val_lb = ', val_lb)
+                    print('val_ub = ', val_ub)
 
-                    # print('a = ', a)
-                    # print('an = ', an)
-                    # print('kap = ', kap)
-                    # print('kapn = ', kapn)
-                    # print('z = ', z)
+                    print('a = ', a)
+                    print('an = ', an)
+                    print('kap = ', kap)
+                    print('kapn = ', kapn)
+                    print('z = ', z)
 
                 ans = h
                 #### bisection end ####
