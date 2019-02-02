@@ -1096,7 +1096,8 @@ class Economy:
 
                     if sign * val_m > 0.:
                         h_ub = h
-                    elif sign * val_m < 0.:
+                    else:
+                    #elif sign * val_m < 0.:
                         h_lb = h
 
                     diff = abs((h_lb + h_ub)/2 - h)                        
@@ -1135,6 +1136,8 @@ class Economy:
                     print('alp6 = ', alp6)                    
                     
                     print('val_m = ', val_m)
+                    print('h_ub = ', h_ub)
+                    print('h_lb = ', h_lb)                                        
                     print('h = ', h)
                     print('hmax = ', hmax)
 
