@@ -87,12 +87,14 @@ class Economy:
                  psin = None,
                  psin_fixed = None,
                  nbracket = None,
+                 nbracket_fixed = None,                 
                  scaling_n = None,
+                 
                  taub = None,
                  psib = None,
                  psib_fixed = None,                 
-                 
                  bbracket = None,
+                 bbracket_fixed = None,                 
                  scaling_b = None):
         
 
