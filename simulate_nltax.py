@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # additional info
     
     agrid2 = curvedspace(0., 200., 2., 40)
-    kapgrid2 = curvedspace(0., 2.5, 1.5, 20)
+    kapgrid2 = curvedspace(0., 2.5, 1.5, 40)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
     # prices
