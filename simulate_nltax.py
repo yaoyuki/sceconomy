@@ -49,7 +49,7 @@ if __name__ == '__main__':
     pure_sweat_share = 0.09 #target
     s_emp_share = 0.30 #target
 
-    yc_init = 0.77 #1.0
+    yc_init = 0.88 #1.0
 
     GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
 
