@@ -966,8 +966,9 @@ class Economy:
                 val_ub = 1. - Hy(hmax_ub, alp6) - alp5*g(hmax_ub, alp6)
                 
                 
-                if val_lb *val_ub > 0.0:
+                if val_lb * val_ub > 0.0:
                     print('error: no bracket')
+                    
                 sign = -1.0
                 if val_ub > 0.:
                     sign = 1.0
@@ -1085,8 +1086,8 @@ class Economy:
                     elif sign * val_m < 0.:
                         h_lb = h
 
-                    diff = abs((h_lb + h_ub)/2 - h)
                     h = (h_lb + h_ub)/2.
+                    diff = abs((h_lb + h_ub)/2 - h)
 
 
                     hk = alp5*g(h, alp6)
@@ -1121,7 +1122,7 @@ class Economy:
                     
                     print('val_m = ', val_m)
                     print('h = ', h)
-                    print('h = ', hmax)
+                    print('hmax = ', hmax)
 
                     print('val_lb = ', val_lb)
                     print('val_ub = ', val_ub)
