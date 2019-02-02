@@ -24,13 +24,13 @@ if __name__ == '__main__':
     # additional info
     
     agrid2 = curvedspace(0., 200., 2., 40)
-    kapgrid2 = curvedspace(0., 2.5, 1.5, 40)
+    kapgrid2 = curvedspace(0., 2.5, 2.0, 20)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
     # prices
-    p_, rc_, ome_, varpi_ = 1.4461028141457346, 0.06194848724613948, 0.40772419502169976, 0.5822021442667737
+    # p_, rc_, ome_, varpi_ = 1.4461028141457346, 0.06194848724613948, 0.40772419502169976, 0.5822021442667737
 
-    # p_, rc_, ome_, varpi_ = 1.3594680204658702, 0.06136345811360533, 0.40, 0.60
+    p_, rc_, ome_, varpi_ = 1.3594680204658702, 0.06136345811360533, 0.40, 0.60 #hy_ns upsilon = 0.5 case
     
 
     split_shock('./input_data/data_i_s', 100_000, num_core)
@@ -41,24 +41,25 @@ if __name__ == '__main__':
     print('Do not simulate more than one models at the same time...')
 
 
-    alpha = 0.4
-    theta = 0.41
-    ynb = 0.451    
-    pure_sweat_share = 0.09 #target
-    s_emp_share = 0.30 #target
+    # alpha = 0.4
+    # theta = 0.41
+    # ynb = 0.451    
+    # pure_sweat_share = 0.09 #target
+    # s_emp_share = 0.30 #target
 
-    yc_init = 0.77 #1.0
+    # yc_init = 0.77 #1.0
 
-    GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
+    # GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
 
-    econ = Economy(alpha = alpha, theta = theta, yn = ynb,
-                   scaling_n = (1.-theta)*yc_init, scaling_b = pure_sweat_share*GDP_implied,
-                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50,
-                   ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
+    # econ = Economy(alpha = alpha, theta = theta, yn = ynb,
+    #                scaling_n = (1.-theta)*yc_init, scaling_b = pure_sweat_share*GDP_implied,
+    #                agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50,
+    #                ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
     
 
-    # econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01,\
-    #                ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50
+                   taun = np.ones(8)*0.4, psin_fixed = 0.15, taub = np.ones(6)*0.2, psib_fixed = 0.15,
+                   ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)

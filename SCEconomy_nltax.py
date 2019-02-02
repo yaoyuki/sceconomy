@@ -85,10 +85,13 @@ class Economy:
 
                  taun = None,
                  psin = None,
+                 psin_fixed = None,
                  nbracket = None,
                  scaling_n = None,
                  taub = None,
                  psib = None,
+                 psib_fixed = None,                 
+                 
                  bbracket = None,
                  scaling_b = None):
         
@@ -138,14 +141,19 @@ class Economy:
         if num_total_pop is not None: self.num_total_pop = num_total_pop
         if A is not None: self.A = A
         if path_to_data_i_s is not None: self.path_to_data_i_s = path_to_data_i_s
+        
         if taun is not None: self.taun = taun
         if psin is not None: self.psin = psin
+        if psin_fixed is not None: self.psin_fixed = psin_fixed
         if nbracket is not None: self.nbracket = nbracket
+        if nbracket_fixed is not None: self.nbracket_fixed = nbracket_fixed                
         if scaling_n is not None: self.scaling_n = scaling_n
 
         if taub is not None: self.taub = taub
         if psib is not None: self.psib = psib
+        if psib_fixed is not None: self.psib_fixed = psib_fixed        
         if bbracket is not None: self.bbracket = bbracket
+        if bbracket_fixed is not None: self.bbracket_fixed = bbracket_fixed  
         if scaling_b is not None: self.scaling_b = scaling_b        
                 
 
@@ -199,6 +207,9 @@ class Economy:
         self.taub = np.array([.137, .185, .202, .238, .266, .280])
         self.bbracket = np.array([0.35, 0.755, 1.96, 4.955, 6.965])
         self.scaling_b = -100.0
+        self.psib_fixed = 0.15
+        self.bbracket_fixed = 2
+
 
         # from LinearTax import get_consistent_phi
         # self.psib = get_consistent_phi(self.bbracket, self.taub, 0.15, 2)
@@ -216,7 +227,11 @@ class Economy:
 
         self.taun = np.array([.2930, .3170, .3240, .3430, .3900, .4050, .4080, .4190])
         self.nbracket = np.array([.3927, .4901, .6045, .9890, 1.3391, 3.2501, 6.2088])
-        self.scaling_n = -100.0        
+        self.scaling_n = -100.0
+
+        self.psin_fixed = 0.0719
+        self.nbracket_fixed = 2
+
 
         # self.psin = get_consistent_phi(self.nbracket, self.taun, 0.0719, 2)
 
@@ -261,7 +276,7 @@ class Economy:
         
         from LinearTax import get_consistent_phi
 
-        self.psib = get_consistent_phi(self.bbracket, self.taub, 0.15, 2) # we need to set the last two as arguments
+        self.psib = get_consistent_phi(self.bbracket, self.taub, self.psib_fixed, self.bbracket_fixed) # we need to set the last two as arguments
 
         tmp = self.bbracket
         self.bbracket = np.zeros(len(tmp)+2)
@@ -278,7 +293,7 @@ class Economy:
         # self.psib = np.array([0.15])
         # self.bbracket = np.array([-np.inf, np.inf])
 
-        self.psin = get_consistent_phi(self.nbracket, self.taun, 0.0719, 2) # we need to set the last two as arguments
+        self.psin = get_consistent_phi(self.nbracket, self.taun, self.psin_fixed, self.nbracket_fixed) # we need to set the last two as arguments
 
         tmp = self.nbracket
         self.nbracket = np.zeros(len(tmp)+2)        
@@ -837,7 +852,7 @@ class Economy:
 
                 
                 if val_lb *val_ub > 0.0:
-                    print('error: no bracket')
+                    print(': no bracket')
                     return -1., -1., -1.
                 
                 sign = -1.0
@@ -1104,7 +1119,7 @@ class Economy:
                     # print('alp6 = ', alp6)                    
                     
                     # print('val_m = ', val_m)
-                    print('h = ', h)
+                    # print('h = ', h)
                     # print('h = ', hmax)
 
                     # print('val_lb = ', val_lb)
