@@ -1062,7 +1062,20 @@ class Economy:
                     sign = 1.0
 
                 h = (h_lb + h_ub)/2.
-                ib = locate(h, bbracket) 
+
+                hk = alp5*g(h, alp6)
+                x = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk**(-veps/vthet)
+                ys = (xi8**alpha)*(z*(kap**phi)*(h**nu))**(1./(1.-alpha))
+                ks = xi8*(z*(kap**phi)*(h**nu))**(1./(1.-alpha))
+                
+                if h > 0.0:
+                    ns = xi13*(ks/(h**upsilon))**(1./(1.-upsilon))
+                else:
+                    ns = 0.0
+
+                bizinc = p*ys - (rs + delk)*ks - x - w*ns
+                
+                ib = locate(bizinc, bbracket) #set brackt for h
 
                 it = 0
                 tol = 1.0e-12
@@ -1086,8 +1099,9 @@ class Economy:
                     elif sign * val_m < 0.:
                         h_lb = h
 
+                    diff = abs((h_lb + h_ub)/2 - h)                        
                     h = (h_lb + h_ub)/2.
-                    diff = abs((h_lb + h_ub)/2 - h)
+
 
 
                     hk = alp5*g(h, alp6)
