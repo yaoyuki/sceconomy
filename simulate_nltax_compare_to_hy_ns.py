@@ -59,6 +59,7 @@ if __name__ == '__main__':
 
     econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50,
                    taun = np.ones(8)*0.4, psin_fixed = 0.15, taub = np.ones(6)*0.2, psib_fixed = 0.15,
+                   scaling_n = 1.0, scaling_b = 1.0,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
     
     econ.set_prices(p = p_, rc = rc_)
@@ -94,6 +95,7 @@ if __name__ == '__main__':
     
     
     #calc main moments
+    econ.print_parameters()
     econ.calc_moments()
     
     ###calculate other important variables###
