@@ -37,7 +37,7 @@ def curvedspace(begin, end, curve, num=100):
     return ans
 
 agrid2 = curvedspace(0., 200., 2., 40)
-kapgrid2 = curvedspace(0., 2.5, 1.5, 40)
+kapgrid2 = curvedspace(0., 2.5, 1.5, 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 # prob2 = np.load('./input_data/transition_matrix_0709.npy')
 
@@ -69,7 +69,7 @@ def target(prices):
     pure_sweat_share = 0.09 #target
     s_emp_share = 0.30 #target
 
-    yc_init = 0.77 #1.0
+    yc_init = 0.89 #1.0
 
     GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
 
