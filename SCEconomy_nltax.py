@@ -1133,7 +1133,8 @@ class Economy:
                     print('alp3 = ', alp3)
                     print('alp4 = ', alp4)
                     print('alp5 = ', alp5)
-                    print('alp6 = ', alp6)                    
+                    print('alp6 = ', alp6)
+                    print('alp7 = ', alp7)                                        
                     
                     print('val_m = ', val_m)
                     print('h_ub = ', h_ub)
