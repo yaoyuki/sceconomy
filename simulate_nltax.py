@@ -57,6 +57,9 @@ if __name__ == '__main__':
                    scaling_n = (1.-theta)*yc_init, scaling_b = pure_sweat_share*GDP_implied,
                    agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
+
+    print('yc_init     = ', yc_init)    
+    print('GDP Implied = ', GDP_implied)
     
 
     # econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01,\
