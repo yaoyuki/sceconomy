@@ -1005,7 +1005,10 @@ class Economy:
 
 
                 ####bisection start
-                h_lb = h_lbar
+                #setting h = h_lb makes x = inf, problematic. no warning will show up.
+                #in the end, x = inf makes bizinc = -inf, so we correctly infer the lowest bracket for now.
+                h_lb = h_lbar + 1.0e-10 
+                
                 h_ub = hmax
 
                 #check bracketting
@@ -1081,6 +1084,7 @@ class Economy:
                 tol = 1.0e-12
                 #rtol = 4.4408920985006262e-16 #this is default tolerance, but sometimes too rigid.
                 rtol = 1.0e-8
+                
                 maxit = 400
                 val_m = 10000.
                 diff = 1.0e10
@@ -1119,7 +1123,8 @@ class Economy:
                     
                     ib = hunt(bizinc, bbracket, ib) 
 
-                    if diff < tol and abs(val_m) < rtol:
+                    #if diff < tol and abs(val_m) < rtol:
+                    if (diff < tol and it > 100) or (diff < tol and abs(val_m) < rtol): #taking into acocunt potential jumps
                         break
 
                 #convergence check
