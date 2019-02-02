@@ -1081,7 +1081,7 @@ class Economy:
                 ib = locate(bizinc, bbracket) #set brackt for h
 
                 it = 0
-                tol = 1.0e-12
+                tol = 1.0e-8
                 #rtol = 4.4408920985006262e-16 #this is default tolerance, but sometimes too rigid.
                 rtol = 1.0e-8
                 
