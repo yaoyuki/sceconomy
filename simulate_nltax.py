@@ -98,6 +98,7 @@ if __name__ == '__main__':
     
     
     #calc main moments
+    econ.print_parameters()
     econ.calc_moments()
     
     ###calculate other important variables###
