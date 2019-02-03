@@ -39,6 +39,8 @@ def curvedspace(begin, end, curve, num=100):
 agrid2 = curvedspace(0., 200., 2., 40)
 kapgrid2 = curvedspace(0., 2.5, 1.5, 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
+
+prob2 = np.load('./DeBacker/prob_epsz.npy')
 # prob2 = np.load('./input_data/transition_matrix_0709.npy')
 
 path_to_data_i_s = '/home/yaoxx366/sceconomy/input_data/data_i_s'
