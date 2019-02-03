@@ -259,7 +259,7 @@ class Economy:
         self.bbracket[1:-1] = tmp[:]
 
         self.bbracket = self.bbracket * self.scaling_b
-        self.psib = self.psib * self.scaling_b
+        # self.psib = self.psib * self.scaling_b
 
 
         # self.taub = np.array([0.2])
@@ -275,7 +275,7 @@ class Economy:
         self.nbracket[1:-1] = tmp[:]
 
         self.nbracket = self.nbracket * self.scaling_n
-        self.psin = self.psin * self.scaling_n
+        # self.psin = self.psin * self.scaling_n
 
         
 
