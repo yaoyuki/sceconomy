@@ -208,43 +208,15 @@ class Economy:
         
         self.taub = np.array([.137, .185, .202, .238, .266, .280])
         self.bbracket = np.array([0.35, 0.755, 1.96, 4.955, 6.965])
-        self.scaling_b = -100.0
+        self.scaling_b = 1.0
         self.psib_fixed = 0.15
         self.bbracket_fixed = 2
 
-
-        # from LinearTax import get_consistent_phi
-        # self.psib = get_consistent_phi(self.bbracket, self.taub, 0.15, 2)
-
-        # tmp = self.bbracket
-        # self.bbracket = np.zeros(len(tmp)+2)
-
-        # self.bbracket[0] = -np.inf
-        # self.bbracket[-1] = np.inf
-        # self.bbracket[1:-1] = tmp[:]
-
-        # self.bbracket = self.bbracket * self.scaling_b
-        # self.psib = self.psib * self.scaling_b
-
-
         self.taun = np.array([.2930, .3170, .3240, .3430, .3900, .4050, .4080, .4190])
         self.nbracket = np.array([.3927, .4901, .6045, .9890, 1.3391, 3.2501, 6.2088])
-        self.scaling_n = -100.0
+        self.scaling_n = 1.0
         self.psin_fixed = 0.0719
         self.nbracket_fixed = 2
-
-
-        # self.psin = get_consistent_phi(self.nbracket, self.taun, 0.0719, 2)
-
-        # tmp = self.nbracket
-        # self.nbracket = np.zeros(len(tmp)+2)        
-        # self.nbracket[0] = -np.inf
-        # self.nbracket[-1] = np.inf
-        # self.nbracket[1:-1] = tmp[:]
-
-        # self.nbracket = self.nbracket * self.scaling_n
-        # self.psin = self.psin * self.scaling_n
-
 
         self.agrid = np.load('./input_data/agrid.npy')
         self.kapgrid = np.load('./input_data/kapgrid.npy')
@@ -319,16 +291,10 @@ class Economy:
         
         #implied parameters
         self.nu = 1. - self.alpha - self.phi;
-        
-        # self.alpha_tilde = self.alpha*(1. - self.varpi)
-        # self.phi_tilde = self.phi*(1. - self.varpi)
-        # self.nu_tilde = self.nu*(1. - self.varpi)
-        
-        # self.varrho = (1. - self.alpha_tilde - self.varpi - self.nu_tilde)/(1. - self.alpha_tilde - self.varpi) * self.vthet / (self.vthet + self.veps)
         self.bh = self.beta*(1. + self.grate)**(self.eta*(1. - self.mu))  #must be less than one.
         
     
-        if self.bh >= 1.0:
+        if self.bh >= 1.0 or self.bh <= 0.0:
             print('Error: bh must be in (0, 1) but bh = ', self.bh)
         
         
@@ -338,7 +304,7 @@ class Economy:
         self.p = p
         self.rc = rc
 
-        #using CRS technology
+        #assuming CRS technology
         self.kcnc_ratio = ((self.theta * self.A)/(self.delk + self.rc))**(1./(1. - self.theta))
         self.w = (1. - self.theta)*self.A*self.kcnc_ratio**self.theta
         
@@ -401,7 +367,7 @@ class Economy:
         print('taud = ', self.taud)
         print('taup = ', self.taup)
         print('theta = ', self.theta)
-        # print('tran (transfer) = ', self.tran)
+
         print('veps = ', self.veps)
         print('vthet = ', self.vthet)
         print('xnb = ', self.xnb)
@@ -653,7 +619,6 @@ class Economy:
         xi12 = self.xi12
         xi13 = self.xi13
         
-        
         util = self.generate_util()
             
         @nb.jit(nopython = True)
@@ -670,7 +635,8 @@ class Economy:
             l = -1.0
 
             n = -1.0
-            
+
+            #is this unique?
             #repeat until n falls in bracket nuber i (i=0,1,2,..,I-1)
             i = 0
             num_taun = len(taun)
@@ -1335,11 +1301,12 @@ class Economy:
         cvals_supan = np.ones((num_a, num_eps)) * (-2.)
         for ia, a in enumerate(agrid):
                 for ieps, eps in enumerate(epsgrid):
+                    # here we assume this guys works at n = 1
 
                     # cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun)*w*eps + tran)/(1. + grate)
 
-                    #Here I assume this guy is in the lowest bracket
-                    cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun[0])*w*eps + psin[0])/(1. + grate)
+                    i_bracket = locate(w*eps, nbracket)
+                    cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun[i_bracket])*w*eps + psin[0])/(1. + grate)
 
 
         get_sstatic = Econ.generate_sstatic()
