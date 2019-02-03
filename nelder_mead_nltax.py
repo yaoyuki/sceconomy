@@ -197,6 +197,10 @@ if __name__ == '__main__':
 
     print('prob')
     print(e.prob)
+    
+    print('yc_init     = ', yc_init)    
+    print('GDP Implied = ', GDP_implied)
+
 
     e.print_parameters()
     e.calc_moments()
