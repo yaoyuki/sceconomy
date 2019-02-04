@@ -207,16 +207,16 @@ class Economy:
 
         
         self.taub = np.array([.137, .185, .202, .238, .266, .280])
-        self.bbracket = np.array([0.35, 0.755, 1.96, 4.955, 6.965])
+        self.bbracket = np.array([0.150, 0.319, 0.824, 2.085, 2.930])
         self.scaling_b = 1.0
-        self.psib_fixed = 0.15
+        self.psib_fixed = 0.202
         self.bbracket_fixed = 2
 
         self.taun = np.array([.2930, .3170, .3240, .3430, .3900, .4050, .4080, .4190])
-        self.nbracket = np.array([.3927, .4901, .6045, .9890, 1.3391, 3.2501, 6.2088])
+        self.nbracket = np.array([.1760, .2196, .2710, .4432, 0.6001, 1.4566, 2.7825])
         self.scaling_n = 1.0
-        self.psin_fixed = 0.0719
-        self.nbracket_fixed = 2
+        self.psin_fixed = 0.405
+        self.nbracket_fixed = 5
 
         self.agrid = np.load('./input_data/agrid.npy')
         self.kapgrid = np.load('./input_data/kapgrid.npy')
@@ -248,6 +248,7 @@ class Economy:
     def __set_nltax_parameters__(self):
         
         from LinearTax import get_consistent_phi
+
         
         self.bbracket = self.bbracket * self.scaling_b
         self.psib = get_consistent_phi(self.bbracket, self.taub, self.psib_fixed, self.bbracket_fixed) # we need to set the last two as arguments
@@ -260,12 +261,6 @@ class Economy:
         self.bbracket[1:-1] = tmp[:]
 
         
-        # self.psib = self.psib * self.scaling_b
-
-
-        # self.taub = np.array([0.2])
-        # self.psib = np.array([0.15])
-        # self.bbracket = np.array([-np.inf, np.inf])
         
         self.nbracket = self.nbracket * self.scaling_n
         self.psin = get_consistent_phi(self.nbracket, self.taun, self.psin_fixed, self.nbracket_fixed) # we need to set the last two as arguments
