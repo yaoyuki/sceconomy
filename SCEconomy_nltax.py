@@ -248,7 +248,8 @@ class Economy:
     def __set_nltax_parameters__(self):
         
         from LinearTax import get_consistent_phi
-
+        
+        self.bbracket = self.bbracket * self.scaling_b
         self.psib = get_consistent_phi(self.bbracket, self.taub, self.psib_fixed, self.bbracket_fixed) # we need to set the last two as arguments
 
         tmp = self.bbracket
@@ -258,14 +259,15 @@ class Economy:
         self.bbracket[-1] = np.inf
         self.bbracket[1:-1] = tmp[:]
 
-        self.bbracket = self.bbracket * self.scaling_b
+        
         # self.psib = self.psib * self.scaling_b
 
 
         # self.taub = np.array([0.2])
         # self.psib = np.array([0.15])
         # self.bbracket = np.array([-np.inf, np.inf])
-
+        
+        self.nbracket = self.nbracket * self.scaling_n
         self.psin = get_consistent_phi(self.nbracket, self.taun, self.psin_fixed, self.nbracket_fixed) # we need to set the last two as arguments
 
         tmp = self.nbracket
@@ -274,7 +276,7 @@ class Economy:
         self.nbracket[-1] = np.inf
         self.nbracket[1:-1] = tmp[:]
 
-        self.nbracket = self.nbracket * self.scaling_n
+
         # self.psin = self.psin * self.scaling_n
 
         
