@@ -61,26 +61,28 @@ def target(prices):
     
     # print('computing for the case w = {:f}, p = {:f}, rc = {:f}'.format(w_, p_, rc_), end = ', ')
     print('computing for the case p = {:f}, rc = {:f}'.format(p_, rc_), end = ', ')
-    
-    ###set any additional condition/parameters
-    ### alpha = 0.4 as default, and nu = 1. - phi - alpha
-    #econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.6, varpi = 0.1)
 
     alpha = 0.4
     theta = 0.41
-    ynb = 0.451    
+    # ynb = 0.451
+    ynb_p_gdp = 0.25
+    xnb_p_gdp = 0.105
+    g_p_gdp = 0.13
+    
     pure_sweat_share = 0.09 #target
     s_emp_share = 0.30 #target
 
     yc_init = 0.89 #1.0
 
-    GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
+    # GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
+    
+    GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
 
-    econ = Economy(alpha = alpha, theta = theta, yn = ynb,
-                   scaling_n = (1.-theta)*yc_init, scaling_b = pure_sweat_share*GDP_implied,
+    econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
+                   scaling_n = GDP_implied, scaling_b = GDP_implied,
                    agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
-
+    
 
     econ.set_prices(p = p_, rc = rc_)
     
@@ -198,6 +200,10 @@ if __name__ == '__main__':
 
     print('prob')
     print(e.prob)
+
+    print('yc_init     = ', yc_init)    
+    print('GDP Implied = ', GDP_implied)
+    
 
     e.print_parameters()
     e.calc_moments()
