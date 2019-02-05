@@ -40,7 +40,7 @@ def curvedspace(begin, end, curve, num=100):
 agrid2 = curvedspace(0., 200., 2., 40)
 kapgrid2 = curvedspace(0., 2.5, 1.5, 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
-# prob2 = np.load('./input_data/transition_matrix_0709.npy')
+prob2 = np.load('./DeBacker/prob_epsz.npy')
 
 path_to_data_i_s = '/home/yaoxx366/sceconomy/input_data/data_i_s'
 
@@ -80,7 +80,7 @@ def target(prices):
 
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50,
+                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob2, rho = 0.01, upsilon = 0.50,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
     
 
