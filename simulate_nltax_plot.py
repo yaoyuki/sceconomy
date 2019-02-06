@@ -9,7 +9,7 @@ log_file = '/home/yaoxx366/sceconomy/log/log.txt'
 
 if __name__ == '__main__':
 
-    f = open(nd_log_file, 'w')
+    f = open(log_file, 'w')
     # f.writelines('w, p, rc, dist, mom0, mom1, mom2, mom3\n')
     f.writelines('p, rc, ome, varpi, mom0, mom1, mom2, mom4, mom5, mom7\n')
     f.close()
@@ -36,13 +36,13 @@ if __name__ == '__main__':
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
     # prices
-    rc_, ome_, varpi_ = 0.044, 0.4, 0.6
+    rc_, ome_, varpi_ = 0.0435, 0.4, 0.6
     
     # p_, rc_, ome_, varpi_ = 1.4461028141457346, 0.06194848724613948, 0.40772419502169976, 0.5822021442667737
     # p_, rc_, ome_, varpi_ = 1.3594680204658702, 0.06136345811360533, 0.40, 0.60
     
 
-    pgrid = np.linspace(1.45, 1.6, 3)
+    pgrid = np.linspace(1.45, 1.6, 10)
 
     for p_ in pgrid:
     
@@ -102,6 +102,10 @@ if __name__ == '__main__':
 
         p = econ.p
         rc = econ.rc
+
+        ome = econ.ome
+        varpi = econ.varpi
+        
         moms = econ.moms
     
         dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0)
@@ -111,7 +115,7 @@ if __name__ == '__main__':
             print('p = ', p, ', p_ = ', p_)
             print('rc = ', rc, ', rc_ = ', rc_)
 
-        f = open(nd_log_file, 'a')
+        f = open(log_file, 'a')
         f.writelines(str(p) + ', ' + str(rc) + ', ' + str(ome) + ', ' + str(varpi) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[4]) + ', ' + str(moms[5]) + ', ' + str(moms[7]) +  '\n')
         # f.writelines(str(p) + ', ' + str(rc) + ', ' + str(varpi) + ', ' + str(ome) + ', ' + str(theta) + ', ' +  str(dist) + ', ' +\
         f.close()
