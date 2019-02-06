@@ -28,7 +28,9 @@ if __name__ == '__main__':
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
     # prices
-    p_, rc_, ome_, varpi_ = 1.347434787993277, 0.06148943609627755, 0.3996339901220936, 0.545313496582086
+    # p_, rc_, ome_, varpi_ = 1.3519953608929385, 0.06117532373046963, 0.3915961239352689, 0.7037502296213269 #0.01
+    # p_, rc_, ome_, varpi_ = 1.3594680204658702, 0.06136345811360533, 0.3993443503967089, 0.6004386801392873 #0.50
+    p_, rc_, ome_, varpi_ = 1.347434787993277, 0.06148943609627755, 0.3996339901220936, 0.545313496582086 #0.75
     
 
     split_shock('./input_data/data_i_s', 100_000, num_core)
@@ -78,9 +80,9 @@ if __name__ == '__main__':
     
     ###calculate other important variables###
     #econ.calc_sweat_eq_value()
-    #econ.calc_age()
-    #econ.simulate_other_vars()
-    #econ.save_result()
+    econ.calc_age()
+    econ.simulate_other_vars()
+    econ.save_result()
     
 
     
