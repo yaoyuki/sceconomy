@@ -647,18 +647,15 @@ class Economy:
                     break
                 
                 if i == len(taun) - 1 and i != j:
-                    print('err: cstatic: no bracket for n')                    
-                
-
-                # if i <= num_taun-2:
-                #     if (nbracket[i] <= wepsn) and (nbracket[i+1] < wepsn):
-                #         break
-                # elif i == num_taun-1:
-                #     if nbracket[i] <= wepsn:
-                #         break
-                # else:
-                #     print('err: cstatic: no bracket for n')
-                        
+                    print('err: cstatic: no bracket for n')
+                    print('a = ', a)
+                    print('an = ', an)
+                    print('eps = ', eps)
+                    print('i = ', i)
+                    print('j = ', j)
+                    print('n = ', n)
+                    print('wepsn = ', wepsn)                    
+                                        
 
             if n < 0.0:
                 n = 0.0
