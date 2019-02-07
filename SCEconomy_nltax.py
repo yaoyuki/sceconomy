@@ -209,13 +209,13 @@ class Economy:
         self.taub = np.array([.137, .185, .202, .238, .266, .280])
         self.bbracket = np.array([0.150, 0.319, 0.824, 2.085, 2.930])
         self.scaling_b = 1.0
-        self.psib_fixed = 0.202
+        self.psib_fixed = 0.15
         self.bbracket_fixed = 2
 
         self.taun = np.array([.2930, .3170, .3240, .3430, .3900, .4050, .4080, .4190])
         self.nbracket = np.array([.1760, .2196, .2710, .4432, 0.6001, 1.4566, 2.7825])
         self.scaling_n = 1.0
-        self.psin_fixed = 0.405
+        self.psin_fixed = 0.15
         self.nbracket_fixed = 5
 
         self.agrid = np.load('./input_data/agrid.npy')
@@ -641,18 +641,30 @@ class Economy:
                 n = (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*psin[i])/(w*eps*(1.-taun[i])*(xi3 + xi7))
                 wepsn = w*eps*n #wageincome
 
-                if i <= num_taun-2:
-                    if (nbracket[i] <= wepsn) and (nbracket[i+1] < wepsn):
-                        break
-                elif i == num_taun-1:
-                    if nbracket[i] <= wepsn:
-                        break
-                else:
-                    print('err: cstatic: no bracket for n')
+                j = locate(wepsn, nbracket)
+
+                if i == j:
+                    break
+                
+                if i == len(taun) - 1 and i != j:
+                    print('err: cstatic: no bracket for n')                    
+                
+
+                # if i <= num_taun-2:
+                #     if (nbracket[i] <= wepsn) and (nbracket[i+1] < wepsn):
+                #         break
+                # elif i == num_taun-1:
+                #     if nbracket[i] <= wepsn:
+                #         break
+                # else:
+                #     print('err: cstatic: no bracket for n')
                         
 
             if n < 0.0:
                 n = 0.0
+                wepsn = w*eps*n
+                i = locate(wepsn, nbracket)
+                
 
             if n >= 0. and n <= 1.:
 
@@ -2012,7 +2024,7 @@ class Economy:
         vsn = np.ones((num_a, num_kap, num_s))*100.0
         vs_util = np.ones((num_a, num_kap, num_s))*100.0
 
-        max_iter = 50
+        max_iter = 20
         max_howard_iter = 50
         tol = 1.0e-5
         dist = 10000.0

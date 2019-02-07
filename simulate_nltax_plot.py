@@ -36,15 +36,19 @@ if __name__ == '__main__':
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
     # prices
-    rc_, ome_, varpi_ = 0.0435, 0.4, 0.6
+    ome_, varpi_ = 0.4, 0.6
     
     # p_, rc_, ome_, varpi_ = 1.4461028141457346, 0.06194848724613948, 0.40772419502169976, 0.5822021442667737
     # p_, rc_, ome_, varpi_ = 1.3594680204658702, 0.06136345811360533, 0.40, 0.60
     
 
     pgrid = np.linspace(1.45, 1.6, 10)
+    rcgrid = np.linspace(0.042, 0.046, 10)
 
-    for p_ in pgrid:
+    p_rc_set = [(p, rc) for p in pgrid for rc in rcgrid]
+
+
+    for p_, rc_ in p_rc_set:
     
         split_shock('./input_data/data_i_s', 100_000, num_core)
     
