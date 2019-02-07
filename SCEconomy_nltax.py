@@ -636,8 +636,10 @@ class Economy:
             #is this unique?
             #repeat until n falls in bracket nuber i (i=0,1,2,..,I-1)
             i = 0
+            j = 0
             num_taun = len(taun)
-            for i in range(len(taun)):
+            wepsn = 0.0
+            for i in range(num_taun):
                 n = (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*psin[i])/(w*eps*(1.-taun[i])*(xi3 + xi7))
                 wepsn = w*eps*n #wageincome
 
@@ -645,16 +647,49 @@ class Economy:
 
                 if i == j:
                     break
-                
-                if i == len(taun) - 1 and i != j:
-                    print('err: cstatic: no bracket for n')
-                    print('a = ', a)
-                    print('an = ', an)
-                    print('eps = ', eps)
-                    print('i = ', i)
-                    print('j = ', j)
-                    print('n = ', n)
-                    print('wepsn = ', wepsn)                    
+
+            obj_i = 0.
+            obj_i1 = 0.
+            #when solution is at a kink
+            flag = True
+            flag2 = False
+            if i == len(taun) - 1 and i != j:
+                flag = False
+                flag2 = True
+
+                for i, wepsn in enumerate(nbracket[1:-1]): #remove -inf, inf
+                    n = wepsn/w/eps
+                    obj_i = n - ( (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*psin[i])/(w*eps*(1.-taun[i])*(xi3 + xi7)))
+                    obj_i1 = n - ( (xi3*w*eps*(1.-taun[i+1]) - xi4*a + xi5*an - xi6 - xi7*psin[i+1])/(w*eps*(1.-taun[i+1])*(xi3 + xi7)))
+
+                    if obj_i * obj_i1 < 0:
+                        flag = True
+                        break
+                    
+            # if flag2 and flag:
+            #     print('a solution is found at a corner ')
+            #     print('obj_i = ', obj_i)
+            #     print('obj_i1 = ', obj_i1)
+            #     print('a = ', a)
+            #     print('an = ', an)
+            #     print('eps = ', eps)
+            #     print('i = ', i)
+            #     # print('j = ', j)
+            #     print('n = ', n)
+            #     print('wepsn = ', wepsn)
+            #     print('')
+
+            if not flag:
+                print('no solution find ')
+                print('err: cstatic: no bracket for n')
+                print('a = ', a)
+                print('an = ', an)
+                print('eps = ', eps)
+                print('i = ', i)
+                print('j = ', j)
+                print('n = ', n)
+                print('wepsn = ', wepsn)
+                print('')
                                         
 
             if n < 0.0:
