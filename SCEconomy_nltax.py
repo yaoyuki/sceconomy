@@ -3115,9 +3115,9 @@ class Economy:
             
 
                     if is_c:
-                        u, cc, cs, cagg, l , n, i, tau, psi = get_cstatic([a, an, eps])
+                        u, cc, cs, cagg, l , n, i_bra, tau, psi = get_cstatic([a, an, eps])
                     else:
-                        u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns, i, tau, psi = get_sstatic([a, an, kap, kapn, z])
+                        u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns, i_bra, tau, psi = get_sstatic([a, an, kap, kapn, z])
 
                     data_u_[i, t] = u
                     data_cc_[i, t] = cc
@@ -3132,7 +3132,7 @@ class Economy:
                     data_ks_[i, t] = ks
                     data_ys_[i, t] = ys
                     data_ns_[i, t] = ns
-                    data_i_tax_bracket_[i, t] = i
+                    data_i_tax_bracket_[i, t] = i_bra
                     
         data_u = np.zeros(data_a.shape)
         data_cc = np.zeros(data_a.shape)
