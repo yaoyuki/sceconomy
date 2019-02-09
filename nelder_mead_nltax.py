@@ -43,7 +43,7 @@ zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 prob2 = np.load('./DeBacker/prob_epsz.npy')
 # prob2 = np.load('./input_data/transition_matrix_0709.npy')
 
-path_to_data_i_s = '/home/yaoxx366/sceconomy/input_data/data_i_s'
+path_to_data_i_s = './tmp/data_i_s'
 
 
 
@@ -81,10 +81,11 @@ def target(prices):
 
     GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
 
+
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
                    agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob2, rho = 0.01, upsilon = 0.50,
-                   ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
+                   ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s)
 
 
     econ.set_prices(p = p_, rc = rc_)
@@ -156,12 +157,38 @@ def target(prices):
 
 if __name__ == '__main__':
 
-    split_shock(path_to_data_i_s, 100_000, int(num_core))
-
     f = open(nd_log_file, 'w')
     # f.writelines('w, p, rc, dist, mom0, mom1, mom2, mom3\n')
-    f.writelines('p, rc, ome, varpi, dist, mom0, mom1, mom2, mom4, mom5, mom7\n')
+    f.writelines('p, rc, ome, varpi, dist, mom0, mom1, mom2, mom4, mom5, mom7\n')        
     f.close()
+
+
+    from markov import calc_trans, Stationary
+    
+    num_pop = 100_000
+    sim_time = 3_000
+
+    data_i_s = np.ones((num_pop, sim_time), dtype = int)
+    #need to set initial state for zp
+    data_i_s[:, 0] = 7
+
+    data_rand = np.random.rand(num_pop, sim_time)
+    calc_trans(data_i_s, data_rand, prob2)
+    data_i_s = data_i_s[:, 2000:]
+
+    np.save(path_to_data_i_s + '.npy' , data_i_s)
+
+
+    ### check
+    f = open(nd_log_file, 'w')
+    f.writelines(np.array_str(np.bincount(data_i_s[:,0]) / np.sum(np.bincount(data_i_s[:,0])), precision = 4, suppress_small = True) + '\n')
+    f.writelines(np.array_str(Stationary(prob2), precision = 4, suppress_small = True) + '\n')
+    f.close()
+
+    del data_i_s
+
+    split_shock(path_to_data_i_s, 100_000, int(num_core))
+
 
     nm_result = None
     from scipy.optimize import minimize
@@ -179,6 +206,8 @@ if __name__ == '__main__':
     f = open(nd_log_file, 'a')
     f.write(str(nm_result))
     f.close()
+    
+
 
     
     ###calculate other important variables###
