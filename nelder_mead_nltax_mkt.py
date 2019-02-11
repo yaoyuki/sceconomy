@@ -82,8 +82,8 @@ def target(prices):
 
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob2, rho = 0.01, upsilon = 0.50, prob = prob,
-                   psib = psib2, taub = taub2, taup = 0.2,
+                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob, rho = 0.01, upsilon = 0.50,
+                   taub = taub2, taup = 0.2, psib = psib2,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s)
 
     econ.set_prices(p = p_, rc = rc_)
@@ -181,7 +181,7 @@ if __name__ == '__main__':
     ### check
     f = open(nd_log_file, 'w')
     f.writelines(np.array_str(np.bincount(data_i_s[:,0]) / np.sum(np.bincount(data_i_s[:,0])), precision = 4, suppress_small = True) + '\n')
-    f.writelines(np.array_str(Stationary(prob2), precision = 4, suppress_small = True) + '\n')
+    f.writelines(np.array_str(Stationary(prob), precision = 4, suppress_small = True) + '\n')
     f.close()
 
     del data_i_s

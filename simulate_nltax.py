@@ -46,9 +46,10 @@ if __name__ == '__main__':
     # prob2 = np.load('./DeBacker/prob_epsz.npy')
 
 
+    
     # prices
-    p_, rc_, ome_, varpi_ = 1.381594349730373, 0.061698623561572324, 0.37384029055515816, 0.5765777484921033
-
+    p_, rc_, ome_, varpi_ = 1.381594349730373, 0.055, 0.37384029055515816, 0.5765777484921033
+    # 1.381594349730373, 0.061698623561572324, 0.37384029055515816, 0.5765777484921033
     # be careful about this part
 
     split_shock(path_to_shock, 100_000, num_core)
@@ -68,13 +69,16 @@ if __name__ == '__main__':
     pure_sweat_share = 0.10 #target
     s_emp_share = 0.30 #target
 
-    yc_init = 0.76 #
+    yc_init = 0.76 *1.05#
 
+    psib2 = np.array([0.12662323, 0.13995705, 0.15, 0.20493531, 0.3130503, 0.38901599])
+    taub2 = np.array([0.80*0.137, 0.80*0.185, 0.80*0.202, 0.89*0.238, 0.89 * 0.266, 0.89 * 0.28])
 
     GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
 
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
+                   taub = taub2, psib = psib2, taup = 0.2,
                    agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2,  rho = 0.01, upsilon = 0.50, prob = prob,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_shock)
     
