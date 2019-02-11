@@ -211,12 +211,14 @@ class Economy:
         self.scaling_b = 1.0
         self.psib_fixed = 0.15
         self.bbracket_fixed = 2
+        self.psib = None 
 
         self.taun = np.array([.2930, .3170, .3240, .3430, .3900, .4050, .4080, .4190])
         self.nbracket = np.array([.1760, .2196, .2710, .4432, 0.6001, 1.4566, 2.7825])
         self.scaling_n = 1.0
         self.psin_fixed = 0.15
         self.nbracket_fixed = 5
+        self.psin = None         
 
         self.agrid = np.load('./input_data/agrid.npy')
         self.kapgrid = np.load('./input_data/kapgrid.npy')
@@ -251,7 +253,9 @@ class Economy:
 
         
         self.bbracket = self.bbracket * self.scaling_b
-        self.psib = get_consistent_phi(self.bbracket, self.taub, self.psib_fixed, self.bbracket_fixed) # we need to set the last two as arguments
+        #set transfer term if not provided
+        if self.psib is None:
+            self.psib = get_consistent_phi(self.bbracket, self.taub, self.psib_fixed, self.bbracket_fixed) # we need to set the last two as arguments
 
         tmp = self.bbracket
         self.bbracket = np.zeros(len(tmp)+2)
@@ -263,7 +267,10 @@ class Economy:
         
         
         self.nbracket = self.nbracket * self.scaling_n
-        self.psin = get_consistent_phi(self.nbracket, self.taun, self.psin_fixed, self.nbracket_fixed) # we need to set the last two as arguments
+
+        #set transfer term if not provided
+        if self.psin is None:
+            self.psin = get_consistent_phi(self.nbracket, self.taun, self.psin_fixed, self.nbracket_fixed) # we need to set the last two as arguments
 
         tmp = self.nbracket
         self.nbracket = np.zeros(len(tmp)+2)        
@@ -2685,7 +2692,7 @@ class Economy:
             print('  Sweat assets(Ekap) = {}'.format(Ekap))
             print('  Govt. debt(b) = {}'.format(b))
             print('  S-Corp Rental Capital (ks) =  {}'.format(Eks))
-            print('  Ratio of C-corp workers(EIs) = {}'.format(EIc))
+            print('  Ratio of C-corp workers(EIc) = {}'.format(EIc))
             print('  GDP(yc + yn + p*Eys) = {}'.format(GDP))
 
             print('')
@@ -3231,6 +3238,10 @@ class Economy:
             np.save(dir_path_save + 'kapgrid', self.kapgrid)
             np.save(dir_path_save + 'zgrid', self.zgrid)
             np.save(dir_path_save + 'epsgrid', self.epsgrid)
+
+            np.save(dir_path_save + 'prob', self.prob)
+            np.save(dir_path_save + 'is_to_iz', self.is_to_iz)
+            np.save(dir_path_save + 'is_to_ieps', self.is_to_ieps)                        
 
             np.save(dir_path_save + 'taub', self.taub)
             np.save(dir_path_save + 'psib', self.psib)

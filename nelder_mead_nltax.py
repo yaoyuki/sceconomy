@@ -20,8 +20,8 @@ print('the code is running with ', num_core, 'cores...')
 prices_init = [p_init, rc_init, ome_init, varpi_init]
 
 
-nd_log_file = '/home/yaoxx366/sceconomy/log/log.txt'
-detailed_output_file = '/home/yaoxx366/sceconomy/log/detail.txt'
+nd_log_file = './log/log.txt'
+detailed_output_file = './log/detail.txt'
 
 
 f = open(detailed_output_file, 'w')
@@ -36,12 +36,9 @@ def curvedspace(begin, end, curve, num=100):
     ans[-1] = end #so that the last element is exactly end
     return ans
 
-agrid2 = curvedspace(0., 300., 2., 40)
-kapgrid2 = curvedspace(0., 5.0, 2.0, 30)
+agrid2 = curvedspace(0., 200., 2., 40)
+kapgrid2 = curvedspace(0., 3., 2., 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
-
-prob2 = np.load('./DeBacker/prob_epsz.npy')
-# prob2 = np.load('./input_data/transition_matrix_0709.npy')
 
 path_to_data_i_s = './tmp/data_i_s'
 
@@ -75,7 +72,7 @@ def target(prices):
     pure_sweat_share = 0.10 #target
     s_emp_share = 0.30 #target
 
-    yc_init = 0.60 #1.0
+    yc_init = 0.76
 
     # GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
 
@@ -84,7 +81,7 @@ def target(prices):
 
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob2, rho = 0.01, upsilon = 0.50,
+                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s)
 
 
@@ -172,8 +169,10 @@ if __name__ == '__main__':
     #need to set initial state for zp
     data_i_s[:, 0] = 7
 
+    prob = np.load('./input_data/transition_matrix.npy')
+    np.random.seed(0)
     data_rand = np.random.rand(num_pop, sim_time)
-    calc_trans(data_i_s, data_rand, prob2)
+    calc_trans(data_i_s, data_rand, prob)
     data_i_s = data_i_s[:, 2000:]
 
     np.save(path_to_data_i_s + '.npy' , data_i_s)
@@ -182,7 +181,7 @@ if __name__ == '__main__':
     ### check
     f = open(nd_log_file, 'w')
     f.writelines(np.array_str(np.bincount(data_i_s[:,0]) / np.sum(np.bincount(data_i_s[:,0])), precision = 4, suppress_small = True) + '\n')
-    f.writelines(np.array_str(Stationary(prob2), precision = 4, suppress_small = True) + '\n')
+    f.writelines(np.array_str(Stationary(prob), precision = 4, suppress_small = True) + '\n')
     f.close()
 
     del data_i_s

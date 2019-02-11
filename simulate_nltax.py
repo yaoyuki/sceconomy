@@ -7,12 +7,29 @@ import pickle
 
 
 if __name__ == '__main__':
+
+    path_to_shock = './tmp/data_i_s'
+    from markov import calc_trans, Stationary
+    
+    num_pop = 100_000
+    sim_time = 3_000
+
+    data_i_s = np.ones((num_pop, sim_time), dtype = int)
+    #need to set initial state for zp
+    data_i_s[:, 0] = 7
+
+    prob = np.load('./input_data/transition_matrix.npy')
+    np.random.seed(0)
+    data_rand = np.random.rand(num_pop, sim_time)
+    calc_trans(data_i_s, data_rand, prob)
+    data_i_s = data_i_s[:, 2000:]
+
+    np.save(path_to_shock + '.npy' , data_i_s)
+
     
     import sys
     args = sys.argv    
     num_core = int(args[1])
-
-    
 
     def curvedspace(begin, end, curve, num=100):
         import numpy as np
@@ -24,17 +41,19 @@ if __name__ == '__main__':
     # additional info
     
     agrid2 = curvedspace(0., 200., 2., 40)
-    kapgrid2 = curvedspace(0., 5., 2.0, 30)
-    prob2 = np.load('./DeBacker/prob_epsz.npy')
-    zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
+    kapgrid2 = curvedspace(0., 3., 2., 30)
+    zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0    
+    # prob2 = np.load('./DeBacker/prob_epsz.npy')
+
 
     # prices
-    p_, rc_, ome_, varpi_ = 1.1596933821433595, 0.07602510783099367, 0.3745553003131017, 0.6077655562064929
-    
+    p_, rc_, ome_, varpi_ = 1.381594349730373, 0.061698623561572324, 0.37384029055515816, 0.5765777484921033
 
-    split_shock('./input_data/data_i_s', 100_000, num_core)
+    # be careful about this part
+
+    split_shock(path_to_shock, 100_000, num_core)
     
-    ###end defining additional parameters###
+    ###end defining additional parameters#
 
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
@@ -49,15 +68,15 @@ if __name__ == '__main__':
     pure_sweat_share = 0.10 #target
     s_emp_share = 0.30 #target
 
-    yc_init = 0.60 #1.0
+    yc_init = 0.76 #
 
 
     GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
 
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob2, rho = 0.01, upsilon = 0.50,
-                   ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
+                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2,  rho = 0.01, upsilon = 0.50, prob = prob,
+                   ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_shock)
     
     
     econ.set_prices(p = p_, rc = rc_)

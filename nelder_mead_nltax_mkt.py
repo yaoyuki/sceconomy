@@ -38,12 +38,13 @@ def curvedspace(begin, end, curve, num=100):
     return ans
 
 agrid2 = curvedspace(0., 200., 2., 40)
-kapgrid2 = curvedspace(0., 5.0, 2., 30)
+kapgrid2 = curvedspace(0., 3., 2., 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
-# prob2 = np.load('./DeBacker/prob_epsz_lo_high_state.npy')
-prob2 = np.load('./DeBacker/prob_epsz.npy')
-
+prob = np.load('./input_data/transition_matrix.npy')
 path_to_data_i_s = './tmp/data_i_s'
+psib2 = np.array([0.12662323, 0.13995705, 0.15, 0.20493531, 0.3130503, 0.38901599])
+taub2 = np.array([0.80*0.137, 0.80*0.185, 0.80*0.202, 0.89*0.238, 0.89 * 0.266, 0.89 * 0.28])
+
 
 
 
@@ -73,22 +74,16 @@ def target(prices):
     pure_sweat_share = 0.10 #target
     s_emp_share = 0.30 #target
 
-    yc_init = 0.61 #1.0
+    yc_init = 0.76 * 1.05 #1.0
 
     # GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
     
     GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
 
-    # econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
-    #                taun = np.ones(8)*0.4, taub = np.ones(6)*0.2,
-    #                scaling_n = GDP_implied, scaling_b = GDP_implied,
-    #                agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob2, rho = 0.01, upsilon = 0.50,
-    #                ome = ome_, varpi = varpi_, path_to_data_i_s = './input_data/data_i_s')
-    
-
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob2, rho = 0.01, upsilon = 0.50,
+                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob2, rho = 0.01, upsilon = 0.50, prob = prob,
+                   psib = psib2, taub = taub2, taup = 0.2,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s)
 
     econ.set_prices(p = p_, rc = rc_)
@@ -174,9 +169,10 @@ if __name__ == '__main__':
     data_i_s = np.ones((num_pop, sim_time), dtype = int)
     #need to set initial state for zp
     data_i_s[:, 0] = 7
-
+    prob = np.load('./input_data/transition_matrix.npy')    
+    np.random.seed(0)
     data_rand = np.random.rand(num_pop, sim_time)
-    calc_trans(data_i_s, data_rand, prob2)
+    calc_trans(data_i_s, data_rand, prob)
     data_i_s = data_i_s[:, 2000:]
 
     np.save(path_to_data_i_s + '.npy' , data_i_s)
