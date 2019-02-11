@@ -74,7 +74,7 @@ def target(prices):
     pure_sweat_share = 0.10 #target
     s_emp_share = 0.30 #target
 
-    yc_init = 0.76 * 1.05 #1.0
+    yc_init = 0.76 #for tramp, *1.0 #1.0
 
     # GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
     
@@ -83,7 +83,7 @@ def target(prices):
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
                    agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob, rho = 0.01, upsilon = 0.50,
-                   taub = taub2, taup = 0.2, psib = psib2,
+                   taub = taub2, psib = psib2, 
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s)
 
     econ.set_prices(p = p_, rc = rc_)
