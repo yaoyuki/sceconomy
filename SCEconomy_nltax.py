@@ -2940,7 +2940,8 @@ class Economy:
                                 anp = anp_s
                                 kapnp = kapnp_s
 
-                                u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns = get_sstatic([an, anp, kapn, kapnp, zp])
+                                u, cc, cs, cagg, l, hy, hkap, hy, x, ks, ys, ns, ibra, tau, psi = get_sstatic([a, an, kap, kapn, z])
+                                # u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns = get_sstatic([an, anp, kapn, kapnp, zp])
                                 up_c[ia, ikap, istate, istate_n] = dc_util(cagg, l)
 
                                 an2[ia, ikap, istate, istate_n] = anp
@@ -2953,12 +2954,13 @@ class Economy:
                                 anp = anp_c
                                 kapnp = kapnp_c
 
-                                u, cc, cs, cagg, l ,n = get_cstatic([an, anp, epsp])
+                                u, cc, cs, cagg, l ,n, inbracket, tau, tran   = get_cstatic([a, an, eps])
+                                # u, cc, cs, cagg, l ,n = get_cstatic([an, anp, epsp])
                                 up_c[ia, ikap, istate, istate_n] = dc_util(cagg, l)
 
                                 an2[ia, ikap, istate, istate_n] = anp
                                 kapn2[ia, ikap, istate, istate_n] = kapnp
-
+                                
         _pre_calc_(d, u_c, up_c, an1, kapn1, an2, kapn2, to_be_s)                        
         ###enc obtain dividends and the stochastic discount factor###
 
