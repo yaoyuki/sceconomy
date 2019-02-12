@@ -2951,7 +2951,7 @@ class Economy:
                                 anp = anp_s
                                 kapnp = kapnp_s
 
-                                u, cc, cs, cagg, l, hy, hkap, h ,x, ks, ys, ns, ibra, tau, psi = get_sstatic([an, anp, kapn, kapnp, z])
+                                u, cc, cs, cagg, l, hy, hkap, h ,x, ks, ys, ns, ibra, tau, psi = get_sstatic([an, anp, kapn, kapnp, zp])
                                 # u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns = get_sstatic([an, anp, kapn, kapnp, zp])
                                 up_c[ia, ikap, istate, istate_n] = dc_util(cagg, l)
 
@@ -2965,7 +2965,7 @@ class Economy:
                                 anp = anp_c
                                 kapnp = kapnp_c
 
-                                u, cc, cs, cagg, l ,n, inbracket, tau, psi   = get_cstatic([an, anp, eps])
+                                u, cc, cs, cagg, l ,n, inbracket, tau, psi   = get_cstatic([an, anp, epsp])
                                 # u, cc, cs, cagg, l ,n = get_cstatic([an, anp, epsp])
                                 up_c[ia, ikap, istate, istate_n] = dc_util(cagg, l)
 
