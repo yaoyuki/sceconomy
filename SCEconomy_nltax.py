@@ -2891,7 +2891,7 @@ class Economy:
                             kapn = kapn_s
 
 
-                            u, cc, cs, cagg, l, hy, hkap, hy, x, ks, ys, ns, ibra, tau, psi = get_sstatic([a, an, kap, kapn, z])
+                            u, cc, cs, cagg, l, hy, hkap, h ,x, ks, ys, ns, ibra, tau, psi = get_sstatic([a, an, kap, kapn, z])
 
 
                             #print(f'u = {u}')
@@ -2917,7 +2917,7 @@ class Economy:
 
                             eps = epsgrid[is_to_ieps[istate]]
 
-                            u, cc, cs, cagg, l ,n, inbracket, tau, tran   = get_cstatic([a, an, eps])
+                            u, cc, cs, cagg, l ,n, inbracket, tau, psi   = get_cstatic([a, an, eps])
                             u_c[ia, ikap, istate] = dc_util(cagg, l)
 
                         an1[ia, ikap, istate] = an
@@ -2951,7 +2951,7 @@ class Economy:
                                 anp = anp_s
                                 kapnp = kapnp_s
 
-                                u, cc, cs, cagg, l, hy, hkap, hy, x, ks, ys, ns, ibra, tau, psi = get_sstatic([a, an, kap, kapn, z])
+                                u, cc, cs, cagg, l, hy, hkap, h ,x, ks, ys, ns, ibra, tau, psi = get_sstatic([an, anp, kapn, kapnp, z])
                                 # u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns = get_sstatic([an, anp, kapn, kapnp, zp])
                                 up_c[ia, ikap, istate, istate_n] = dc_util(cagg, l)
 
@@ -2965,7 +2965,7 @@ class Economy:
                                 anp = anp_c
                                 kapnp = kapnp_c
 
-                                u, cc, cs, cagg, l ,n, inbracket, tau, tran   = get_cstatic([a, an, eps])
+                                u, cc, cs, cagg, l ,n, inbracket, tau, psi   = get_cstatic([an, anp, eps])
                                 # u, cc, cs, cagg, l ,n = get_cstatic([an, anp, epsp])
                                 up_c[ia, ikap, istate, istate_n] = dc_util(cagg, l)
 
@@ -3236,8 +3236,8 @@ class Economy:
         self.data_ns = data_ns
         self.data_i_tax_bracket = data_i_tax_bracket
 
-        # self.data_div_sweat = data_div_sweat
-        # self.data_val_sweat = data_val_sweat        
+        self.data_div_sweat = data_div_sweat
+        self.data_val_sweat = data_val_sweat        
         # self.data_val_sweat_bh = data_val_sweat_bh
         # self.data_val_sweat_1gR = data_val_sweat_1gR
 
