@@ -3202,23 +3202,23 @@ class Economy:
         sweat_val = self.sweat_val
 
         # sweat_val_bh = self.calc_sweat_eq_value(discount = self.bh)[1]
-        # sweat_val_1gR = self.calc_sweat_eq_value(discount = (1. + self.grate)/(1. + self.rbar))[1]
+        sweat_val_1gR = self.calc_sweat_eq_value(discount = (1. + self.grate)/(1. + self.rbar))[1]
 
         # self.sweat_val_bh = sweat_val_bh
-        # self.sweat_val_1gR = sweat_val_1gR
+        self.sweat_val_1gR = sweat_val_1gR
 
 
         data_div_sweat = np.zeros(data_a.shape)
         data_val_sweat = np.zeros(data_a.shape)        
         # data_val_sweat_bh = np.zeros(data_a.shape)
-        # data_val_sweat_1gR = np.zeros(data_a.shape)        
+        data_val_sweat_1gR = np.zeros(data_a.shape)        
 
         
 
         calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_div, data_div_sweat)
         calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val, data_val_sweat)
         # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_bh, data_val_sweat_bh)
-        # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_1gR, data_val_sweat_1gR)                
+        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_1gR, data_val_sweat_1gR)                
 
 
         self.data_u = data_u
@@ -3239,7 +3239,7 @@ class Economy:
         self.data_div_sweat = data_div_sweat
         self.data_val_sweat = data_val_sweat        
         # self.data_val_sweat_bh = data_val_sweat_bh
-        # self.data_val_sweat_1gR = data_val_sweat_1gR
+        self.data_val_sweat_1gR = data_val_sweat_1gR
 
         return
     
@@ -3295,13 +3295,13 @@ class Economy:
             np.save(dir_path_save + 'sweat_div', self.sweat_div)
             np.save(dir_path_save + 'sweat_val', self.sweat_val)
             # np.save(dir_path_save + 'sweat_val_bh', self.sweat_val_bh)            
-            # np.save(dir_path_save + 'sweat_val_1gR', self.sweat_val_1gR)
+            np.save(dir_path_save + 'sweat_val_1gR', self.sweat_val_1gR)
             
 
             np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
             np.save(dir_path_save + 'data_val_sweat', self.data_val_sweat[:, -100:])
             # np.save(dir_path_save + 'data_val_sweat_bh', self.data_val_sweat_bh[:, -100:])
-            # np.save(dir_path_save + 'data_val_sweat_1gR', self.data_val_sweat_1gR[:, -100:])                        
+            np.save(dir_path_save + 'data_val_sweat_1gR', self.data_val_sweat_1gR[:, -100:])                        
 
             np.save(dir_path_save + 's_age', self.s_age)
             np.save(dir_path_save + 'c_age', self.c_age)
