@@ -294,7 +294,7 @@ class Economy:
 
         
         #implied parameters
-        self.nu = 1. - self.alpha - self.phi;
+        self.nu = 1. - self.alpha - self.phi
         self.bh = self.beta*(1. + self.grate)**(self.eta*(1. - self.mu))  #must be less than one.
         
     
@@ -2887,16 +2887,16 @@ class Economy:
                             kapn = kapn_s
 
 
-                            u, cc, cs, cagg, l, hy, hkap, hy, x, ks, ys, ns, i, tau, psi = get_sstatic([a, an, kap, kapn, z])
+                            u, cc, cs, cagg, l, hy, hkap, hy, x, ks, ys, ns, ibra, tau, psi = get_sstatic([a, an, kap, kapn, z])
 
 
                             #print(f'u = {u}')
                             u_c[ia, ikap, istate] = dc_util(cagg, l)
 
-                            profit = p*ys - (rs + delk)*ks - x - w*ns #this can be nagative
-                            tax = tau * profit # - psi
+                            # profit = p*ys - (rs + delk)*ks - x - w*ns #this can be nagative
+                            # tax = tau * profit # - psi
                             # tax = taum * max(profit, 0.) #not sure this is correct. this should be (kap == 0 or kap > 0)
-                            div = phi * p * ys - x - w*ns #div related to sweat equity
+                            div = phi * p * ys - x #div related to sweat equity
 
 
                             d[ia, ikap, istate] = div
@@ -3031,6 +3031,7 @@ class Economy:
 
         if it >= maxit:
             print('Warning: iteration reached the max iteration.')
+            
         print(f'elapsed time = {t1 - t0}')
         print(f'{it+1}th loop. dist = {dist}')
 
@@ -3163,48 +3164,48 @@ class Economy:
 
 
 
-        # # need to check
-        # @nb.jit(nopython = True, parallel = True)
-        # def calc_val_seq(data_a_, data_kap_, data_i_s_, data_is_c_, sweat_eq_val_ ,data_val_seq_):
+        # need to check
+        @nb.jit(nopython = True, parallel = True)
+        def calc_val_seq(data_a_, data_kap_, data_i_s_, data_is_c_, sweat_eq_val_ ,data_val_seq_):
         
-        #     for t in nb.prange(1, sim_time):
-        #         for i in range(num_total_pop):
+            for t in nb.prange(1, sim_time):
+                for i in range(num_total_pop):
             
-        #             istate = data_i_s_[i, t]
-        #             eps = epsgrid[is_to_ieps[istate]]
-        #             z = zgrid[is_to_iz[istate]]
+                    istate = data_i_s_[i, t]
+                    eps = epsgrid[is_to_ieps[istate]]
+                    z = zgrid[is_to_iz[istate]]
                 
-        #             a = data_a_[i, t-1]
-        #             kap = data_kap_[i, t-1]
+                    a = data_a_[i, t-1]
+                    kap = data_kap_[i, t-1]
             
-        #             an = data_a_[i, t]
-        #             kapn = data_kap_[i, t]
+                    an = data_a_[i, t]
+                    kapn = data_kap_[i, t]
                 
-        #         #             is_c = data_is_c_[i, t]
+                #             is_c = data_is_c_[i, t]
                 
-        #             data_val_seq_[i,t] = fem2d_peval(a, kap, agrid, kapgrid, sweat_eq_val_[:,:,istate])
+                    data_val_seq_[i,t] = fem2d_peval(a, kap, agrid, kapgrid, sweat_eq_val_[:,:,istate])
                 
-        # sweat_div = self.sweat_div
-        # sweat_val = self.sweat_val
+        sweat_div = self.sweat_div
+        sweat_val = self.sweat_val
 
-        # sweat_val_bh = self.calc_sweat_eq_value(discount = self.bh)[1]
-        # sweat_val_1gR = self.calc_sweat_eq_value(discount = (1. + self.grate)/(1. + self.rbar))[1]
+        sweat_val_bh = self.calc_sweat_eq_value(discount = self.bh)[1]
+        sweat_val_1gR = self.calc_sweat_eq_value(discount = (1. + self.grate)/(1. + self.rbar))[1]
 
-        # self.sweat_val_bh = sweat_val_bh
-        # self.sweat_val_1gR = sweat_val_1gR
+        self.sweat_val_bh = sweat_val_bh
+        self.sweat_val_1gR = sweat_val_1gR
 
 
-        # data_div_sweat = np.zeros(data_a.shape)
-        # data_val_sweat = np.zeros(data_a.shape)        
-        # data_val_sweat_bh = np.zeros(data_a.shape)
-        # data_val_sweat_1gR = np.zeros(data_a.shape)        
+        data_div_sweat = np.zeros(data_a.shape)
+        data_val_sweat = np.zeros(data_a.shape)        
+        data_val_sweat_bh = np.zeros(data_a.shape)
+        data_val_sweat_1gR = np.zeros(data_a.shape)        
 
         
 
-        # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_div, data_div_sweat)
-        # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val, data_val_sweat)
-        # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_bh, data_val_sweat_bh)
-        # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_1gR, data_val_sweat_1gR)                
+        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_div, data_div_sweat)
+        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val, data_val_sweat)
+        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_bh, data_val_sweat_bh)
+        calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_1gR, data_val_sweat_1gR)                
 
 
         self.data_u = data_u
