@@ -120,7 +120,7 @@ if __name__ == '__main__':
     econ.calc_moments()
     
     ###calculate other important variables###
-    #econ.calc_sweat_eq_value()
+    econ.calc_sweat_eq_value()
     econ.calc_age()
     econ.simulate_other_vars()
     econ.save_result()

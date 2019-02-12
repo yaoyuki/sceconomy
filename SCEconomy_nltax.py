@@ -2880,7 +2880,11 @@ class Economy:
                         val_s = (get_sstatic([a, an_s, kap, kapn_s, z])[0]  + fem2d_peval(an_s, kapn_s, agrid, kapgrid, EV[:,:,istate])) **(1./(1.- mu))
 
 
-                        if val_s >= val_c:
+                        if val_c == 0.0 and val_s == 0.0: #if both are infeasible
+                            print('both are infeasible')
+                            print('a = ', a, ', kap = ', kap, 'an_s = ', an_s, ', kapn_s = ', kapn_s, 'an_c = ', an_c, ', kapn_c = ', kapn_c)
+                            
+                        elif val_s >= val_c:
                             to_be_s[ia, ikap, istate] = True
 
                             an = an_s
@@ -2936,7 +2940,14 @@ class Economy:
                             vsp = (get_sstatic([an, anp_s, kapn, kapnp_s, zp])[0]    + fem2d_peval(anp_s, kapnp_s, agrid, kapgrid, EV[:,:,istate_n])) **(1./(1.- mu))
 
 
-                            if vsp >= vcp:
+
+                            
+                            if vsp == 0.0 and vcp == 0.0: #if both are infeasible
+                                print('both are infeasible')
+                                print('an = ', an, ', kapn = ', kapn, 'anp_s = ', anp_s, ', kapnp_s = ', kapnp_s, 'anp_c = ', anp_c, ', kapnp_c = ', kapnp_c)
+       
+
+                            elif vsp >= vcp:
                                 anp = anp_s
                                 kapnp = kapnp_s
 
