@@ -39,8 +39,29 @@ def curvedspace(begin, end, curve, num=100):
 agrid2 = curvedspace(0., 200., 2., 40)
 kapgrid2 = curvedspace(0., 3., 2., 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
+prob = np.load('./DeBacker/prob_epsz.npy') #DeBacker
+# prob = np.load('./input_data/.npy')
 
 path_to_data_i_s = './tmp/data_i_s'
+
+
+
+alpha = 0.3 #new!
+theta = 0.41
+# ynb = 0.451
+ynb_p_gdp = 0.25
+xnb_p_gdp = 0.105
+g_p_gdp = 0.13
+    
+pure_sweat_share = 0.10 #target
+s_emp_share = 0.30 #target
+
+yc_init = 0.8679
+# 0.76
+
+# GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
+GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
+
 
 
 
@@ -62,26 +83,10 @@ def target(prices):
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
     #econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.6, varpi = 0.1)
 
-    alpha = 0.4
-    theta = 0.41
-    # ynb = 0.451
-    ynb_p_gdp = 0.25
-    xnb_p_gdp = 0.105
-    g_p_gdp = 0.13
-    
-    pure_sweat_share = 0.10 #target
-    s_emp_share = 0.30 #target
-
-    yc_init = 0.76
-
-    # GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
-
-    GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
-
 
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50,
+                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob, la = 0.7,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s)
 
 
@@ -169,7 +174,7 @@ if __name__ == '__main__':
     #need to set initial state for zp
     data_i_s[:, 0] = 7
 
-    prob = np.load('./input_data/transition_matrix.npy')
+
     np.random.seed(0)
     data_rand = np.random.rand(num_pop, sim_time)
     calc_trans(data_i_s, data_rand, prob)
@@ -182,6 +187,8 @@ if __name__ == '__main__':
     f = open(nd_log_file, 'w')
     f.writelines(np.array_str(np.bincount(data_i_s[:,0]) / np.sum(np.bincount(data_i_s[:,0])), precision = 4, suppress_small = True) + '\n')
     f.writelines(np.array_str(Stationary(prob), precision = 4, suppress_small = True) + '\n')
+    f.writelines('yc_init = ' +  str(yc_init) + '\n')
+    f.writelines('GDP_implied = ' +  str(GDP_implied) + '\n')    
     f.close()
 
     del data_i_s

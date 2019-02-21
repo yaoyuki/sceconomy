@@ -42,8 +42,25 @@ kapgrid2 = curvedspace(0., 3., 2., 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 prob = np.load('./input_data/transition_matrix.npy')
 path_to_data_i_s = './tmp/data_i_s'
-psib2 = np.array([0.12662323, 0.13995705, 0.15, 0.20493531, 0.3130503, 0.38901599])
-taub2 = np.array([0.80*0.137, 0.80*0.185, 0.80*0.202, 0.89*0.238, 0.89 * 0.266, 0.89 * 0.28])
+# psib2 = np.array([0.12662323, 0.13995705, 0.15, 0.20493531, 0.3130503, 0.38901599])
+# taub2 = np.array([0.80*0.137, 0.80*0.185, 0.80*0.202, 0.89*0.238, 0.89 * 0.266, 0.89 * 0.28])
+# taub2 = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50
+
+alpha = 0.3 #new!
+theta = 0.41
+# ynb = 0.451
+ynb_p_gdp = 0.25
+xnb_p_gdp = 0.105
+g_p_gdp = 0.13
+    
+pure_sweat_share = 0.10 #target
+s_emp_share = 0.30 #target
+
+yc_init = 0.76
+
+# GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
+GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
+
 
 
 
@@ -64,26 +81,10 @@ def target(prices):
     # print('computing for the case w = {:f}, p = {:f}, rc = {:f}'.format(w_, p_, rc_), end = ', ')
     print('computing for the case p = {:f}, rc = {:f}'.format(p_, rc_), end = ', ')
 
-    alpha = 0.4
-    theta = 0.41
-    # ynb = 0.451
-    ynb_p_gdp = 0.25
-    xnb_p_gdp = 0.105
-    g_p_gdp = 0.13
-    
-    pure_sweat_share = 0.10 #target
-    s_emp_share = 0.30 #target
-
-    yc_init = 0.76 #for tramp, *1.0 #1.0
-
-    # GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
-    
-    GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
 
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
                    agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob, rho = 0.01, upsilon = 0.50,
-                   taub = taub2, psib = psib2, 
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s)
 
     econ.set_prices(p = p_, rc = rc_)
@@ -169,7 +170,7 @@ if __name__ == '__main__':
     data_i_s = np.ones((num_pop, sim_time), dtype = int)
     #need to set initial state for zp
     data_i_s[:, 0] = 7
-    prob = np.load('./input_data/transition_matrix.npy')    
+    # prob = np.load('./input_data/transition_matrix.npy')    
     np.random.seed(0)
     data_rand = np.random.rand(num_pop, sim_time)
     calc_trans(data_i_s, data_rand, prob)
