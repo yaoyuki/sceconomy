@@ -47,7 +47,7 @@ if __name__ == '__main__':
     
     
 
-    p_, rc_, ome_, varpi_ = 1.417444459595774, 0.0610743812616079, 0.4627459750781605, 0.6056020599342775
+    p_, rc_, ome_, varpi_ = 1.4511445940193992, 0.053393961117462245, 0.4627459750781605, 0.6056020599342775
 
     split_shock(path_to_shock, 100_000, num_core)
     
@@ -69,16 +69,21 @@ if __name__ == '__main__':
     yc_init = 0.8679
     # yc_init = 0.76
 
-    # psib2 = np.array([0.12662323, 0.13995705, 0.15, 0.20493531, 0.3130503, 0.38901599])
-    # taub2 = np.array([0.80*0.137, 0.80*0.185, 0.80*0.202, 0.89*0.238, 0.89 * 0.266, 0.89 * 0.28])
+    path_to_data_i_s = './tmp/data_i_s'
+
+    taub = np.array([0.80*0.137, 0.80*0.185, 0.80*0.202, 0.89*0.238, 0.89 * 0.266, 0.89 * 0.28])
+    psib = np.array([0.12543758, 0.13944768, 0.15,       0.20772159, 0.3213201,  0.40113872])
+    
+
 
     GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
 
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
                    agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2,  rho = 0.01, upsilon = 0.50, prob = prob, la = 0.7,
+                   taub = taub, psib = psib, taup = 0.2,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_shock)
-    #taub = taub2, psib = psib2, taup = 0.2,    
+    
     
     econ.set_prices(p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
@@ -111,17 +116,16 @@ if __name__ == '__main__':
         print('rc = ', rc, ', rc_ = ', rc_)
 
     
-    
     #calc main moments
     econ.print_parameters()
-    econ.calc_moments()
     
     ###calculate other important variables###
     econ.calc_sweat_eq_value()
     econ.calc_age()
     econ.simulate_other_vars()
+    econ.calc_moments()    
     econ.save_result()
-    
+
 
     
     

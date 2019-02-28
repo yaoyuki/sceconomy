@@ -40,11 +40,19 @@ def curvedspace(begin, end, curve, num=100):
 agrid2 = curvedspace(0., 200., 2., 40)
 kapgrid2 = curvedspace(0., 3., 2., 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
-prob = np.load('./input_data/transition_matrix.npy')
+prob = np.load('./DeBacker/prob_epsz.npy') #DeBacker
+# prob = np.load('./input_data/.npy')
+
+# taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+# psib = np.array([0.12543758, 0.13944768, 0.15,       0.20772159, 0.3213201,  0.40113872])
+
 path_to_data_i_s = './tmp/data_i_s'
+
+
 # psib2 = np.array([0.12662323, 0.13995705, 0.15, 0.20493531, 0.3130503, 0.38901599])
-# taub2 = np.array([0.80*0.137, 0.80*0.185, 0.80*0.202, 0.89*0.238, 0.89 * 0.266, 0.89 * 0.28])
 # taub2 = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50
+taub = np.array([0.80*0.137, 0.80*0.185, 0.80*0.202, 0.89*0.238, 0.89 * 0.266, 0.89 * 0.28])
+psib = np.array([0.12543758, 0.13944768, 0.15,       0.20772159, 0.3213201,  0.40113872])
 
 alpha = 0.3 #new!
 theta = 0.41
@@ -56,12 +64,10 @@ g_p_gdp = 0.13
 pure_sweat_share = 0.10 #target
 s_emp_share = 0.30 #target
 
-yc_init = 0.76
+yc_init =  0.8679
 
 # GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta)*yc_init + (1.-alpha)*ynb)/(1.-alpha - pure_sweat_share)
 GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
-
-
 
 
 
@@ -84,7 +90,8 @@ def target(prices):
 
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob, rho = 0.01, upsilon = 0.50,
+                   agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, prob = prob, rho = 0.01, upsilon = 0.50, la = 0.7,
+                   taub = taub, psib = psib,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s)
 
     econ.set_prices(p = p_, rc = rc_)

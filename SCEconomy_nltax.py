@@ -246,6 +246,10 @@ class Economy:
         self.num_suba_inner = 20
         self.num_subkap_inner = 30
 
+        #secure names for some variables
+        self.data_val_sweat = None
+        self.data_val_sweat_1gR = None        
+
 
     def __set_nltax_parameters__(self):
         
@@ -2594,11 +2598,13 @@ class Economy:
             Ecagg_c = np.mean((data_ss[:,6] + p*data_ss[:,7] )* (data_ss[:,0]))
             Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * (1. - data_ss[:,0]))
 
-            # ETn = np.mean((taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0])
-            ETn = np.mean((data_ss[:,18]*w*data_ss[:,5]*data_ss[:,10] - data_ss[:,19])*data_ss[:,0])            
+            wepsn_i = w*data_ss[:,5]*data_ss[:,10]*data_ss[:,0]
+            ETn = np.mean((data_ss[:,18]*wepsn_i - data_ss[:,19])*data_ss[:,0])            
 
-            # ETm = np.mean((taum*(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13]) - tran)*(1. - data_ss[:,0]) )            
-            ETm = np.mean((data_ss[:,18]*(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13]) - data_ss[:,19])*(1. - data_ss[:,0]) )
+            # ETm = np.mean((taum*(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13]) - tran)*(1. - data_ss[:,0]) )
+            
+            bizinc_i = (p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13])*(1.-data_ss[:,0])
+            ETm = np.mean((data_ss[:,18]*(bizinc_i) - data_ss[:,19])*(1. - data_ss[:,0]))
 
             E_transfer = np.mean(data_ss[:,19])
 
@@ -2747,11 +2753,13 @@ class Economy:
             print('  Tax revenue(tax_rev) = {}'.format(tax_rev))
 
             print('')
-            print('Gini Coefficients: ***NEED TO BE FIXED***THIS IS TRASH***')
+            print('Gini Coefficients:')
             print('  Financial Assets = {}'.format(gini(data_ss[:,1])))
             print('  Sweats Assets = {}'.format(gini(data_ss[:,2])))
-            print('  C-wages (including S)= {}'.format(gini(w*data_ss[:,5]* data_ss[:,10]*data_ss[:,0])))
-            print('  S-income (including C)= {}'.format(gini((p*data_ss[:,15] ) * (1. - data_ss[:,0]))))
+            print('  C-wages (wepsn) (S\' wage is set to zero)= {}'.format(gini(wepsn_i)))
+            print('  C-wages (wepsn) (conditional on C)= {}'.format(gini(wepsn_i[data_ss[:,0] == True])))            
+            print('  S-inc (pys - (rs +delk) - wns - x) (C\'s is set to zero )= {}'.format(gini(bizinc_i*(1. - data_ss[:,0]))))
+            print('  S-inc (pys - (rs +delk) - wns - x) (conditional on S)= {}'.format(gini(bizinc_i[data_ss[:,0] == False])))            
         #     print('  S-income = {}'.format(gini((p*data_ss[:,14]) * (1. - data_ss[:,0]))))
         #     print('  Total Income'.format('?'))
         #     print()
@@ -2777,6 +2785,27 @@ class Economy:
             print('  Labor Demand of C(nc) = {}'.format(nc))
             print('  Labor Demand of S(Ens) = {}'.format(Ens))
             print('')
+
+            print('')
+            print('Additional Moments')
+            print('  E(phi p ys - x)       = {}'.format(phi*p*Eys - Ex))
+            print('  E(phi p ys - x)/GDP   = {}'.format((phi*p*Eys - Ex)/GDP))
+            print('  E(ks)                 = {}'.format(Eks))
+            print('  E(ks)/GDP             = {}'.format(Eks/GDP))
+            print('  E(nu p ys - w ns)     = {}'.format((nu*p*Eys - w*Ens)))                        
+            print('  E(nu p ys - w ns)/GDP = {}'.format((nu*p*Eys - w*Ens)/GDP))            
+            
+            
+            if self.data_val_sweat is not None:
+                EVb_sdicount = np.mean(data_val_sweat[:,-1])
+                print('  EVb (bh un_c/u_c)              = {}'.format(EVb_sdicount))
+                print('  EVb/GDP (bh un_c/u_c)          = {}'.format(EVb_sdicount/GDP))
+                
+            if self.data_val_sweat_1gR is not None:
+                EVb_1gR = np.mean(data_val_sweat[:,-1])
+                print('  EVb  ((1+grate)/(1+rbar))      = {}'.format(EVb_1gR))
+                print('  EVb/GDP ((1+grate)/(1+rbar))   = {}'.format(EVb_1gR/GDP))                            
+                
 
 
 
@@ -2837,7 +2866,7 @@ class Economy:
 
 
         ###obtain dividends and the stochastic discount factor###
-        d = np.ones((num_a, num_kap, num_s)) * (-100.0)
+        d = np.ones((num_a, num_kap, num_s)) * (-10000000000.0)
     #     d_after_tax = np.ones((num_a, num_kap, num_s)) * (-2.0)
 
         u_c = np.zeros((num_a, num_kap, num_s))
@@ -3199,7 +3228,7 @@ class Economy:
                     data_val_seq_[i,t] = fem2d_peval(a, kap, agrid, kapgrid, sweat_eq_val_[:,:,istate])
                 
         sweat_div = self.sweat_div
-        sweat_val = self.sweat_val
+        sweat_val = self.sweat_val #I think this one uses stochastic discount factor
 
         # sweat_val_bh = self.calc_sweat_eq_value(discount = self.bh)[1]
         sweat_val_1gR = self.calc_sweat_eq_value(discount = (1. + self.grate)/(1. + self.rbar))[1]

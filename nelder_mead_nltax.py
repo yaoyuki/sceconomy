@@ -42,6 +42,8 @@ zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 prob = np.load('./DeBacker/prob_epsz.npy') #DeBacker
 # prob = np.load('./input_data/.npy')
 
+taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+psib = np.array([0.12543758, 0.13944768, 0.15,       0.20772159, 0.3213201,  0.40113872])
 path_to_data_i_s = './tmp/data_i_s'
 
 
@@ -87,6 +89,7 @@ def target(prices):
     econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
                    agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob, la = 0.7,
+                   taub = taub, psib = psib,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s)
 
 
