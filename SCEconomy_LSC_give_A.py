@@ -681,9 +681,8 @@ class Economy:
             an = s[1]
             z = s[2]
 
-            #ks and ys are predetermined here
-            # ks = (p*alpha/(rs+delk))**(1./(1. - alpha))
-            ks = xi8 #should be the same as above
+
+            ks = z**(1./(1. - alpha))*xi8
             ys = z*ks**alpha
 
             u = -np.inf

@@ -685,6 +685,7 @@ class Economy:
             #     print('an = ', an)
             #     print('eps = ', eps)
             #     print('i = ', i)
+
             #     # print('j = ', j)
             #     print('n = ', n)
             #     print('wepsn = ', wepsn)
@@ -1357,8 +1358,8 @@ class Economy:
 
                     # cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun)*w*eps + tran)/(1. + grate)
 
-                    i_bracket = locate(w*eps, nbracket)
-                    cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun[i_bracket])*w*eps + psin[0])/(1. + grate)
+                    # i_bracket = locate(w*eps, nbracket)
+                    cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun[0])*w*eps + psin[0])/(1. + grate)
 
 
         get_sstatic = Econ.generate_sstatic()
