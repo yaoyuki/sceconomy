@@ -312,7 +312,7 @@ class Economy:
         self.p = p
         self.rc = rc
 
-        #assuming CRS technology
+        #assuming CRS technology for C-corp
         self.kcnc_ratio = ((self.theta * self.A)/(self.delk + self.rc))**(1./(1. - self.theta))
         self.w = (1. - self.theta)*self.A*self.kcnc_ratio**self.theta
         

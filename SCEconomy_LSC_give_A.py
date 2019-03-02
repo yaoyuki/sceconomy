@@ -1550,7 +1550,7 @@ class Economy:
                     
                     data_ss[i,6:15] = get_sstatic([a, an, z])[1:]
 
-                    #return u, cc, cs, cagg, lbar,NAN, NAN, NAN, ks, ys 
+                    #return u, cc, cs, cagg, lbar, NAN, NAN, NAN, ks, ys 
         
 
 

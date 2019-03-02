@@ -12,6 +12,7 @@ import numba as nb
 
 #my library
 #import
+from orderedTableSearch import locate, hunt
 from FEM import femeval, fem_peval #1D interpolation
 from FEM_2D import fem2d_peval, fem2deval_mesh #2D interpolation
 from markov import Stationary
@@ -76,7 +77,7 @@ class Economy:
                  sim_time = None,
                  num_total_pop = None,
                  A = None,
-                 path_to_data_i_s = None
+                 path_to_data_i_s = None,
 
                  taun = None,
                  psin = None,
@@ -148,9 +149,9 @@ class Economy:
         if bbracket_fixed is not None: self.bbracket_fixed = bbracket_fixed  
         if scaling_b is not None: self.scaling_b = scaling_b
 
-        #check
-        if self.upsilon >= 1.0:
-            print('Error: upsilon must be < 1 but upsilon = ', upsilon)
+        #c
+        # if self.upsilon >= 1.0:
+        #     print('Error: upsilon must be < 1 but upsilon = ', upsilon)
 
         self.__set_nltax_parameters__()
         self.__set_implied_parameters__()
@@ -329,10 +330,9 @@ class Economy:
         print('la = ', self.la)
         print('mu = ', self.mu)
         print('ome = ', self.ome)
-        print('upsilon = ', self.upsilon)        
         print('phi = ', self.phi)
         print('rho = ', self.rho)
-        print('varpi = ', self.varpi)
+        # print('varpi = ', self.varpi)
         print('tauc = ', self.tauc)
         print('taud = ', self.taud)
         print('taup = ', self.taup)
@@ -631,10 +631,9 @@ class Economy:
         la = self.la
         mu = self.mu
         ome = self.ome
-        upsilon = self.upsilon        
         phi = self.phi
         rho = self.rho
-        varpi = self.varpi
+        # varpi = self.varpi
         tauc = self.tauc
         taud = self.taud
         taup = self.taup
@@ -650,7 +649,7 @@ class Economy:
         nbracket = self.nbracket
 
         agrid = self.agrid
-        kapgrid = self.kapgrid
+        # kapgrid = self.kapgrid
         epsgrid = self.epsgrid
         zgrid = self.zgrid
 
@@ -660,11 +659,9 @@ class Economy:
         is_to_ieps = self.is_to_ieps
 
         amin = self.amin
-        num_suba_inner = self.num_suba_inner
-        num_subkap_inne = self.num_subkap_inner
 
         num_a = self.num_a
-        num_kap = self.num_kap
+        # num_kap = self.num_kap
         num_eps = self.num_eps
         num_z = self.num_z
 
@@ -781,7 +778,7 @@ class Economy:
                 u = util(cagg, 1. - n)
 
             #used to be u, cc, cs, cagg, l ,n
-            return u, cc, cs, cagg, l ,n, np.nan, np.nan, i, taun[i], psin[i]
+            return u, cc, cs, cagg, l ,n, -1.0e23, -1.0e23, i, taun[i], psin[i]
 
     
         return get_cstatic
@@ -898,7 +895,7 @@ class Economy:
 
             # lbar is a given constant
             #mx, my, x are set to np.nan.
-            return u, cc, cs, cagg, lbar, np.nan, ks, ys, ibracket, taub[ibracket], psib[ibracket]
+            return u, cc, cs, cagg, lbar, -1.0e20, ks, ys, ibracket, taub[ibracket], psib[ibracket]
         
         return get_sstatic
     
@@ -942,10 +939,10 @@ class Economy:
         #to solve C-optimization problem, we need the max feasible set for an [amin, sup_an]
         c_supan = np.ones((num_a, num_eps)) * (-2.)
         for ia, a in enumerate(agrid):
-                for ieps, eps in enumerate(epsgrid):
+            for ieps, eps in enumerate(epsgrid):
 
-                    #first tax bracket is picked for no reason
-                    c_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun[0])*w*eps + psin[0])/(1. + grate)
+                #first tax bracket is picked for no reason
+                c_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun[0])*w*eps + psin[0])/(1. + grate)
 
 
         get_sstatic = Econ.generate_sstatic()                    
@@ -957,7 +954,7 @@ class Economy:
         for iz, z in enumerate(zgrid):
             for ia, a in enumerate(agrid):
                 
-                ks = z**(1./(1.-alpha)*xi8         
+                ks = z**(1./(1.-alpha))*xi8                         
                 ys = z*ks**alpha
 
                 #first tax bracket is picked 
@@ -1670,7 +1667,7 @@ class Economy:
 
         #load main simlation result
         data_a = self.data_a
-        data_kap = self.data_kap
+        # data_kap = self.data_kap
         data_i_s = self.data_i_s
         data_is_c = self.data_is_c
         data_ss = self.data_ss
@@ -1690,8 +1687,8 @@ class Economy:
         if rank == 0:
             print('amax = {}'.format(np.max(data_a)))
             print('amin = {}'.format(np.min(data_a)))
-            print('kapmax = {}'.format(np.max(data_kap)))
-            print('kapmin = {}'.format(np.min(data_kap)))
+            # print('kapmax = {}'.format(np.max(data_kap)))
+            # print('kapmin = {}'.format(np.min(data_kap)))
 
             t = -1
 
@@ -1720,7 +1717,7 @@ class Economy:
             Ecc = np.mean(data_ss[:,6])
             Ecs = np.mean(data_ss[:,7])
             El = np.mean(data_ss[:,9])
-            En = np.mean(data_ss[:,5]* data_ss[:,10] * (data_ss[:,0]))
+            En = np.mean(data_ss[:,5]* data_ss[:,10] * (data_ss[:,0])) #efficient labor
             
 
             Eks = np.mean(data_ss[:,11] * (1. - data_ss[:,0]))
@@ -1740,11 +1737,12 @@ class Economy:
             # Ens = np.mean(data_ss[:,16] * (1. - data_ss[:,0])) #new! labor supply for each firms
 
 
-            Ecagg_c = np.mean((data_ss[:,6] + p*data_ss[:,7] )* (data_ss[:,0]))
-            Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * (1. - data_ss[:,0]))
+            Ecagg_c = np.mean((data_ss[:,6] + p*data_ss[:,7] )*data_ss[:,0])
+            Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] )*(1. - data_ss[:,0]))
 
             wepsn_i = w*data_ss[:,5]*data_ss[:,10]*data_ss[:,0]
-            ETn = np.mean((data_ss[:,14]*wepsn_i - data_ss[:,15])*data_ss[:,0]) #transfer subtracted      
+            ETn = np.mean((data_ss[:,14]*wepsn_i - data_ss[:,15])*data_ss[:,0])
+            #transfer subtracted      
 
             bizinc_i = (p*data_ss[:,12] - (rs + delk)*data_ss[:,11])*(1.-data_ss[:,0])
             ETm = np.mean((data_ss[:,14]*bizinc_i - data_ss[:,15])*(1.-data_ss[:,0])) #transfer subtracted
@@ -1822,13 +1820,13 @@ class Economy:
             #instead of imposing labor market clearing condition
             # mom0 = 1. - (1. - theta)*yc/(w*nc)
             mom0 = 1. - Ecs/Eys
-            mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            mom1 = 1. - (Ecc  + (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
             mom2 = 1. - (tax_rev - E_transfer - netb)/g            
             print('')
 
             # print('1-(1-thet)*yc/(E[w*eps*n]) = {}'.format(mom0))
             print('1-E(cs)/E(ys) = {}'.format(mom0))
-            print('1-(Ecc+Ex+(grate+delk)*(kc + Eks)+ g + xnb - yn)/yc = {}'.format(mom1))            
+            print('1-(Ecc+(grate+delk)*(kc + Eks)+ g + xnb - yn)/yc = {}'.format(mom1))            
             #print('1-((1-taud)kc+E(ks)+b)/Ea = {}'.format(1. - (b + (1.- taud)*kc + Eks)/Ea))
             print('1-(tax-tran-netb)/g = {}'.format(mom2))
 
@@ -1884,7 +1882,7 @@ class Economy:
             print('  Govt Consumption(g) = {}'.format(g/GDP))
             print('  Nonbusiness investment(xnb) = {}'.format((xnb)/GDP))
             print('  sweat    Investment(Ex) = {}'.format(Ex))
-            print('    Sum = {}'.format((C+xc+Exs+g+xnb + Ex)/GDP))
+            print('    Sum = {}'.format((C+xc+Exs+g+xnb)/GDP)) #Ex is removed for now
 
             print('')
             print('Govt Budget:')
@@ -2083,19 +2081,19 @@ class Economy:
                     ns = np.nan
 
                     a = data_a_[i, t-1]
-                    kap = data_kap_[i, t-1]
+                    # kap = data_kap_[i, t-1]
 
                     an = data_a_[i, t]
-                    kapn = data_kap_[i, t]
+                    # kapn = data_kap_[i, t]
 
                     is_c = data_is_c_[i, t]
 
                     # data_ss
                     # 0: is_c
                     # 1: a
-                    # 2: kap
+                    # 2: skip
                     # 3: an
-                    # 4: kapn
+                    # 4: skip
                     # 5: eps or z
                     # 6: cc
                     # 7: cs
