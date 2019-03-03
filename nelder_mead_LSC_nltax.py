@@ -11,7 +11,7 @@ import pickle
 
 p_init = float(args[1])
 rc_init = float(args[2])
-num_core = args[2]
+num_core = args[3]
 
 print('the code is running with ', num_core, 'cores...')
 prices_init = [p_init, rc_init]
@@ -25,6 +25,7 @@ f.close()
 
 dist_min = 10000000.0
 econ_save = None
+zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
 def curvedspace(begin, end, curve, num=100):
     import numpy as np
@@ -46,7 +47,7 @@ def target(prices):
     ###set any additional condition/parameters
 
 
-    econ = Economy()
+    econ = Economy(zgrid = zgrid2*0.45)
 
 
     econ.set_prices(p = p_, rc = rc_)

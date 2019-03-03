@@ -882,7 +882,7 @@ class Economy:
             
             # cc = xi4*a - xi5*an + xi6 + xi11*(p*ys - (rs+delk)*ks)
             cc = xi4*a - xi5*an + (1.- taub[ibracket])/denom*bizinc + (psib[ibracket] + yn - xnb)/denom
-            cc = xi4*a - xi5*an + (1.- taub[ibracket])*xi7*bizinc + (psib[ibracket])*xi7 + xi6
+            # cc = xi4*a - xi5*an + (1.- taub[ibracket])*xi7*bizinc + (psib[ibracket])*xi7 + xi6
             cs = xi1*cc
             cagg = xi2 * cc
 
@@ -1260,9 +1260,9 @@ class Economy:
         vsn = np.ones(vmax.shape)*100.0
         vs_util = np.ones(vmax.shape)*100.0
 
-        max_iter = 1000
+        max_iter = 500
         max_howard_iter = 0
-        tol = 1.0e-8
+        tol = 1.0e-6
         dist = 10000.0
         dist_sub = 10000.0
         it = 0
@@ -1872,8 +1872,8 @@ class Economy:
             print('    Sum = {}'.format((w*nc + rc*kc + rs*Eks+ p*Eys - (rs+delk)*Eks + delk*(kc+Eks) + yn)/GDP))
 
             self.puresweat = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
-            
 
+            
             print('')
             print('National Product Shares (./GDP):')
             print('  Consumption(C) = {}'.format(C/GDP))
@@ -1946,11 +1946,10 @@ class Economy:
             #     print('  EVb/GDP ((1+grate)/(1+rbar))   = {}'.format(EVb_1gR/GDP))                            
                 
 
-
-
             mom0 = 1. - Ecs/Eys
-            mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            mom1 = 1. - (Ecc  + (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
             mom2 = 1. - (tax_rev - E_transfer - netb)/g            
+
             mom3 = 0.0
             mom4 = Ens/En
             mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
@@ -2080,6 +2079,8 @@ class Economy:
                     ys = np.nan
                     ns = np.nan
 
+                    ibra = -1000
+
                     a = data_a_[i, t-1]
                     # kap = data_kap_[i, t-1]
 
@@ -2087,6 +2088,7 @@ class Economy:
                     # kapn = data_kap_[i, t]
 
                     is_c = data_is_c_[i, t]
+                    
 
                     # data_ss
                     # 0: is_c
@@ -2123,7 +2125,7 @@ class Economy:
                     # data_x_[i, t] = x
                     data_ks_[i, t] = ks
                     data_ys_[i, t] = ys
-                    data_i_tax_bracket_[i, t] = i_bra
+                    data_i_tax_bracket_[i, t] = ibra
 
                     data_tau_[i, t] = tau
                     data_psi_[i, t] = psi
@@ -2149,7 +2151,7 @@ class Economy:
         #note that this does not store some impolied values,,,, say div or value of sweat equity
         calc_all(data_a, data_i_s, data_is_c, ##input
                  data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_ks, data_ys, ##output
-                 data_i_tax_bracket_, data_tau_, data_psi_)           
+                 data_i_tax_bracket, data_tau, data_psi)           
 
 
         self.data_u = data_u
