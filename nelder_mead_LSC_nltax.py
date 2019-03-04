@@ -5,7 +5,7 @@ import numpy as np
 import time
 import subprocess
 ### use modified version of SCEConomy module
-from SCEconomy_LSC_nltax import Economy
+from SCEconomy_LSC_nltax import Economy, split_shock
 
 import pickle
 
@@ -26,6 +26,8 @@ f.close()
 dist_min = 10000000.0
 econ_save = None
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
+prob = np.load('./DeBacker/prob_epsz.npy') #DeBacker
+path_to_data_i_s = './tmp/data_i_s'
 
 def curvedspace(begin, end, curve, num=100):
     import numpy as np
@@ -47,7 +49,7 @@ def target(prices):
     ###set any additional condition/parameters
 
 
-    econ = Economy(zgrid = zgrid2*0.45)
+    econ = Economy(path_to_data_i_s = path_to_data_i_s)
 
 
     econ.set_prices(p = p_, rc = rc_)
@@ -99,6 +101,37 @@ if __name__ == '__main__':
     f = open(nd_log_file, 'w')
     f.writelines('p, rc, dist, mom0, mom1, mom2, mom3\n')
     f.close()
+
+    #load shocks
+    from markov import calc_trans, Stationary
+    
+    num_pop = 100_000
+    sim_time = 3_000
+
+    data_i_s = np.ones((num_pop, sim_time), dtype = int)
+    #need to set initial state for zp
+    data_i_s[:, 0] = 7
+
+
+    np.random.seed(0)
+    data_rand = np.random.rand(num_pop, sim_time)
+    calc_trans(data_i_s, data_rand, prob)
+    data_i_s = data_i_s[:, 2000:]
+
+    np.save(path_to_data_i_s + '.npy' , data_i_s)
+
+    ### check
+    f = open(nd_log_file, 'w')
+    f.writelines(np.array_str(np.bincount(data_i_s[:,0]) / np.sum(np.bincount(data_i_s[:,0])), precision = 4, suppress_small = True) + '\n')
+    f.writelines(np.array_str(Stationary(prob), precision = 4, suppress_small = True) + '\n')
+    # f.writelines('yc_init = ' +  str(yc_init) + '\n')
+    # f.writelines('GDP_implied = ' +  str(GDP_implied) + '\n')    
+    f.close()
+
+    del data_i_s
+    
+    split_shock(path_to_data_i_s, 100_000, int(num_core))
+
 
     nm_result = None
     from scipy.optimize import minimize

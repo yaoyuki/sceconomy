@@ -1260,7 +1260,7 @@ class Economy:
         vsn = np.ones(vmax.shape)*100.0
         vs_util = np.ones(vmax.shape)*100.0
 
-        max_iter = 500
+        max_iter = 1000
         max_howard_iter = 0
         tol = 1.0e-6
         dist = 10000.0
