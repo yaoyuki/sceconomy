@@ -163,7 +163,7 @@ class Economy:
         """
         
         self.__is_price_set__ = False
-        self.alpha    = 0.4
+        self.alpha    = 0.3
         self.beta     = 0.98
         self.chi      = 0.0 #param for borrowing constarint
         self.delk     = 0.05
@@ -1156,54 +1156,29 @@ class Economy:
 
         # howard interation is commented out for now.
 
-        # @nb.jit(nopython = True)
-        # def _howard_iteration_(_vmax_, _vcn_, _vsn_, _vc_an_, _vc_util_,_vs_an_, _vs_kapn_, _vs_util_ ,howard_iter):
-        #     __EV__ = np.zeros((1, 1, num_a, num_kap, num_s))
-        #     if howard_iter > 0:
+        @nb.jit(nopython = True)
+        def _howard_iteration_(_vmax_, _vcn_, _vsn_, _vc_an_, _vc_util_, _vs_an_, _vs_util_, howard_iter):
+            __EV__ = np.zeros((1, num_a,  num_s))
+            if howard_iter > 0:
 
-        #         for it_ho in range(howard_iter):
+                for it_ho in range(howard_iter):
 
-        #             _vmax_[:] = np.fmax(_vcn_, _vsn_)
-        # #             _EV_[:] = bh*((_vmax_**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s)) #does not depend on ia or ikap
-        #             for ia in range(num_a):
-        #                 __EV__[0, 0, ia, :, :] = bh*((_vmax_[ia,:,:]**(1. - mu))@(prob.T)).reshape((1, 1, 1, num_kap, num_s)) 
+                    _vmax_[:] = np.fmax(_vcn_, _vsn_)
 
+                    for ia in range(num_a):
+                        __EV__[0, ia, :] = bh*((_vmax_[ia, :]**(1. - mu))@(prob.T)).reshape((1, 1, num_s)) 
 
-        #             #EV[:] = bh*((vmaxn**(1. - mu))@(prob.T)).reshape((num_a, num_kap, num_s)) #does not depend on ia or ikap
+                    for istate in range(num_s):
+                        iz = is_to_iz[istate]
+                        z = zgrid[iz]
 
+                        for ia in range(num_a):
 
-        #             for istate in range(num_s):
-        #                 iz = is_to_iz[istate]
-        #                 z = zgrid[iz]
-        #                 #EV_c_interp_f = RectBivariateSpline(agrid, kapgrid, EV[0, 0, :, :, istate],kx = 1, ky = 1)
+                            _vcn_[ia, istate] = (_vc_util_[ia, istate] + fem_peval(_vc_an_[ia, istate], agrid, __EV__[0, :, istate]) )**(1./(1. - mu))
 
-        #                 for ia in range(num_a):
-        #                     for ikap in range(num_kap):
-        #                         #kap = kapgrid[ikap]
-        #                         #update C
+                            _vsn_[ia, istate] = (_vs_util_[ia, istate] + fem_peval(_vs_an_[ia, istate], agrid, __EV__[0, :, istate]) )**(1./(1. - mu))
+        
 
-        # #                         EV_c = EV_c_interp_f(agrid, la*kapgrid[ikap])
-        # #                         obj2 = interp1d(agrid,  EV_c.reshape(num_a), fill_value = 'extrapolate')
-
-        #                         #obj = lambda x: (get_util_c(np.array([agrid[ia], x, epsgrid[is_to_ieps[istate]]])) + obj2(x))**(1./(1. - mu))
-        #                         #vcn[ia, ikap, istate] = (vc_util[ia, ikap, istate] + obj2(vc_an[ia, ikap, istate]))**(1./(1. - mu))
-        #                         _vcn_[ia, ikap, istate] = (_vc_util_[ia, ikap, istate] +                                                          fem2d_peval(_vc_an_[ia, ikap, istate], la*kapgrid[ikap], agrid, kapgrid, __EV__[0,0,:,:,istate])                                                          )**(1./(1. - mu))
-
-
-
-
-        #                         #update S
-
-        #                         #vsn[ia, ikap, istate] = (vs_util[ia, ikap, istate] + EV_interp_f(vs_an[ia, ikap, istate] , vs_kapn[ia, ikap, istate]))**(1./(1. - mu))
-        #                         _vsn_[ia, ikap, istate] = (_vs_util_[ia, ikap, istate] +                                                          fem2d_peval(_vs_an_[ia, ikap, istate] , _vs_kapn_[ia, ikap, istate], agrid, kapgrid, __EV__[0,0,:,:,istate])                                                          )**(1./(1. - mu))
-
-        #         #after 
-
-
-        # #             vmaxn[:] = np.fmax(vcn, vsn)
-
-
-        # ###pararell
 
         @nb.jit(nopython = True)
         def reshape_to_mat(v, val):
@@ -1260,8 +1235,8 @@ class Economy:
         vsn = np.ones(vmax.shape)*100.0
         vs_util = np.ones(vmax.shape)*100.0
 
-        max_iter = 1000
-        max_howard_iter = 0
+        max_iter = 100
+        max_howard_iter = 100
         tol = 1.0e-6
         dist = 10000.0
         dist_sub = 10000.0
@@ -1332,7 +1307,7 @@ class Economy:
                 if max_howard_iter > 0:
                     #print('Starting Howard Iteration...')
                     t3 = time.time()
-
+                    _howard_iteration_(vmax, vcn, vsn, vc_an, vc_util, vs_an, vs_util, max_howard_iter)
                     # _howard_iteration_(vmaxn, vcn, vsn, vc_an, vc_util, vs_an, vs_kapn, vs_util ,max_howard_iter)
 
                 if max_howard_iter > 0:
