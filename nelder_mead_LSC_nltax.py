@@ -36,6 +36,22 @@ def curvedspace(begin, end, curve, num=100):
     return ans
 
 
+alpha = 0.3 #new!
+theta = 0.41
+ynb_p_gdp = 0.25
+xnb_p_gdp = 0.105
+g_p_gdp = 0.13
+
+pure_sweat_share = 0.10
+yc_init = 0.75
+
+GDP_implied = yc_init/(1. - ynb_p_gdp - pure_sweat_share/(1.-alpha))
+
+ynb = ynb_p_gdp*GDP_implied
+xnb = xnb_p_gdp*GDP_implied
+g = g_p_gdp*GDP_implied
+
+
 
 def target(prices):
     global dist_min
@@ -49,7 +65,9 @@ def target(prices):
     ###set any additional condition/parameters
 
 
-    econ = Economy(path_to_data_i_s = path_to_data_i_s)
+    econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2,
+                   g = g, yn = ynx, xnb = xnb,
+                   alpha = alpha, theta = theta)
 
 
     econ.set_prices(p = p_, rc = rc_)
@@ -89,6 +107,8 @@ def target(prices):
 
     f = open(nd_log_file, 'a')
     f.writelines(str(p) + ', ' + str(rc) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + '\n')
+    f.writelines('yc_init = ' +  str(yc_init) + '\n')
+    f.writelines('GDP_implied = ' +  str(GDP_implied) + '\n')    
     f.close()
     
     if dist < dist_min:
