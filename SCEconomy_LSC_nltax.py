@@ -1921,11 +1921,12 @@ class Economy:
             #     print('  EVb/GDP ((1+grate)/(1+rbar))   = {}'.format(EVb_1gR/GDP))                            
                 
 
+            
             mom0 = 1. - Ecs/Eys
             mom1 = 1. - (Ecc  + (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
             mom2 = 1. - (tax_rev - E_transfer - netb)/g            
 
-            mom3 = 0.0
+            mom3 = (p*Eys - (rs+delk)*Eks)/GDP
             mom4 = Ens/En
             mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
             mom6 = nc
@@ -1934,7 +1935,7 @@ class Economy:
         mom0 = comm.bcast(mom0) #1. - Ecs/Eys
         mom1 = comm.bcast(mom1) # 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
         mom2 = comm.bcast(mom2) # 1. - (tax_rev - tran - netb)/g
-        mom3 = comm.bcast(mom3) # 0.0
+        mom3 = comm.bcast(mom3) # (p*Eys - (rs+delk)*Eks)/GDP)
         mom4 = comm.bcast(mom4) # Ens/En
         mom5 = comm.bcast(mom5) # (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
         mom6 = comm.bcast(mom6) # nc
@@ -2285,6 +2286,7 @@ if __name__ == '__main__':
     econ = import_econ()
 
     econ.get_policy()
+    econ.print_parameters()
     econ.simulate_model()
 
     export_econ(econ)
