@@ -1235,9 +1235,9 @@ class Economy:
         vsn = np.ones(vmax.shape)*100.0
         vs_util = np.ones(vmax.shape)*100.0
 
-        max_iter = 100
-        max_howard_iter = 100
-        tol = 1.0e-6
+        max_iter = 50
+        max_howard_iter = 100 #was 100
+        tol = 1.0e-8 #was 1.0e-6
         dist = 10000.0
         dist_sub = 10000.0
         it = 0
@@ -1307,7 +1307,7 @@ class Economy:
                 if max_howard_iter > 0:
                     #print('Starting Howard Iteration...')
                     t3 = time.time()
-                    _howard_iteration_(vmax, vcn, vsn, vc_an, vc_util, vs_an, vs_util, max_howard_iter)
+                    _howard_iteration_(vmaxn, vcn, vsn, vc_an, vc_util, vs_an, vs_util, max_howard_iter)
                     # _howard_iteration_(vmaxn, vcn, vsn, vc_an, vc_util, vs_an, vs_kapn, vs_util ,max_howard_iter)
 
                 if max_howard_iter > 0:
