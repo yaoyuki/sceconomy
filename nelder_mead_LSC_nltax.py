@@ -43,7 +43,7 @@ xnb_p_gdp = 0.105
 g_p_gdp = 0.13
 
 pure_sweat_share = 0.10
-yc_init = 0.75
+yc_init = 1.1
 
 GDP_implied = yc_init/(1. - ynb_p_gdp - pure_sweat_share/(1.-alpha))
 
@@ -58,7 +58,11 @@ def target(prices):
     global econ_save
 
     p_ = prices[0]
-    rc_ = prices[1]
+    #rc_ = prices[1]
+
+    trans = prices[1]
+
+    rc_ = 0.06
     
     print('computing for the case p = {:f}, rc = {:f}'.format(p_, rc_), end = ', ')
     
@@ -66,7 +70,7 @@ def target(prices):
 
 
     econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2,
-                   g = g, yn = ynx, xnb = xnb,
+                   g = g, yn = ynb, xnb = xnb, psib_fixed = trans, psin_fixed = trans,
                    alpha = alpha, theta = theta)
 
 
