@@ -35,7 +35,6 @@ def curvedspace(begin, end, curve, num=100):
     ans[-1] = end #so that the last element is exactly end
     return ans
 
-
 alpha = 0.3 #new!
 theta = 0.41
 ynb_p_gdp = 0.25
@@ -43,14 +42,19 @@ xnb_p_gdp = 0.105
 g_p_gdp = 0.13
 
 pure_sweat_share = 0.10
-yc_init = 1.1
+yc_init = 1.04
 
 GDP_implied = yc_init/(1. - ynb_p_gdp - pure_sweat_share/(1.-alpha))
 
 ynb = ynb_p_gdp*GDP_implied
 xnb = xnb_p_gdp*GDP_implied
 g = g_p_gdp*GDP_implied
+    
+ome = 0.7833340585165647
 
+taup = 0.20
+taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+psib = np.array([0.12837754, 0.14071072, 0.15, 0.20081269, 0.30081419, 0.37107904])
 
 
 def target(prices):
@@ -58,11 +62,8 @@ def target(prices):
     global econ_save
 
     p_ = prices[0]
-    #rc_ = prices[1]
+    rc_ = prices[1]
 
-    trans = prices[1]
-
-    rc_ = 0.06
     
     print('computing for the case p = {:f}, rc = {:f}'.format(p_, rc_), end = ', ')
     
@@ -70,7 +71,9 @@ def target(prices):
 
 
     econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2,
-                   g = g, yn = ynb, xnb = xnb, psib_fixed = trans, psin_fixed = trans,
+                   g = g, yn = ynb, xnb = xnb, ome = ome,
+                   scaling_n = GDP_implied, scaling_b = GDP_implied,
+                   taub = taub, psib = psib, taup = taup,
                    alpha = alpha, theta = theta)
 
 
@@ -86,6 +89,8 @@ def target(prices):
 
     f = open(detailed_output_file, 'ab') #use byte mode
     f.write(result.stdout)
+    f.writelines('yc_init = ' +  str(yc_init) + '\n')
+    f.writelines('GDP_implied = ' +  str(GDP_implied) + '\n')    
     f.close()
     
     print('etime: {:f}'.format(t1 - t0), end = ', ')
@@ -99,7 +104,9 @@ def target(prices):
     rc = econ.rc
     moms = econ.moms
     
-    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0)
+    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0)
+
+    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0)
     
     if p != p_ or  rc != rc_:
         print('err: input prices and output prices do not coincide.')
@@ -111,8 +118,6 @@ def target(prices):
 
     f = open(nd_log_file, 'a')
     f.writelines(str(p) + ', ' + str(rc) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + '\n')
-    f.writelines('yc_init = ' +  str(yc_init) + '\n')
-    f.writelines('GDP_implied = ' +  str(GDP_implied) + '\n')    
     f.close()
     
     if dist < dist_min:
