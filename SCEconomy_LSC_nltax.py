@@ -957,8 +957,8 @@ class Economy:
                 ks = z**(1./(1.-alpha))*xi8                         
                 ys = z*ks**alpha
 
-                #first tax bracket is picked 
-                s_supan[ia, iz] = ((1. + rbar)*a + (1. - taub[0])*(p*ys - (rs + delk)*ks) + psib[0])/(1. + grate)
+                #first tax bracket is picked. I don't have a clear reqson for it.
+                s_supan[ia, iz] = ((1. + rbar)*a + (1. - taub[0])*(p*ys - (rs + delk)*ks) + psib[0] + yn - xnb)/(1. + grate)
 
         del ks, ys
                     
@@ -1137,9 +1137,13 @@ class Economy:
                 if _is_c_:
                     an_sup = min(c_supan[ia, is_to_ieps[istate]] - 1.e-6, agrid[-1]) #no extrapolation for aprime
                     an_min = amin
-                else:
-                    an_sup = min(s_supan[ia, is_to_iz[istate]] - 1.e-6, agrid[-1]) #no extrapolation for aprime
-                    an_min = chi*xi8
+                else:#if S
+                    iz = is_to_iz[istate]
+                    z = zgrid[iz]
+                    
+                    an_sup = min(s_supan[ia, iz] - 1.e-6, agrid[-1]) #no extrapolation for aprime
+                    ks = (z**(1./(1.-alpha)))*xi8
+                    an_min = chi*ks #chi*ks
 
                 ans =  _optimize_given_state_(an_min, an_sup, _EV_, ia, istate, _is_c_)
                 
@@ -1236,7 +1240,7 @@ class Economy:
         vs_util = np.ones(vmax.shape)*100.0
 
         max_iter = 50
-        max_howard_iter = 100 #was 100
+        max_howard_iter = 100 
         tol = 1.0e-8 #was 1.0e-6
         dist = 10000.0
         dist_sub = 10000.0
@@ -1922,9 +1926,9 @@ class Economy:
                 
 
             
-            mom0 = 1. - Ecs/Eys
-            mom1 = 1. - (Ecc  + (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
-            mom2 = 1. - (tax_rev - E_transfer - netb)/g            
+            # mom0 = 1. - Ecs/Eys
+            # mom1 = 1. - (Ecc  + (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            # mom2 = 1. - (tax_rev - E_transfer - netb)/g            
 
             mom3 = (p*Eys - (rs+delk)*Eks)/GDP
             mom4 = Ens/En
@@ -2086,7 +2090,7 @@ class Economy:
 
 
                     if is_c:
-                        u, cc, cs, cagg, l ,n,    tmp1, tmp2, ibra, tau, psi = get_cstatic([a, an, eps])
+                        u, cc, cs, cagg, l , n, tmp1, tmp2, ibra, tau, psi = get_cstatic([a, an, eps])
                     else:
                         u, cc, cs, cagg, l, tmp1, ks, ys, ibra, tau, psi = get_sstatic([a, an, z])
 
