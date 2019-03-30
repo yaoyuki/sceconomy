@@ -218,10 +218,14 @@ class Economy:
         
         
         
-    def set_prices(self, w, p, rc):
-        self.w = w
+    def set_prices(self, p, rc):
+
         self.p = p
         self.rc = rc
+
+        self.kcnc_ratio = ((self.theta * self.A)/(self.delk + self.rc))**(1./(1. - self.theta))
+        self.w = (1. - self.theta)*self.A*self.kcnc_ratio**self.theta
+        
         
         self.__is_price_set__ = True
         
@@ -234,7 +238,7 @@ class Economy:
         self.xi2 = (self.ome + (1. - self.ome) * self.xi1**self.rho)**(1./self.rho)
         self.xi3 = self.eta/(1. - self.eta) * self.ome * (1. - self.taun) / (1. + self.tauc) * self.w / self.xi2**self.rho
         
-        self.xi8 = ((self.p*(self.nu**self.nu)*(self.alpha**(1.-self.alpha))/((self.w**self.nu)*((self.rs + self.delk)**(1.-self.nu)) ))**(1./(1.-self.alpha-self.nu))
+        self.xi8 = ((self.p*(self.nu**self.nu)*(self.alpha**(1.-self.alpha))/((self.w**self.nu)*((self.rs + self.delk)**(1.-self.nu)) )))**(1./(1.-self.alpha-self.nu))
         # self.xi8 = (self.alpha*self.p/(self.rs + self.delk))**(1./(1. - self.alpha))
         
         self.xi13 = self.nu/self.alpha*(self.rs + self.delk)/self.w
@@ -840,13 +844,15 @@ class Economy:
         #to solve S-optimization problem, we need the max feasible set for an [amin, sup_an]                    
         s_supan = np.ones((num_a, num_z)) * (-2.)
         
-        ks = z**(1./(1.-alpha-nu))*xi8
-        ns = xi13*ks
-
+       
         for iz, z in enumerate(zgrid):
             for ia, a in enumerate(agrid):
-                    ys = z*(ks**alpha)*(ns**nu)
-                    s_supan[ia, iz] = ((1. + rbar)*a + (1. - taum)*(p*ys - (rs + delk)*ks - w*ns) + tran + yn - xnb)/(1. + grate)
+
+                ks = z**(1./(1.-alpha-nu))*xi8
+                ns = xi13*ks
+                
+                ys = z*(ks**alpha)*(ns**nu)
+                s_supan[ia, iz] = ((1. + rbar)*a + (1. - taum)*(p*ys - (rs + delk)*ks - w*ns) + tran + yn - xnb)/(1. + grate)
 
         del ks, ys, ns
                     
@@ -1625,6 +1631,8 @@ class Economy:
         zeta= Econ.zeta
         lbar = Econ.lbar
 
+        kcnc_ratio = Econ.kcnc_ratio
+
 
         A = Econ.A
 
@@ -1724,8 +1732,10 @@ class Economy:
             self.nc = nc
             self.En = En
             self.Ens = Ens
+
+            kc = nc*kcnc_ratio            
                     
-            kc = ((w/(1. - theta)/A)**(1./theta))*nc
+            # kc = ((w/(1. - theta)/A)**(1./theta))*nc
             yc = A * (kc**theta)*(nc**(1.-theta))
             yc_sub = Ecc + (grate + delk)*(kc + Eks) + g + xnb - yn
 
