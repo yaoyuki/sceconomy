@@ -5,7 +5,7 @@ import numpy as np
 import time
 import subprocess
 ### use modified version of SCEConomy module
-from SCEconomy_LSC_nltax import Economy, split_shock
+from SCEconomy_LSC_ns_nltax import Economy, split_shock
 
 import pickle
 
@@ -44,18 +44,21 @@ g_p_gdp = 0.13
 pure_sweat_share = 0.10
 yc_init = 1.04
 
-GDP_implied = yc_init/(1. - ynb_p_gdp - pure_sweat_share/(1.-alpha))
+# GDP_implied = yc_init/(1. - ynb_p_gdp - pure_sweat_share/(1.-alpha)) #formula for LSC without ns
+GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
 
 ynb = ynb_p_gdp*GDP_implied
 xnb = xnb_p_gdp*GDP_implied
 g = g_p_gdp*GDP_implied
     
-ome = 0.7833340585165647
 
-taup = 0.20
-taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
-psib = np.array([0.12837754, 0.14071072, 0.15, 0.20081269, 0.30081419, 0.37107904])
+#taup = 0.20
+#taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+#psib = np.array([0.12837754, 0.14071072, 0.15, 0.20081269, 0.30081419, 0.37107904])
 
+
+ome_ = 0.78
+nu_ = 0.35
 
 def target(prices):
     global dist_min
@@ -64,6 +67,7 @@ def target(prices):
     p_ = prices[0]
     rc_ = prices[1]
 
+
     
     print('computing for the case p = {:f}, rc = {:f}'.format(p_, rc_), end = ', ')
     
@@ -71,11 +75,12 @@ def target(prices):
 
 
     econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2,
-                   g = g, yn = ynb, xnb = xnb, ome = ome,
+                   g = g, yn = ynb, xnb = xnb,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   taub = taub, psib = psib, #taup = taup,
-                   alpha = alpha, theta = theta)
+                   alpha = alpha, theta = theta,
+                   ome = ome_, nu = nu_)
 
+    # taub = taub, psib = psib, #taup = taup,
 
     econ.set_prices(p = p_, rc = rc_)
     
@@ -83,7 +88,7 @@ def target(prices):
     #with open('econ.pickle', mode='rb') as f: econ = pickle.load(f)
     t0 = time.time()
 
-    result = subprocess.run(['mpiexec', '-n', num_core, 'python', 'SCEconomy_LSC_nltax.py'], stdout=subprocess.PIPE)
+    result = subprocess.run(['mpiexec', '-n', num_core, 'python', 'SCEconomy_LSC_ns_nltax.py'], stdout=subprocess.PIPE)
     t1 = time.time()
     
 
@@ -102,22 +107,26 @@ def target(prices):
     w = econ.w
     p = econ.p
     rc = econ.rc
+    ome = econ.ome
+    nu = econ.nu    
     moms = econ.moms
     
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0)
 
     dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0)
     
-    if p != p_ or  rc != rc_:
+    if p != p_ or  rc != rc_ or ome != ome_ or nu != nu_:
         print('err: input prices and output prices do not coincide.')
         print('p = ', p, ', p_ = ', p_)
         print('rc = ', rc, ', rc_ = ', rc_)
+        print('ome = ', ome, ', ome_ = ', ome_)
+        print('nu = ', nu, ', nu_ = ', nu_)                
        # return
     
     print('dist = {:f}'.format(dist))
 
     f = open(nd_log_file, 'a')
-    f.writelines(str(p) + ', ' + str(rc) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + '\n')
+    f.writelines(str(p) + ', ' + str(rc) + ', ' + str(ome) + ', ' + str(nu) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[3]) + '\n')
     f.close()
     
     if dist < dist_min:
@@ -128,7 +137,7 @@ def target(prices):
 if __name__ == '__main__':
 
     f = open(nd_log_file, 'w')
-    f.writelines('p, rc, dist, mom0, mom1, mom2, mom3\n')
+    f.writelines('p, rc, ome, nu, dist, mom0, mom1, mom2, mom3\n')
     f.close()
 
     #load shocks
