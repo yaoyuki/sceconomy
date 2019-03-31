@@ -209,7 +209,6 @@ class Economy:
 
         
         #implied parameters
-        self.nu = 1. - self.alpha - self.phi
         self.bh = self.beta*(1. + self.grate)**(self.eta*(1. - self.mu))  #must be less than one.
         self.varrho = (1. - self.alpha - self.nu)/(1. - self.alpha) * self.vthet / (self.vthet + self.veps)
     
@@ -238,7 +237,7 @@ class Economy:
         self.xi2 = (self.ome + (1. - self.ome) * self.xi1**self.rho)**(1./self.rho)
         self.xi3 = self.eta/(1. - self.eta) * self.ome * (1. - self.taun) / (1. + self.tauc) * self.w / self.xi2**self.rho
         
-        self.xi8 = ((self.p*(self.nu**self.nu)*(self.alpha**(1.-self.alpha))/((self.w**self.nu)*((self.rs + self.delk)**(1.-self.nu)) )))**(1./(1.-self.alpha-self.nu))
+        self.xi8 = ((self.p*(self.nu**self.nu)*(self.alpha**(1.-self.nu))/((self.w**self.nu)*((self.rs + self.delk)**(1.-self.nu)) )))**(1./(1.-self.alpha-self.nu))
         # self.xi8 = (self.alpha*self.p/(self.rs + self.delk))**(1./(1. - self.alpha))
         
         self.xi13 = self.nu/self.alpha*(self.rs + self.delk)/self.w
@@ -262,6 +261,7 @@ class Economy:
         print('')
         print('Parameters')
         print('alpha = ', self.alpha)
+        print('nu = ', self.nu)
         print('beta = ', self.beta)
         print('chi = ', self.chi)
         print('delk = ', self.delk)
@@ -305,7 +305,6 @@ class Economy:
 
             print('')
             print('Implied Parameters')
-            print('nu = ', self.nu)
             print('bh (beta_tilde) = ', self.bh)
             print('varrho = ', self.varrho)
 
@@ -1494,7 +1493,7 @@ class Economy:
 
         if rank == 0:
 
-            data_ss = np.ones((num_total_pop, 17)) * (-2.0)
+            data_ss = np.ones((num_total_pop, 16)) * (-2.0)
 
             t = -1
             for i in range(num_total_pop):
@@ -1530,7 +1529,7 @@ class Economy:
                     data_ss[i,5] = z
 
                     
-                    data_ss[i,6:17] = get_sstatic([a, an, z])[1:]
+                    data_ss[i,6:16] = get_sstatic([a, an, z])[1:]
 
                     #return u, cc, cs, cagg, lbar, NAN, NAN, NAN, ks, ys, ns
         
@@ -1793,7 +1792,7 @@ class Economy:
 
             mom0 = 1. - Ecs/Eys
             mom1 = 1. - (Ecc  + (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
-            mom2 = 1. - (tax_rev - E_transfer - netb)/g            
+            mom2 = 1. - (tax_rev - tran - netb)/g            
                     
             # # mom0 = 1. - (1. - theta)*yc/(w*nc)
             # mom0 = 1. - theta/(rc + delk) * yc/kc

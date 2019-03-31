@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import subprocess
-from SCEconomy_LSC_ns import Economy
+from SCEconomy_LSC_ns_nltax import Economy
 
 import pickle
 
@@ -18,25 +18,30 @@ if __name__ == '__main__':
     agrid = curvedspace(0.0, 100., 2.0, 40)
 
 
-    # alpha = 0.3 #new!
-    # theta = 0.41
-    # ynb_p_gdp = 0.25
-    # xnb_p_gdp = 0.105
-    # g_p_gdp = 0.13
+    alpha = 0.3 #new!
+    nu = 0.00001
+    theta = 0.41
+    ynb_p_gdp = 0.25
+    xnb_p_gdp = 0.105
+    g_p_gdp = 0.13
     
-   
-    # yc_init = 1.04
+    pure_sweat_share = 0.10
+    yc_init = 1.04
     
-    # GDP_implied = yc_init/(1. - ynb_p_gdp - /(1.-alpha))
+    GDP_implied = yc_init/(1. - ynb_p_gdp - pure_sweat_share/(1.-alpha))
     
-    # ynb = ynb_p_gdp*GDP_implied
-    # xnb = xnb_p_gdp*GDP_implied
-    # g = g_p_gdp*GDP_implied
+    ynb = ynb_p_gdp*GDP_implied
+    xnb = xnb_p_gdp*GDP_implied
+    g = g_p_gdp*GDP_implied
     
+    
+    # taup = 0.20
+    # taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+    # psib = np.array([0.12837754, 0.14071072, 0.15, 0.20081269, 0.30081419, 0.37107904])
     
 
     ### additional info
-    zgrid = np.load('./input_data/zgrid.npy') ** 2.0
+    zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
     # zgrid2 = np.load('./input_data/zgrid_09_0075.npy') ** 2.0
     # prob2 = np.load('./input_data/prob_epsz_07_09_01_0075.npy')
@@ -60,7 +65,12 @@ if __name__ == '__main__':
 
     np.save(path_to_shock + '.npy' , data_i_s)
 
-    p_, rc_ = 0.275384608013927, 0.0579181695442646
+    p_, rc_ , ome_ = 0.275384608013927, 0.0579181695442646 ,0.783161613400783
+    # 0.2351573248046552, 0.05318390611686519, 0.7831616134007835
+
+
+    taun = np.array([0.1465, 0.1585, 0.162,  0.1715, 0.195,  0.2025, 0.204,  0.2095])
+    psin = np.array([0.08021118,  0.08744664,  0.09007978,  0.09889971,  0.13458096,  0.15, 0.15748521, 0.20991406])
 
 
     ###define additional parameters###
@@ -72,14 +82,20 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(nu = 0.1, path_to_data_i_s = path_to_shock, prob = prob, zgrid = zgrid, agrid = agrid)
+    econ = Economy(path_to_data_i_s = path_to_shock, prob = prob, zgrid = zgrid2, agrid = agrid,
+                   g = g, yn = ynb, xnb = xnb, ome = ome_,
+                   scaling_n = GDP_implied, scaling_b = GDP_implied,
+                   taun = taun, psin = psin,
+                   alpha = alpha, theta = theta, nu = nu)
+    #taub = taub, psib = psib,taup = taup,
     
     econ.set_prices(p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
 
-
     t0 = time.time()
-    result = subprocess.run(['mpiexec', '-n', str(num_core), 'python', 'SCEconomy_LSC_ns.py'], stdout=subprocess.PIPE)
+
+    result = subprocess.run(['mpiexec', '-n', str(num_core), 'python', 'SCEconomy_LSC_ns_nltax.py'], stdout=subprocess.PIPE)
+    
     t1 = time.time()
 
     with open('econ.pickle', mode='rb') as f: econ = pickle.load(f)

@@ -43,7 +43,8 @@ class Economy:
     """
     
     def __init__(self,
-                 alpha = None,                 
+                 alpha = None,
+                 nu = None,
                  beta = None,
                  chi = None,
                  delk = None,
@@ -99,6 +100,7 @@ class Economy:
         #set the parameters if designated
         #I don't know how to automate these lines
         if alpha is not None: self.alpha = alpha
+        if nu is not None: self.nu = nu
         if beta is not None: self.beta = beta
         if chi is not None: self.chi = chi
         if delk is not None: self.delk = delk    
@@ -164,6 +166,7 @@ class Economy:
         
         self.__is_price_set__ = False
         self.alpha    = 0.3
+        self.nu       = 0.55
         self.beta     = 0.98
         self.chi      = 0.0 #param for borrowing constarint
         self.delk     = 0.05
@@ -276,7 +279,6 @@ class Economy:
 
         
         #implied parameters
-        self.nu = 1. - self.alpha - self.phi
         self.bh = self.beta*(1. + self.grate)**(self.eta*(1. - self.mu))  #must be less than one.
         self.varrho = (1. - self.alpha - self.nu)/(1. - self.alpha) * self.vthet / (self.vthet + self.veps)
     
@@ -304,8 +306,11 @@ class Economy:
         self.xi2 = (self.ome + (1. - self.ome) * self.xi1**self.rho)**(1./self.rho) #ok
 
         self.xi3 = self.eta/(1. - self.eta) * self.ome / (1. + self.tauc) / self.xi2**self.rho #changed
-        
-        self.xi8 = (self.alpha*self.p/(self.rs + self.delk))**(1./(1. - self.alpha)) #ok
+
+        self.xi8 = ((self.p*(self.nu**self.nu)*(self.alpha**(1.-self.nu))/((self.w**self.nu)*((self.rs + self.delk)**(1.-self.nu)) )))**(1./(1.-self.alpha-self.nu))
+                
+        self.xi13 = self.nu/self.alpha*(self.rs + self.delk)/self.w #ns = xi13*ks
+
 
         self.denom = (1. + self.p*self.xi1)*(1. + self.tauc)
         self.xi7 = 1./ self.denom #changed        
@@ -320,6 +325,7 @@ class Economy:
         print('')
         print('Parameters')
         print('alpha = ', self.alpha)
+        print('nu = ', self.nu)        
         print('beta = ', self.beta)
         print('chi = ', self.chi)
         print('delk = ', self.delk)
@@ -369,8 +375,9 @@ class Economy:
             print('rs = ', self.rs)
 
             print('')
-            print('Implied Parameters')
-            print('nu = ', np.nan)
+            print('')
+            print('')
+
 
             print('')
             print('xi1 = ', self.xi1)
@@ -381,6 +388,7 @@ class Economy:
             print('xi6 = ', self.xi6)
             print('xi7 = ', self.xi7)
             print('xi8 = ', self.xi8)
+            print('xi13 = ', self.xi13)            
 
             
         else:
@@ -525,6 +533,7 @@ class Economy:
         xi6 = self.xi6
         xi7 = self.xi7
         xi8 = self.xi8
+
         ###end loading vars###
         
         @nb.jit(nopython = True)
@@ -850,6 +859,7 @@ class Economy:
         xi6 = self.xi6
         xi7 = self.xi7
         xi8 = self.xi8
+        xi13 = self.xi13        
         ###end loading vars###
         
         util = self.generate_util()
@@ -866,12 +876,14 @@ class Economy:
 
             # ks = (z*p*alpha/(rs+delk))**(1./(1. - alpha))
             
-            ks = z**(1./(1. - alpha))*xi8 #should be the same as above
-            ys = z*ks**alpha
+            ks = z**(1./(1. - alpha - nu))*xi8 #should be the same as above
+            ns = xi13*ks            
+            ys = z*(ks**alpha)*(ns**nu)
 
             #bizinc does not depend on
-            bizinc = p*ys - (rs+delk)*ks
-            ibracket = locate(bizinc, bbracket) #check if this is actually working            
+            bizinc = p*ys - (rs+delk)*ks - w*ns
+            ibracket = locate(bizinc, bbracket) #check if this is actually working
+
 
             #initial
             u = -np.inf
@@ -895,7 +907,7 @@ class Economy:
 
             # lbar is a given constant
             #mx, my, x are set to np.nan.
-            return u, cc, cs, cagg, lbar, -1.0e20, ks, ys, ibracket, taub[ibracket], psib[ibracket]
+            return u, cc, cs, cagg, lbar, -1.0e20, ks, ys, ibracket, taub[ibracket], psib[ibracket], ns
         
         return get_sstatic
     
@@ -953,14 +965,17 @@ class Economy:
 
         for iz, z in enumerate(zgrid):
             for ia, a in enumerate(agrid):
+
+            
+                ks = z**(1./(1. - alpha - nu))*xi8 #should be the same as above
+                ns = xi13*ks            
+                ys = z*(ks**alpha)*(ns**nu)
                 
-                ks = z**(1./(1.-alpha))*xi8                         
-                ys = z*ks**alpha
 
                 #first tax bracket is picked. I don't have a clear reqson for it.
-                s_supan[ia, iz] = ((1. + rbar)*a + (1. - taub[0])*(p*ys - (rs + delk)*ks) + psib[0] + yn - xnb)/(1. + grate)
+                s_supan[ia, iz] = ((1. + rbar)*a + (1. - taub[0])*(p*ys - (rs + delk)*ks - w*ns) + psib[0] + yn - xnb)/(1. + grate)
 
-        del ks, ys
+        del ks, ys, ns
                     
         # objective function of VFI optimization problem
         @nb.jit(nopython = True)    
@@ -1533,7 +1548,7 @@ class Economy:
 
         if rank == 0:
 
-            data_ss = np.ones((num_total_pop, 16)) * (-2.0)
+            data_ss = np.ones((num_total_pop, 17)) * (-2.0)
 
             t = -1
             for i in range(num_total_pop):
@@ -1551,7 +1566,7 @@ class Economy:
                     data_ss[i,3] = an
                     data_ss[i,4] = np.nan
                     data_ss[i,5] = eps
-                    data_ss[i,6:] = get_cstatic([a, an, eps])[1:]
+                    data_ss[i,6:16] = get_cstatic([a, an, eps])[1:]
 
                     #return u, cc, cs, cagg, l ,n, np.nan, np.nan,   ibracket, taun, psin
 
@@ -1569,11 +1584,10 @@ class Economy:
                     data_ss[i,5] = z
 
                     
-                    data_ss[i,6:] = get_sstatic([a, an, z])[1:]
+                    data_ss[i,6:17] = get_sstatic([a, an, z])[1:]
 
-                    #return u, cc, cs, cagg, lbar, i, np.nan, ks, ys, i, taub[i], psib[i]
-                    #return u, cc, cs, cagg, l ,n, np.nan, np.nan,   ibracket, taun, psin                         
-        
+                    #return u, cc, cs, cagg, lbar, -1.0e20, ks, ys, ibracket, taub[ibracket], psib[ibracket], ns
+
 
 
         self.data_a = data_a
@@ -1707,7 +1721,7 @@ class Economy:
             Ehkap = np.nan
             Ehy = np.nan
             Eh = np.nan
-            Ens = np.nan
+            Ens = np.mean(data_ss[:,16] * (1. - data_ss[:,0]))
                          
             # Ex = np.mean(data_ss[:,13] * (1. - data_ss[:,0]))                         
             # Ehkap = np.mean(data_ss[:,11] * (1. - data_ss[:,0]))
@@ -1729,8 +1743,7 @@ class Economy:
             E_transfer = np.mean(data_ss[:,15])
 
 
-            nc = En #impose labor market clearing
-
+            nc = En - Ens
             
             self.nc = nc
             self.En = En
@@ -1906,8 +1919,8 @@ class Economy:
 
             print('')
             print('Additional Moments')
-            print('  E(phi p ys - x)       = {}'.format(phi*p*Eys - Ex))
-            print('  E(phi p ys - x)/GDP   = {}'.format((phi*p*Eys - Ex)/GDP))
+            print('  E(phi p ys - x)       = {}'.format(np.nan))
+            print('  E(phi p ys - x)/GDP   = {}'.format((np.nan)))
             print('  E(ks)                 = {}'.format(Eks))
             print('  E(ks)/GDP             = {}'.format(Eks/GDP))
             print('  E(nu p ys - w ns)     = {}'.format((nu*p*Eys - w*Ens)))                        
@@ -2036,7 +2049,7 @@ class Economy:
         @nb.jit(nopython = True, parallel = True)
         def calc_all(data_a_, data_i_s_, data_is_c_,
                      data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_,  data_ks_, data_ys_,
-                     data_i_tax_bracket_, data_tau_, data_psi_):
+                     data_i_tax_bracket_, data_tau_, data_psi_, data_ns_):
 
             for i in nb.prange(num_total_pop):
                 for t in range(1, sim_time):
@@ -2092,7 +2105,7 @@ class Economy:
                     if is_c:
                         u, cc, cs, cagg, l , n, tmp1, tmp2, ibra, tau, psi = get_cstatic([a, an, eps])
                     else:
-                        u, cc, cs, cagg, l, tmp1, ks, ys, ibra, tau, psi = get_sstatic([a, an, z])
+                        u, cc, cs, cagg, l, tmp1, ks, ys, ibra, tau, psi, ns = get_sstatic([a, an, z])
 
                     data_u_[i, t] = u
                     data_cc_[i, t] = cc
@@ -2109,6 +2122,7 @@ class Economy:
 
                     data_tau_[i, t] = tau
                     data_psi_[i, t] = psi
+                    data_ns_[i, t] = ns                    
                     
         data_u = np.zeros(data_a.shape)
         data_cc = np.zeros(data_a.shape)
@@ -2126,12 +2140,13 @@ class Economy:
                          
         data_i_tax_bracket = np.zeros(data_a.shape)
         data_tau = np.zeros(data_a.shape)
-        data_psi = np.zeros(data_a.shape)                         
+        data_psi = np.zeros(data_a.shape)
+        data_ns = np.zeros(data_a.shape)                                 
                          
         #note that this does not store some impolied values,,,, say div or value of sweat equity
         calc_all(data_a, data_i_s, data_is_c, ##input
                  data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_ks, data_ys, ##output
-                 data_i_tax_bracket, data_tau, data_psi)           
+                 data_i_tax_bracket, data_tau, data_psi, data_ns)           
 
 
         self.data_u = data_u
@@ -2148,7 +2163,8 @@ class Economy:
 
         self.data_i_tax_bracket = data_i_tax_bracket 
         self.data_tau = data_tau 
-        self.data_psi = data_psi 
+        self.data_psi = data_psi
+        self.data_ns = data_ns        
                          
 
         # self.data_div_sweat = data_div_sweat
@@ -2178,6 +2194,7 @@ class Economy:
             np.save(dir_path_save + 'data_cagg', self.data_cagg[:, -100:])
             np.save(dir_path_save + 'data_l', self.data_l[:, -100:])
             np.save(dir_path_save + 'data_n', self.data_n[:, -100:])
+            np.save(dir_path_save + 'data_ns', self.data_ns[:, -100:])            
             # np.save(dir_path_save + 'data_mx', self.data_mx[:, -100:])
             # np.save(dir_path_save + 'data_my', self.data_my[:, -100:])
             # np.save(dir_path_save + 'data_x', self.data_x[:, -100:])
