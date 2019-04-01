@@ -11,10 +11,12 @@ import pickle
 
 p_init = float(args[1])
 rc_init = float(args[2])
-num_core = args[3]
+ome_init = float(args[3])
+nu_init = float(args[4])
+num_core = args[5]
 
 print('the code is running with ', num_core, 'cores...')
-prices_init = [p_init, rc_init]
+prices_init = [p_init, rc_init, ome_init, nu_init]
 
 
 nd_log_file = './log/log.txt'
@@ -45,6 +47,7 @@ pure_sweat_share = 0.10
 yc_init = 1.04
 
 # GDP_implied = yc_init/(1. - ynb_p_gdp - pure_sweat_share/(1.-alpha)) #formula for LSC without ns
+s_emp_share = 0.30
 GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
 
 ynb = ynb_p_gdp*GDP_implied
@@ -57,8 +60,8 @@ g = g_p_gdp*GDP_implied
 #psib = np.array([0.12837754, 0.14071072, 0.15, 0.20081269, 0.30081419, 0.37107904])
 
 
-ome_ = 0.78
-nu_ = 0.35
+# ome_ = 0.78
+# nu_ = 0.35
 
 def target(prices):
     global dist_min
@@ -66,7 +69,8 @@ def target(prices):
 
     p_ = prices[0]
     rc_ = prices[1]
-
+    ome_ = prices[2]
+    nu_ = prices[3]
 
     
     print('computing for the case p = {:f}, rc = {:f}'.format(p_, rc_), end = ', ')
@@ -94,8 +98,6 @@ def target(prices):
 
     f = open(detailed_output_file, 'ab') #use byte mode
     f.write(result.stdout)
-    f.writelines('yc_init = ' +  str(yc_init) + '\n')
-    f.writelines('GDP_implied = ' +  str(GDP_implied) + '\n')    
     f.close()
     
     print('etime: {:f}'.format(t1 - t0), end = ', ')
@@ -113,7 +115,8 @@ def target(prices):
     
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0)
 
-    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0)
+    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0)
+    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 + (moms[5]/pure_sweat_share - 1.)**2.0)
     
     if p != p_ or  rc != rc_ or ome != ome_ or nu != nu_:
         print('err: input prices and output prices do not coincide.')
@@ -138,6 +141,8 @@ if __name__ == '__main__':
 
     f = open(nd_log_file, 'w')
     f.writelines('p, rc, ome, nu, dist, mom0, mom1, mom2, mom3\n')
+    f.writelines('yc_init = ' +  str(yc_init) + '\n')
+    f.writelines('GDP_implied = ' +  str(GDP_implied) + '\n')        
     f.close()
 
     #load shocks

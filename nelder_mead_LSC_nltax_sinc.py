@@ -26,7 +26,7 @@ f.close()
 
 dist_min = 10000000.0
 econ_save = None
-zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
+
 prob = np.load('./DeBacker/prob_epsz.npy') #DeBacker
 path_to_data_i_s = './tmp/data_i_s'
 
@@ -35,6 +35,10 @@ def curvedspace(begin, end, curve, num=100):
     ans = np.linspace(0, (end - begin)**(1.0/curve), num) ** (curve) + begin
     ans[-1] = end #so that the last element is exactly end
     return ans
+
+zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
+agrid = curvedspace(0., 100., 2.0, 40)
+    
 
 
 alpha = 0.3 #new!
@@ -68,7 +72,7 @@ def target(prices):
     ###set any additional condition/parameters
 
 
-    econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2,
+    econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2, agrid = agrid,
                    g = g, yn = ynb, xnb = xnb, ome = ome_,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
                    alpha = alpha, theta = theta)
