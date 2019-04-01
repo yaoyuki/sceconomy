@@ -1737,7 +1737,7 @@ class Economy:
             ETn = np.mean((data_ss[:,14]*wepsn_i - data_ss[:,15])*data_ss[:,0])
             #transfer subtracted      
 
-            bizinc_i = (p*data_ss[:,12] - (rs + delk)*data_ss[:,11])*(1.-data_ss[:,0])
+            bizinc_i = (p*data_ss[:,12] - (rs + delk)*data_ss[:,11] - w*data_ss[:,16])*(1.-data_ss[:,0])
             ETm = np.mean((data_ss[:,14]*bizinc_i - data_ss[:,15])*(1.-data_ss[:,0])) #transfer subtracted
 
             E_transfer = np.mean(data_ss[:,15])
