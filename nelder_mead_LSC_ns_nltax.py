@@ -37,6 +37,7 @@ def curvedspace(begin, end, curve, num=100):
     ans[-1] = end #so that the last element is exactly end
     return ans
 
+agrid2 = curvedspace(0.0, 50.0, 2.0, 40)
 alpha = 0.3 #new!
 theta = 0.41
 ynb_p_gdp = 0.25
@@ -44,7 +45,7 @@ xnb_p_gdp = 0.105
 g_p_gdp = 0.13
 
 pure_sweat_share = 0.10
-yc_init = 1.04
+yc_init = 0.783
 
 # GDP_implied = yc_init/(1. - ynb_p_gdp - pure_sweat_share/(1.-alpha)) #formula for LSC without ns
 s_emp_share = 0.30
@@ -57,11 +58,12 @@ g = g_p_gdp*GDP_implied
 
 #taup = 0.20
 #taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
-#psib = np.array([0.12837754, 0.14071072, 0.15, 0.20081269, 0.30081419, 0.37107904])
+#psib = np.array([0.12784033, 0.14047993, 0.15, 0.20207513, 0.30456117, 0.37657174])
 
 
-# ome_ = 0.78
-# nu_ = 0.35
+
+# ome_ = 0.5128841057785495
+# nu_ = 0.37111422508833014
 
 def target(prices):
     global dist_min
@@ -78,20 +80,19 @@ def target(prices):
     ###set any additional condition/parameters
 
 
-    econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2,
+    econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2, agrid = agrid2,
                    g = g, yn = ynb, xnb = xnb,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
                    alpha = alpha, theta = theta,
                    ome = ome_, nu = nu_)
-
-    # taub = taub, psib = psib, #taup = taup,
+                   # taub = taub, psib = psib,
+                   # taup = taup,
 
     econ.set_prices(p = p_, rc = rc_)
     
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
     #with open('econ.pickle', mode='rb') as f: econ = pickle.load(f)
     t0 = time.time()
-
     result = subprocess.run(['mpiexec', '-n', num_core, 'python', 'SCEconomy_LSC_ns_nltax.py'], stdout=subprocess.PIPE)
     t1 = time.time()
     
@@ -113,7 +114,6 @@ def target(prices):
     nu = econ.nu    
     moms = econ.moms
     
-    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + moms[2]**2.0)
 
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0)
     dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 + (moms[5]/pure_sweat_share - 1.)**2.0)
@@ -164,7 +164,7 @@ if __name__ == '__main__':
     np.save(path_to_data_i_s + '.npy' , data_i_s)
 
     ### check
-    f = open(nd_log_file, 'w')
+    f = open(nd_log_file, 'a')
     f.writelines(np.array_str(np.bincount(data_i_s[:,0]) / np.sum(np.bincount(data_i_s[:,0])), precision = 4, suppress_small = True) + '\n')
     f.writelines(np.array_str(Stationary(prob), precision = 4, suppress_small = True) + '\n')
     # f.writelines('yc_init = ' +  str(yc_init) + '\n')
