@@ -880,8 +880,13 @@ class Economy:
             ns = xi13*ks
 
             if an < chi *ks: #if the working capital constraint is binding
-                ks = an / chi
-                ns = (nu*p*z*ks**alpha/w)**(1./(1.0 - nu))
+
+                if an > 0.:
+                    ks = an / chi
+                    ns = (nu*p*z*ks**alpha/w)**(1./(1.0 - nu))
+                else:
+                    ks = 0.0
+                    ns = 0.0
             
             ys = z*(ks**alpha)*(ns**nu)
 
@@ -1162,8 +1167,10 @@ class Economy:
                     z = zgrid[iz]
                     
                     an_sup = min(s_supan[ia, iz] - 1.e-6, agrid[-1]) #no extrapolation for aprime
-                    ks = (z**(1./(1.-alpha)))*xi8
-                    an_min = chi*ks #chi*ks
+                    
+                    an_min = amin
+                    #ks = (z**(1./(1.-alpha)))*xi8
+                    #an_min = chi*ks #chi*ks
 
                 ans =  _optimize_given_state_(an_min, an_sup, _EV_, ia, istate, _is_c_)
                 
@@ -1450,7 +1457,7 @@ class Economy:
         data_is_c = None
 
         if rank == 0:
-            data_a = np.ones((num_total_pop, sim_time)) * chi*xi8 #start from the feasible minimum value
+            data_a = np.ones((num_total_pop, sim_time)) #start from the feasible minimum value
             data_i_s = np.zeros((num_total_pop, sim_time), dtype = int)
             data_is_c = np.zeros((num_total_pop, sim_time), dtype = bool) 
 
@@ -1529,8 +1536,8 @@ class Economy:
 
                     an = i_c * an_c + (1. - i_c) * an_s
 
-                    if (an < chi*xi8) and not i_c:
-                        print('simulation error: an < k_s but S. t = ', t , ', i = ' , i)
+                    # if (an < chi*xi8) and not i_c:
+                    #     print('simulation error: an < k_s but S. t = ', t , ', i = ' , i)
                         
                     if (an < amin) and  i_c:
                         print('simulation error: an < amin but C. t = ', t , ', i = ' , i)
