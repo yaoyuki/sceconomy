@@ -175,7 +175,7 @@ class Economy:
         self.mu       = 1.5 
         self.ome      = 0.6 #omega
         self.phi      = np.nan
-        self.rho      = 0.5
+        self.rho      = 0.01
         self.tauc     = 0.06
         self.taud     = 0.14
         self.taum     = 0.20
