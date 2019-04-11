@@ -15,29 +15,32 @@ if __name__ == '__main__':
         return ans
 
 
-    agrid = curvedspace(0.0, 100., 2.0, 40)
-
-
+    agrid2 = curvedspace(0.0, 50.0, 2.0, 40)
     alpha = 0.3 #new!
-    nu = 0.00001
     theta = 0.41
     ynb_p_gdp = 0.25
     xnb_p_gdp = 0.105
     g_p_gdp = 0.13
-    
+
     pure_sweat_share = 0.10
-    yc_init = 1.04
+    yc_init = 0.783
+
+    # GDP_implied = yc_init/(1. - ynb_p_gdp - pure_sweat_share/(1.-alpha)) #formula for LSC without ns
+    s_emp_share = 0.30
+    GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
     
-    GDP_implied = yc_init/(1. - ynb_p_gdp - pure_sweat_share/(1.-alpha))
     
     ynb = ynb_p_gdp*GDP_implied
     xnb = xnb_p_gdp*GDP_implied
     g = g_p_gdp*GDP_implied
+
+    #taup = 0.20
+    taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+    psib = np.array([0.12784033, 0.14047993, 0.15, 0.20207513, 0.30456117, 0.37657174])
     
+    #psib = np.array([0.12784033, 0.14047993, 0.15,      0.20207513, 0.30456117, 0.37657174])
+
     
-    # taup = 0.20
-    # taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
-    # psib = np.array([0.12837754, 0.14071072, 0.15, 0.20081269, 0.30081419, 0.37107904])
     
 
     ### additional info
@@ -65,13 +68,9 @@ if __name__ == '__main__':
 
     np.save(path_to_shock + '.npy' , data_i_s)
 
-    p_, rc_ , ome_ = 0.275384608013927, 0.0579181695442646 ,0.783161613400783
-    # 0.2351573248046552, 0.05318390611686519, 0.7831616134007835
-
-
-    taun = np.array([0.1465, 0.1585, 0.162,  0.1715, 0.195,  0.2025, 0.204,  0.2095])
-    psin = np.array([0.08021118,  0.08744664,  0.09007978,  0.09889971,  0.13458096,  0.15, 0.15748521, 0.20991406])
-
+    p_, rc_  = 0.8239409973365927, 0.06089128726200027
+    ome_ = 0.5125722416155015
+    nu_ = 0.37125265279135256
 
     ###define additional parameters###
     num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
@@ -82,13 +81,13 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-    econ = Economy(path_to_data_i_s = path_to_shock, prob = prob, zgrid = zgrid2, agrid = agrid,
-                   g = g, yn = ynb, xnb = xnb, ome = ome_,
+    econ = Economy(path_to_data_i_s = path_to_shock, prob = prob, zgrid = zgrid2, agrid = agrid2,
+                   g = g, yn = ynb, xnb = xnb,
+                   taub = taub, psib = psib, 
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   taun = taun, psin = psin,
-                   alpha = alpha, theta = theta, nu = nu)
-    #taub = taub, psib = psib,taup = taup,
-    
+                   alpha = alpha, theta = theta, nu = nu_, ome = ome_)
+
+    # taup = taup,
     econ.set_prices(p = p_, rc = rc_)
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
 

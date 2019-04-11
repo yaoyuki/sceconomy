@@ -693,8 +693,15 @@ class Economy:
             z = s[2]
 
 
+            #assume
             ks = z**(1./(1.-alpha-nu))*xi8
             ns = xi13*ks
+
+            if an < chi *ks: #if the working capital constraint is binding
+                ks = an / chi
+                ns = (nu*p*z*ks**alpha/w)**(1./(1.0 - nu))
+            
+            
             ys = z*(ks**alpha)*(ns**nu)
 
             cc = -1.0
@@ -712,7 +719,8 @@ class Economy:
 
             u = -np.inf
             #adhoc feasbility check
-            if (cagg > 0.0) and (an >= chi *ks):
+            #if (cagg > 0.0) and (an >= chi *ks):
+            if (cagg > 0.0):                
                 u = util(cagg, lbar)
                 
             #else, return -np.inf
