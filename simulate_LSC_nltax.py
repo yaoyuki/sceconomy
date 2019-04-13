@@ -15,7 +15,7 @@ if __name__ == '__main__':
         return ans
 
 
-    agrid = curvedspace(0.0, 100., 2.0, 40)
+    agrid = curvedspace(0.0, 50., 2.0, 40)
 
 
     alpha = 0.3 #new!
@@ -33,8 +33,8 @@ if __name__ == '__main__':
     xnb = xnb_p_gdp*GDP_implied
     g = g_p_gdp*GDP_implied
     
-    
-    # taup = 0.20
+
+    taup = 0.20
     # taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
     # psib = np.array([0.12837754, 0.14071072, 0.15, 0.20081269, 0.30081419, 0.37107904])
     
@@ -64,13 +64,7 @@ if __name__ == '__main__':
 
     np.save(path_to_shock + '.npy' , data_i_s)
 
-    p_, rc_ , ome_ = 0.275384608013927, 0.0579181695442646 ,0.783161613400783
-    # 0.2351573248046552, 0.05318390611686519, 0.7831616134007835
-
-
-    taun = np.array([0.1465, 0.1585, 0.162,  0.1715, 0.195,  0.2025, 0.204,  0.2095])
-    psin = np.array([0.08021118,  0.08744664,  0.09007978,  0.09889971,  0.13458096,  0.15, 0.15748521, 0.20991406])
-
+    p_, rc_ , ome_ = 0.241241600917817, 0.0535336815436171, 0.753033796603102
 
     ###define additional parameters###
     num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
@@ -84,7 +78,8 @@ if __name__ == '__main__':
     econ = Economy(path_to_data_i_s = path_to_shock, prob = prob, zgrid = zgrid2, agrid = agrid,
                    g = g, yn = ynb, xnb = xnb, ome = ome_,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   taun = taun, psin = psin,
+                   # taub = taub, psib = psib, #
+                   taup = taup, 
                    alpha = alpha, theta = theta)
     #taub = taub, psib = psib,taup = taup,
     

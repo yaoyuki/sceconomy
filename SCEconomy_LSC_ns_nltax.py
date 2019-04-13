@@ -1539,8 +1539,8 @@ class Economy:
                     # if (an < chi*xi8) and not i_c:
                     #     print('simulation error: an < k_s but S. t = ', t , ', i = ' , i)
                         
-                    if (an < amin) and  i_c:
-                        print('simulation error: an < amin but C. t = ', t , ', i = ' , i)
+                    if (an < amin):
+                        print('simulation error: an < amin . t = ', t , ', i = ' , i)
                         
 
                     data_a_[i, t] = an

@@ -34,12 +34,11 @@ if __name__ == '__main__':
     xnb = xnb_p_gdp*GDP_implied
     g = g_p_gdp*GDP_implied
 
-    #taup = 0.20
+
+
+    taup = 0.20
     #taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
     #psib = np.array([0.12784033, 0.14047993, 0.15, 0.20207513, 0.30456117, 0.37657174])
-    
-    #psib = np.array([0.12784033, 0.14047993, 0.15,      0.20207513, 0.30456117, 0.37657174])
-
     
     
 
@@ -69,10 +68,11 @@ if __name__ == '__main__':
     np.save(path_to_shock + '.npy' , data_i_s)
 
 
-    p_, rc_  = 0.8277446301894447, 0.060876325484852944
+    p_, rc_  = 0.853125403782442, 0.0537516695167411
+    0.823711662411598, 0.0608962961710779
 
-    ome_ = 0.5125722416155015
-    nu_ = 0.37125265279135256
+    ome_ = 0.47794902702321
+    nu_ = 0.371274481893513
 
     ###define additional parameters###
     num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
@@ -84,7 +84,9 @@ if __name__ == '__main__':
     print('Do not simulate more than one models at the same time...')
 
     econ = Economy(path_to_data_i_s = path_to_shock, prob = prob, zgrid = zgrid2, agrid = agrid2,
-                   g = g, yn = ynb, xnb = xnb, chi = 0.25,
+                   g = g, yn = ynb, xnb = xnb, chi = 0.0,
+                   #taub = taub, psib = psib,#
+                    taup = taup,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
                    alpha = alpha, theta = theta, nu = nu_, ome = ome_)
 
