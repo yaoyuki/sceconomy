@@ -71,9 +71,9 @@ def target(prices):
 
 
     econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2,
-                   g = g, yn = ynb, xnb = xnb, ome = ome,
+                   g = g, yn = ynb, xnb = xnb, ome = ome, chi = 0.1,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   taub = taub, psib = psib, #taup = taup,
+                   # taub = taub, psib = psib, #taup = taup,
                    alpha = alpha, theta = theta)
 
 
