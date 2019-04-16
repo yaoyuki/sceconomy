@@ -34,9 +34,9 @@ if __name__ == '__main__':
     g = g_p_gdp*GDP_implied
     
 
-    # taup = 0.20
-    # taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
-    # psib = np.array([0.12837754, 0.14071072, 0.15, 0.20081269, 0.30081419, 0.37107904])
+    taup = 0.20
+    taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+    psib = np.array([0.12837754, 0.14071072, 0.15, 0.20081269, 0.30081419, 0.37107904])
     
 
     ### additional info
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     np.save(path_to_shock + '.npy' , data_i_s)
 
-    p_, rc_ , ome_ = 0.23234253712140007, 0.06094429127331734, 0.753033796603102
+    p_, rc_ , ome_ = 0.235520788865057, 0.0532512933612404, 0.753033796603102
 
     ###define additional parameters###
     num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     econ = Economy(path_to_data_i_s = path_to_shock, prob = prob, zgrid = zgrid2, agrid = agrid,
                    g = g, yn = ynb, xnb = xnb, ome = ome_, chi = 0.25,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   # taub = taub, psib = psib, #taup = taup, 
+                   taub = taub, psib = psib, taup = taup, 
                    alpha = alpha, theta = theta)
     #taub = taub, psib = psib,taup = taup,
     
