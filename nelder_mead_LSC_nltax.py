@@ -35,6 +35,7 @@ def curvedspace(begin, end, curve, num=100):
     ans[-1] = end #so that the last element is exactly end
     return ans
 
+agrid2 = curvedspace(0.0, 50.0, 2.0, 40)    
 alpha = 0.3 #new!
 theta = 0.41
 ynb_p_gdp = 0.25
@@ -50,7 +51,7 @@ ynb = ynb_p_gdp*GDP_implied
 xnb = xnb_p_gdp*GDP_implied
 g = g_p_gdp*GDP_implied
     
-ome = 0.7833340585165647
+ome = 0.753033796603102
 
 taup = 0.20
 taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
@@ -70,10 +71,10 @@ def target(prices):
     ###set any additional condition/parameters
 
 
-    econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2,
-                   g = g, yn = ynb, xnb = xnb, ome = ome, chi = 0.1,
+    econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2, agrid = agrid2,
+                   g = g, yn = ynb, xnb = xnb, ome = ome, chi = 0.25,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   # taub = taub, psib = psib, #taup = taup,
+                   taub = taub, psib = psib, taup = taup,
                    alpha = alpha, theta = theta)
 
 
@@ -89,8 +90,6 @@ def target(prices):
 
     f = open(detailed_output_file, 'ab') #use byte mode
     f.write(result.stdout)
-    f.writelines('yc_init = ' +  str(yc_init) + '\n')
-    f.writelines('GDP_implied = ' +  str(GDP_implied) + '\n')    
     f.close()
     
     print('etime: {:f}'.format(t1 - t0), end = ', ')
@@ -129,6 +128,9 @@ if __name__ == '__main__':
 
     f = open(nd_log_file, 'w')
     f.writelines('p, rc, dist, mom0, mom1, mom2, mom3\n')
+    f.writelines('yc_init = ' +  str(yc_init) + '\n')
+    f.writelines('GDP_implied = ' +  str(GDP_implied) + '\n')    
+    
     f.close()
 
     #load shocks

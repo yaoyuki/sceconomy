@@ -11,8 +11,8 @@ import pickle
 
 p_init = float(args[1])
 rc_init = float(args[2])
-# ome_init = float(args[3])
-# nu_init = float(args[4])
+#ome_init = float(args[3])
+#nu_init = float(args[4])
 num_core = args[3]
 
 print('the code is running with ', num_core, 'cores...')
@@ -57,13 +57,14 @@ xnb = xnb_p_gdp*GDP_implied
 g = g_p_gdp*GDP_implied
     
 
-#taup = 0.20
-taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
-psib = np.array([0.12784033, 0.14047993, 0.15,      0.20207513, 0.30456117, 0.37657174])
+taup = 0.20
+#taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+#psib = np.array([0.12784033, 0.14047993, 0.15,      0.20207513, 0.30456117, 0.37657174])
 
 
-ome_ = 0.5125722416155015
-nu_ = 0.37125265279135256
+
+ome_ = 0.47794902702321
+nu_ = 0.371274481893513
 
 
 def target(prices):
@@ -72,8 +73,8 @@ def target(prices):
 
     p_ = prices[0]
     rc_ = prices[1]
-    #ome_ = prices[2]
-    #nu_ = prices[3]
+    # ome_ = prices[2]
+    # nu_ = prices[3]
 
     
     print('computing for the case p = {:f}, rc = {:f}'.format(p_, rc_), end = ', ')
@@ -85,9 +86,10 @@ def target(prices):
                    g = g, yn = ynb, xnb = xnb,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
                    alpha = alpha, theta = theta,
-                   taub = taub, psib = psib,
+                   # taub = taub, psib = psib,#
+                   taup = taup,                                          
                    ome = ome_, nu = nu_)
-                   #taup = taup,    
+
 
     econ.set_prices(p = p_, rc = rc_)
     

@@ -37,7 +37,7 @@ def curvedspace(begin, end, curve, num=100):
     return ans
 
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
-agrid = curvedspace(0., 100., 2.0, 40)
+agrid = curvedspace(0., 50., 2.0, 40)
     
 
 
