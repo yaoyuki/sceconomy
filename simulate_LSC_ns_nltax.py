@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import subprocess
-from SCEconomy_LSC_ns_nltax import Economy
+from SCEconomy_LSC_ns_nltax import Economy, split_shock
 
 import pickle
 
@@ -69,13 +69,14 @@ if __name__ == '__main__':
 
 
     p_, rc_  = 0.853125403782442, 0.0537516695167411
-    0.823711662411598, 0.0608962961710779
+    
 
     ome_ = 0.47794902702321
     nu_ = 0.371274481893513
 
     ###define additional parameters###
     num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
+    split_shock(path_to_shock, 100_000, int(num_core))
 
 
     ###end defining additional parameters###
