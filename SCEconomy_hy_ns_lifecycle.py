@@ -64,7 +64,6 @@ class Economy:
                  taun = None,
                  taup = None,
                  theta = None,
-                 tran = None,
                  trans_retire = None, #retirement benefit which is not included in tran
                  veps = None,
                  vthet = None,
@@ -116,7 +115,6 @@ class Economy:
         if taun is not None: self.taun = taun
         if taup is not None: self.taup = taup
         if theta is not None: self.theta = theta
-        if tran is not None: self.tran = tran
         if trans_retire is not None: self.trans_retire = trans_retire #added
         if veps is not None: self.veps = veps
         if vthet is not None: self.vthet = vthet
@@ -180,7 +178,8 @@ class Economy:
         self.num_total_pop = 100_000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
 
-        self.path_to_data_i_s = './input_data/data_i_s.npy'
+        # self.path_to_data_i_s = './input_data/data_i_s.npy'
+        # self.path_to_data_i_s = './tmp/data_i_s'
 
 
         
@@ -315,7 +314,7 @@ class Economy:
         self.xi5 = (1. + self.grate) / self.denom
 
 
-        self.xi6_y = (self.yn - self.xnb) / self.denom
+        self.xi6 = (self.yn - self.xnb) / self.denom
 
         # needs to update
         # self.xi6_y = (self.tran + self.yn - self.xnb) / self.denom
@@ -400,9 +399,7 @@ class Economy:
             print('xi3 = ', self.xi3)
             print('xi4 = ', self.xi4)
             print('xi5 = ', self.xi5)
-#            print('xi6 = ', self.xi6)
-            print('xi6_y = ', self.xi6_y)
-            print('xi6_o = ', self.xi6_o)            
+            print('xi6 = ', self.xi6)
             print('xi7 = ', self.xi7)
             print('xi8 = ', self.xi8)
             print('xi9 = ', self.xi9)
@@ -425,62 +422,10 @@ class Economy:
 
         
     def generate_util(self):
-        ###load vars###
-        alpha = self.alpha
-        beta = self.beta
-        chi = self.chi
-        delk = self.delk
-        delkap = self.delkap
-        eta = self.eta
-        g = self.g
-        grate = self.grate
-        la = self.la
-        mu = self.mu
-        ome = self.ome
-        phi = self.phi
-        rho = self.rho
-        tauc = self.tauc
-        taud = self.taud
-        taum = self.taum
-        taun = self.taun
-        taup = self.taup
-        theta = self.theta
-        veps = self.veps
-        vthet = self.vthet
-        xnb = self.xnb
-        yn = self.yn
-        zeta= self.zeta
 
-        agrid = self.agrid
-        kapgrid = self.kapgrid
-        epsgrid = self.epsgrid
-        zgrid = self.zgrid
-
-        prob = self.prob
-
-        is_to_iz = self.is_to_iz
-        is_to_ieps = self.is_to_ieps
-
-        amin = self.amin
-        num_suba_inner = self.num_suba_inner
-        num_subkap_inne = self.num_subkap_inner
-
-        num_a = self.num_a
-        num_kap = self.num_kap
-        num_eps = self.num_eps
-        num_z = self.num_z
-
-        nu = self.nu
         bh = self.bh
-        varrho = self.varrho
-
-        w = self.w
-        p = self.p
-        rc = self.rc
-
-        rbar = self.rbar
-        rs = self.rs
-        ###end loading vars###
+        eta = self.eta
+        mu = self.mu
         
         @nb.jit(nopython = True)
         def util(c, l):
@@ -492,68 +437,16 @@ class Economy:
         return util
     
     def generate_dc_util(self):
-        ###load vars###
-        alpha = self.alpha
-        beta = self.beta
-        chi = self.chi
-        delk = self.delk
-        delkap = self.delkap
-        eta = self.eta
-        g = self.g
-        grate = self.grate
-        la = self.la
-        mu = self.mu
-        ome = self.ome
-        phi = self.phi
-        rho = self.rho
-        tauc = self.tauc
-        taud = self.taud
-        taum = self.taum
-        taun = self.taun
-        taup = self.taup
-        theta = self.theta
-        veps = self.veps
-        vthet = self.vthet
-        xnb = self.xnb
-        yn = self.yn
-        zeta= self.zeta
 
-        agrid = self.agrid
-        kapgrid = self.kapgrid
-        epsgrid = self.epsgrid
-        zgrid = self.zgrid
-
-        prob = self.prob
-
-        is_to_iz = self.is_to_iz
-        is_to_ieps = self.is_to_ieps
-
-        amin = self.amin
-        num_suba_inner = self.num_suba_inner
-        num_subkap_inne = self.num_subkap_inner
-
-        num_a = self.num_a
-        num_kap = self.num_kap
-        num_eps = self.num_eps
-        num_z = self.num_z
-
-        nu = self.nu
         bh = self.bh
-        varrho = self.varrho
-
-        w = self.w
-        p = self.p
-        rc = self.rc
-
-        rbar = self.rbar
-        rs = self.rs
-        ###end loading vars###
+        eta = self.eta
+        mu = self.mu
         
         #this is in the original form
         @nb.jit(nopython = True)
         def dc_util(c, l):
             if c > 0.0 and l > 0.0 and l <= 1.0:
-                return eta * c**(eta*(1. - mu) - 1.0) * ((l**(1. - eta)))**(1. - mu)
+                return eta*c**(eta*(1.-mu) - 1.0)*((l**(1.-eta)))**(1.-mu)
 
             else:
                 print('dc_util at c = ', c, ', l = ', l, 'is not defined.')
@@ -681,11 +574,13 @@ class Economy:
             #when solution is at a kink
             flag = True
             flag2 = False
+            
             if i == len(taun) - 1 and i != j:
                 flag = False
                 flag2 = True
 
                 for i, wepsn in enumerate(nbracket[1:-1]): #remove -inf, inf
+                    #maybe it does not matter which bracket he is in? 
                     n = wepsn/w/eps
                     obj_i = n - ( (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*(psin[i]+is_o*trans_retire))/(w*eps*(1.-taun[i])*(xi3 + xi7)))
                     obj_i1 = n - ( (xi3*w*eps*(1.-taun[i+1]) - xi4*a + xi5*an - xi6 - xi7*(psin[i+1]+is_o*trans_retire))/(w*eps*(1.-taun[i+1])*(xi3 + xi7)))
@@ -741,54 +636,6 @@ class Economy:
             return u, cc, cs, cagg, l ,n, i, taun[i], psin[i] + is_o*trans_retire
         return get_cstatic
         
-        
-            
-        @nb.jit(nopython = True)
-        def get_cstatic_oldoldold(s): #[a, an, eps, is_o] (eps is the original one)
-            a = s[0]
-            an = s[1]
-            eps = s[2]
-            is_o = s[3] # if young, this is 1. if old, 0. (or True, False)
-
-
-            #this is a bit dangerous since is_o can be other than 0 and 1
-            if is_o:
-                xi6 = xi6_o
-                eps = tau_wo*eps #replace eps with tau_wo*eps
-            else:
-                xi6 = xi6_y
-            
-
-            u = -np.inf
-            cc = -1.0
-            cs = -1.0
-            cagg = -1.0
-
-            l = -1.0
-            n = -1.0
-
-
-            if eps <= 0.0:  #if they have non-positive productivity, labor supply is zero. 
-                n = 0.0
-            else:
-                n = (xi3*eps - xi4*a + xi5*an - xi6)/(eps*(xi3 + xi7))
-                n = max(n, 0.0)
-
-            if n >= 0. and n <= 1.:
-
-                l = 1. - n
-
-                #cc = xi3*eps*(1. - temp_n) #this is wrong at the corner.
-                cc = xi4*a - xi5*an + xi6 + xi7*eps*n
-
-                cs = xi1*cc
-                cagg = xi2*cc
-                u = util(cagg, 1. - n)
-
-
-            return u, cc, cs, cagg, l ,n
-        return get_cstatic
-
 
     def generate_sstatic(self):
         
@@ -916,14 +763,6 @@ class Economy:
                 alp2 = vthet*(xi4*a - xi5*an + xi6 + xi7*(psib + is_o*trans_retire))/(1.-taub)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet) 
                 alp3 = vthet/(veps*((1. + p*xi1)*(1. + tauc))) #updated
 
-                
-                # if alp2 == alp3:
-                #     print('warning: alp2 == alp3')
-                #     return 0.0, 0.0, 1.0 #in this case, utility must be -inf
-
-                # if (alp2< alp3) or (alp2 <=0):
-                #     return -1., -1., -1.  #the solution does not exist
-
                 hk_min = 0.0
                 hk_max = 1.0
                 
@@ -1026,7 +865,7 @@ class Economy:
 
                 return 0.0, 0.0, 0.0
 
-            #case 2 -- the main --
+            #case 2 -- the main case--
             elif kap > 0.0 and kapn > (1. - delkap)/(1. + grate) * kap:
 
                 alp1 = xi9 
@@ -1190,7 +1029,7 @@ class Economy:
                     #elif sign * val_m < 0.:
                         h_lb = h
 
-                    diff = abs((h_lb + h_ub)/2 - h)                        
+                    diff = abs((h_lb + h_ub)/2. - h)                        
                     h = (h_lb + h_ub)/2.
 
 
@@ -1368,502 +1207,10 @@ class Economy:
         return get_sstatic
     
     
-    def generate_sstatic_2(self):
-        ###load vars###
-        alpha = self.alpha
-        beta = self.beta
-        chi = self.chi
-        delk = self.delk
-        delkap = self.delkap
-        eta = self.eta
-        g = self.g
-        grate = self.grate
-        la = self.la
-        tau_wo = self.tau_wo
-        tau_bo = self.tau_bo
-        mu = self.mu
-        ome = self.ome
-        phi = self.phi
-        rho = self.rho
-        tauc = self.tauc
-        taud = self.taud
-        taum = self.taum
-        taun = self.taun
-        taup = self.taup
-        theta = self.theta
-        tran = self.tran
-        veps = self.veps
-        vthet = self.vthet
-        xnb = self.xnb
-        yn = self.yn
-        zeta= self.zeta
-
-        agrid = self.agrid
-        kapgrid = self.kapgrid
-        epsgrid = self.epsgrid
-        zgrid = self.zgrid
-
-        prob = self.prob
-
-        is_to_iz = self.is_to_iz
-        is_to_ieps = self.is_to_ieps
-
-        amin = self.amin
-        num_suba_inner = self.num_suba_inner
-        num_subkap_inne = self.num_subkap_inner
-
-        num_a = self.num_a
-        num_kap = self.num_kap
-        num_eps = self.num_eps
-        num_z = self.num_z
-
-        nu = self.nu
-        bh = self.bh
-        varrho = self.varrho
-
-        w = self.w
-        p = self.p
-        rc = self.rc
-
-        rbar = self.rbar
-        rs = self.rs
-    
-        denom = self.denom
-        xi1 = self.xi1
-        xi2 = self.xi2
-        xi3 = self.xi3
-        xi4 = self.xi4
-        xi5 = self.xi5
-#        xi6 = self.xi6
-        xi6_y = self.xi6_y
-        xi6_o = self.xi6_o                
-        xi7 = self.xi7
-        xi8 = self.xi8
-        xi9 = self.xi9
-        xi10 = self.xi10
-        xi11 = self.xi11
-        xi12 = self.xi12
-        ###end loading vars###
-        
-        util = self.generate_util()
-        
-        @nb.jit(nopython = True)
-        def obj_find_mx(*args):
-                mx = args[0]
-                alp1 = args[1]
-                alp2 = args[2]
-                alp3 = args[3]
-
-                return alp1*(1. - mx) - alp2*mx**((vthet + veps)/vthet) + alp3*mx
-
-        @nb.jit(nopython = True)
-        def d_obj_find_mx(*args):
-                mx = args[0]
-                alp1 = args[1]
-                alp2 = args[2]
-                alp3 = args[3]
-
-                return -alp1 - alp2*((vthet + veps)/vthet)*mx**(veps/vthet) + alp3
-
-        @nb.jit(nopython = True)
-        def obj_find_mymax(*args):
-                my = args[0]
-                alp5 = args[1]
-                return 1. - my - alp5*my**varrho
-
-        @nb.jit(nopython = True)
-        def d_obj_find_mymax(*args):
-                my = args[0]
-                alp5 = args[1]
-                return  - 1.0 - varrho*alp5*my**(varrho - 1.0)
-
-
-        @nb.jit(nopython = True)
-        def obj_find_my(*args):
-                my = args[0]
-                alp1 = args[1]
-                alp2 = args[2]
-                alp3 = args[3]
-                alp4 = args[4]
-                alp5 = args[5]
-
-                return alp1*(1. - my - alp5*my**varrho) - alp2 * my**(1. - nu/(1. - alpha)) - alp3*my + alp4*my**varrho       
-
-
-        @nb.jit(nopython = True)
-        def solve_mxmy(s):#return mx and my given (a, \kappa, a', \kappa' z, is_o). z is not adjusted for tau_bo
-            a = s[0]
-            an = s[1]
-            kap = s[2]
-            kapn = s[3]
-            z = s[4]
-            is_o = s[5]
-
-            if is_o:
-                xi6 = xi6_o
-                z = tau_bo*z #replace eps with tau_wo*eps
-            else:
-                xi6 = xi6_y
-                
-
-            if kap == 0.0 and kapn > 0.0: 
-                alp1 = eta/(1. - eta) * ome / xi2**rho / (1. + tauc)
-                alp2 = vthet*(xi4*a - xi5*an + xi6)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet)
-                alp3 = vthet/(veps*denom)
-
-                if alp2 == alp3:
-                    return 1.0, 0.0 #in this case, utility must be -inf
-
-                if (alp2< alp3) or (alp2 <=0):
-                    return -1., -1. #the solution does not exist
-
-
-                mx_lb = max( (alp3*vthet/(alp2*(vthet + veps)))**(vthet/veps), (alp3/alp2) )
-
-        #         obj = lambda mx: alp1*(1. - mx) - alp2*mx**((vthet + veps)/vthet) + alp3*mx
-        #         objprime = lambda mx: -alp1 - alp2*((vthet + veps)/vthet)*mx**(veps/vthet) + alp3
-        #         ans = newton(obj_find_mx, mx_lb , fprime = d_obj_find_mx, args = (alp1, alp2, alp3), tol = 1.0e-15)
-
-
-                ###start newton method
-                mx = mx_lb
-                it = 0
-                maxit = 100 #scipy's newton use maxit = 50
-                tol = 1.0e-15
-                dist = 10000
-
-                while it < maxit:
-                    it = it + 1
-                    res = alp1*(1. - mx) - alp2*mx**((vthet + veps)/vthet) + alp3*mx
-
-                    dist = abs(res)
-
-                    if dist < tol:
-                        break
-
-                    dres= -alp1 - alp2*((vthet + veps)/vthet)*mx**(veps/vthet) + alp3
-                    diff = res/dres
-                    mx = mx - res/dres
-
-
-                #convergence check
-                if it == maxit:
-                    print('err: newton method for mx did not converge.')
-
-                ans = mx    
-                ###end newton method
-
-                return ans, 0.
-
-            elif kap == 0.0 and kapn == 0.0:
-
-                #m=0.0, my = 0.0, x = 0.0
-                #x = 0.0 should be designated outside of this function.
-                return 0.0, 0.0
-
-
-            elif kap > 0.0 and kapn > (1. - delkap)/(1. + grate) * kap: ##>=
-                alp1 = xi9
-                alp2 = (xi4 * a - xi5*an + xi6)/((z*kap**phi)**(1./(1.-alpha)))
-                alp3 = xi10
-                alp5 = (((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))/(xi12 * (z*kap**phi)**(1./(1.-alpha))))**(vthet/(vthet + veps))
-                alp4 = xi11 * xi12 * alp5
-
-        #         obj_mymax = lambda my: 1. - my - alp5*my**varrho
-        #         obj_mymax_prime = lambda my: - 1.0 - varrho*alp5*my**(varrho - 1.0)
-
-        #         mymax = brentq(obj_find_mymax, 0., 1., args = (alp5,))
-
-
-                ####bisection start
-                mymax_lb = 0.
-                mymax_ub = 1.
-
-                #check bracketting
-                val_lb = 1. - mymax_lb - alp5*mymax_lb**varrho
-                val_ub = 1. - mymax_ub - alp5*mymax_ub**varrho
-
-                if val_lb *val_ub > 0.0:
-                    print('error: no bracket')
-                sign = -1.0
-                if val_ub > 0.:
-                    sign = 1.0
-
-                mymax = (mymax_lb + mymax_ub)/2.
-
-                it = 0
-                tol = 1.0e-12
-                maxit = 200
-                val_m = 10000
-                while it < maxit:
-                    it = it + 1
-                    val_m = 1. - mymax - alp5*mymax**varrho
-
-
-                    if sign * val_m > 0.:
-                        mymax_ub = mymax
-                    elif sign * val_m < 0.:
-                        mymax_lb = mymax
-
-                    diff = abs((mymax_lb + mymax_ub)/2 - mymax)
-                    mymax = (mymax_lb + mymax_ub)/2.
-
-                    if diff < tol:
-                        break
-
-                #convergence check
-                if it == maxit:
-                    print('err: bisection method for mymax did not converge.')
-                    print('val_m = ', val_m)
-                    print('mymax = ', mymax)
-                ####bisection end
-
-                # if mymax <= 0.0 or mymax >= 1.0:
-                # do we need this part?
-                if mymax < 0.0 or mymax > 1.0:
-                    print('mymax is not well-solved or a corner solution')
-                    return -1., -1.
-
-        #         obj = lambda my: alp1*(1. - my - alp5*my**varrho) - alp2 * my**(1. - nu/(1. - alpha)) - alp3*my + alp4*my**varrho
-
-                if obj_find_my(0.0, alp1, alp2, alp3, alp4, alp5)  == 0.0:
-                    #print('my = 0.0')
-                    return 0.0, 0.0
-
-                if obj_find_my(mymax, alp1, alp2, alp3, alp4, alp5) == 0.0:
-                    #print('my = mymax')
-                    return alp5*mymax**varrho, mymax
-
-                if obj_find_my(mymax, alp1, alp2, alp3, alp4, alp5) > 0:
-                    #print('my does not exist')
-                    return -1., -1.
-
-
-        #          ans = brentq(obj_find_my, 0., mymax, args = (alp1, alp2, alp3, alp4, alp5), xtol=1e-20)
-
-
-                ####bisection start
-                my_lb = 0.
-                my_ub = mymax
-
-                #check bracketting
-                val_lb = alp1*(1. - my_lb - alp5*my_lb**varrho) - alp2 * my_lb**(1. - nu/(1. - alpha)) - alp3*my_lb + alp4*my_lb**varrho 
-                val_ub = alp1*(1. - my_ub - alp5*my_ub**varrho) - alp2 * my_ub**(1. - nu/(1. - alpha)) - alp3*my_ub + alp4*my_ub**varrho
-
-                if val_lb *val_ub > 0.0:
-                    print('error: no bracket')
-                sign = -1.0
-                if val_ub > 0.:
-                    sign = 1.0
-
-                my = (my_lb + my_ub)/2.
-
-                it = 0
-                tol = 1.0e-12
-                rtol = 4.4408920985006262e-16
-                maxit = 400
-                val_m = 10000.
-                while it < maxit:
-                    it = it + 1
-                    if my > 0. and my < 1.0e-6:
-                        tol = 1.0e-20
-
-                    val_m = alp1*(1. - my - alp5*my**varrho) - alp2 * my**(1. - nu/(1. - alpha)) - alp3*my + alp4*my**varrho  
-
-
-                    if sign * val_m > 0.:
-                        my_ub = my
-                    elif sign * val_m < 0.:
-                        my_lb = my
-
-                    diff = abs((my_lb + my_ub)/2 - my)
-                    my = (my_lb + my_ub)/2.
-
-                    if diff < tol and abs(val_m) < rtol:
-                        break
-
-                #convergence check
-                if it == maxit:
-                    print('err: bisection method for my did not converge.')
-                    #print('alp1 = ', alp1)
-                    #print('alp2 = ', alp2)
-                    #print('alp3 = ', alp3)
-                    #print('alp4 = ', alp4)
-                    #print('alp5 = ', alp5)
-                    #print('val_m = ', val_m)
-                    #print('my = ', my)
-                    #print('mymax = ', mymax)
-
-                ans = my
-                ####bisection end
-
-
-                if ans == 0.0:
-                    print('A corner solution at 0.0 is obtianed: consider setting a smaller xtol.')
-                    print('my = ', ans)
-
-
-        #         if ans == mymax:
-        #             #sometimes ans is extremely close to mymax
-        #             #due to solver's accuracy.
-
-                return alp5*ans**varrho, ans
-
-            else:
-                #print('error: kap < 0 is not allowed.')
-                return -1., -1.
-
-
-        @nb.jit(nopython = True)
-        def get_sstatic(s):
-
-            a = s[0]
-            an = s[1]
-            kap = s[2]
-            kapn = s[3]
-            z = s[4]
-            is_o = s[5]
-
-            if is_o:
-                xi6 = xi6_o
-                z = tau_bo*z #replace eps with tau_wo*eps
-            else:
-                xi6 = xi6_y
-
-
-
-            u = -np.inf
-            mx = -1.0
-            my = -1.0
-            l = -1.0
-            x = -1.0
-            cc = -1.0
-            cs = -1.0
-            cagg = -1.0
-            ks = -1.0
-            ys = -1.0
-
-
-            if kapn >= (1. - delkap)/(1. + grate) * kap:
-                mx, my = solve_mxmy(s)
-
-                if mx >= 0. and my >= 0.:
-
-                    x = -100.0
-
-                    if mx == 0.0: #kap == 0.0 and kapn == 0.0 and my == 0.0:
-                        x = 0.0
-                    else:
-                        x = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*mx**(-veps/vthet)
-
-
-                    l = 1.0 - mx - my
-
-                    if kap == 0.0:
-                        #T^m if they do not operate
-                        cc = xi4*a - xi5*an + xi6 - xi11*x / (1. - taum) + xi10*(z*kap**phi)**(1./(1.- alpha)) * my**(nu/(1. - alpha))
-                    else:
-                        cc = xi4*a - xi5*an + xi6 - xi11*x  + xi10*(z*kap**phi)**(1./(1.- alpha)) * my**(nu/(1. - alpha))
-
-
-                    cs = xi1 * cc
-                    cagg = xi2 * cc
-                    ks = xi8 * (z*(kap**phi)* (my**nu)) ** (1./(1. - alpha))
-                    ys = z*(ks**alpha)*(kap**phi)*(my**nu) #or (xi8**alpha)*(z*(kap**phi)*(my**nu))**(1./(1.- alpha))
-
-                    #feasibility check
-                    if cagg > 0.0 and l > 0.0 and l <= 1.0 and an >= chi * p * ys:
-                        u = util(cagg, l)
-
-            return u, cc, cs, cagg, l, mx, my, x, ks, ys
-        
-        return get_sstatic
-    
     def get_policy(self):
+        for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())
+        
         Econ = self
-
-        #import data from Econ
-        alpha = Econ.alpha
-        beta = Econ.beta
-        iota = Econ.iota
-        chi = Econ.chi
-        delk = Econ.delk
-        delkap = Econ.delkap
-        eta = Econ.eta
-        g = Econ.g
-        grate = Econ.grate
-        la = Econ.la
-        la_tilde = Econ.la_tilde
-        mu = Econ.mu
-        ome = Econ.ome
-        phi = Econ.phi
-        rho = Econ.rho
-        tauc = Econ.tauc
-        taud = Econ.taud
-        taum = Econ.taum
-        taun = Econ.taun
-        taup = Econ.taup
-        theta = Econ.theta
-        trans_retire = Econ.trans_retire
-        veps = Econ.veps
-        vthet = Econ.vthet
-        xnb = Econ.xnb
-        yn = Econ.yn
-        zeta= Econ.zeta
-
-
-        agrid = Econ.agrid
-        kapgrid = Econ.kapgrid
-        epsgrid = Econ.epsgrid
-        zgrid = Econ.zgrid
-
-        prob = Econ.prob
-        prob_yo = Econ.prob_yo
-
-        is_to_iz = Econ.is_to_iz
-        is_to_ieps = Econ.is_to_ieps
-
-        amin = Econ.amin
-        num_suba_inner = Econ.num_suba_inner
-        num_subkap_inner = Econ.num_subkap_inner
-
-        num_a = Econ.num_a
-        num_kap = Econ.num_kap
-        num_eps = Econ.num_eps
-        num_z = Econ.num_z
-        num_s = Econ.num_s
-
-        nu = Econ.nu
-        bh = Econ.bh
-        varrho = Econ.varrho
-
-        w = Econ.w
-        p = Econ.p
-        rc = Econ.rc
-
-        rbar = Econ.rbar
-        rs = Econ.rs
-
-        xi1 = Econ.xi1
-        xi2 = Econ.xi2
-        xi3 = Econ.xi3
-        xi4 = Econ.xi4
-        xi5 = Econ.xi5
-        
-        #xi6 = Econ.xi6
-        xi6_y = Econ.xi6_y
-        xi6_o = Econ.xi6_o
-        
-        xi7 = Econ.xi7
-        xi8 = Econ.xi8
-        xi9 = Econ.xi9
-        xi10 = Econ.xi10
-        xi11 = Econ.xi11
-        xi12 = Econ.xi12
-
-        prob_st = Econ.prob_st
-
-
 
         ###parameters for MPI###
 
@@ -1904,16 +1251,18 @@ class Economy:
         #cvals_supan = np.ones((num_a, num_eps)) * (-2.)
         cvals_supan = np.ones((num_a, num_eps, 2)) * (-2.)
 
+        
         #for young c-corp workers
         for ia, a in enumerate(agrid):
                 for ieps, eps in enumerate(epsgrid):
 
-                    cvals_supan[ia, ieps, 0] = ((1. + rbar)*a + (1. - taun)*w*eps + tran)/(1. + grate)
+                    cvals_supan[ia, ieps, 0] = ((1. + rbar)*a + (1. - taun[0])*w*eps + psin[0] + yn - xnb)/(1. + grate)
+                    
         #for old c-corp workers
         for ia, a in enumerate(agrid):
-                for ieps, eps in enumerate(epsgrid):
+                for ieps, eps in enumerate(epsgrid):;
 
-                    cvals_supan[ia, ieps, 1] = ((1. + rbar)*a + (1. - taun)*w*eps + tran + trans_retire)/(1. + grate)
+                    cvals_supan[ia, ieps, 1] = ((1. + rbar)*a + (1. - taun[0])*tau_wo*w*eps + psin[0] + trans_retire + yn - xnb)/(1. + grate)
                     
 
         get_sstatic = Econ.generate_sstatic()
@@ -2767,6 +2116,7 @@ class Economy:
         ###main VFI iteration###
         if rank == 0:
             print('starting VFI...')
+            
         while it < max_iter and dist > tol:
 
             if rank == 0:
@@ -3129,74 +2479,7 @@ class Economy:
     def simulate_model(self):
         Econ = self
 
-        #import data from Econ
-        alpha = Econ.alpha
-        beta = Econ.beta
-        iota = Econ.iota
-        chi = Econ.chi
-        delk = Econ.delk
-        delkap = Econ.delkap
-        eta = Econ.eta
-        g = Econ.g
-        grate = Econ.grate
-        la = Econ.la
-        la_tilde = Econ.la_tilde
-        tau_wo = Econ.tau_wo
-        tau_bo = Econ.tau_bo
-        mu = Econ.mu
-        ome = Econ.ome
-        phi = Econ.phi
-        rho = Econ.rho
-        tauc = Econ.tauc
-        taud = Econ.taud
-        taum = Econ.taum
-        taun = Econ.taun
-        taup = Econ.taup
-        theta = Econ.theta
-        tran = Econ.tran
-        veps = Econ.veps
-        vthet = Econ.vthet
-        xnb = Econ.xnb
-        yn = Econ.yn
-        zeta= Econ.zeta
-
-        agrid = Econ.agrid
-        kapgrid = Econ.kapgrid
-        epsgrid = Econ.epsgrid
-        zgrid = Econ.zgrid
-
-        prob = Econ.prob
-        prob_yo = Econ.prob_yo
-        prob_st = Econ.prob_st
-
-        is_to_iz = Econ.is_to_iz
-        is_to_ieps = Econ.is_to_ieps
-
-        amin = Econ.amin
-        num_suba_inner = Econ.num_suba_inner
-        num_subkap_inner = Econ.num_subkap_inner
-
-        num_a = Econ.num_a
-        num_kap = Econ.num_kap
-        num_eps = Econ.num_eps
-        num_z = Econ.num_z
-        num_s = Econ.num_s
-
-        nu = Econ.nu
-        bh = Econ.bh
-        varrho = Econ.varrho
-
-        w = Econ.w
-        p = Econ.p
-        rc = Econ.rc
-
-        rbar = Econ.rbar
-        rs = Econ.rs
-
-        #simulation parameters
-        sim_time = Econ.sim_time
-        num_total_pop = Econ.num_total_pop
-
+        for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())        
         #load the value functions
 
         v_yc_an = Econ.v_yc_an
@@ -3204,7 +2487,8 @@ class Economy:
         v_ys_an = Econ.v_ys_an
         v_os_an = Econ.v_os_an        
         v_ys_kapn = Econ.v_ys_kapn
-        v_os_kapn = Econ.v_os_kapn        
+        v_os_kapn = Econ.v_os_kapn
+        
         vn_yc = Econ.vn_yc
         vn_oc = Econ.vn_oc        
         vn_ys = Econ.vn_ys
@@ -3233,8 +2517,6 @@ class Economy:
                  prob_yo[1,0]*iota*bh*((v_y_succeeded**(1. - mu))@(prob_st)).reshape((1, 1, num_a, num_kap, 1)) #?
 
 
-
-
         @nb.jit(nopython = True)
         def unravel_ip(i_aggregated_state):
 
@@ -3244,15 +2526,6 @@ class Economy:
 
         get_cstatic = Econ.generate_cstatic()
         get_sstatic = Econ.generate_sstatic()
-
-#        #do we need this one here...? #maybe not. Eliminated
-#        cvals_supan = np.ones((num_a, num_eps)) * (-2.)
-#        for ia, a in enumerate(agrid):
-#                for ieps, eps in enumerate(epsgrid):
-#
-#                    cvals_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun)*w*eps + tran)/(1. + grate)
-
-
         ### start parameters for MPI ###
         m = num_total_pop // size
         r = num_total_pop % size
@@ -3775,7 +3048,7 @@ class Economy:
             
 
             yc = A * (kc**theta)*(nc**(1.-theta))
-            yc_sub = Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn
+            yc_sub = Ecc + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn
 
             Tc = tauc*(Ecc + p*Ecs)
             Tp = taup*(yc - w*nc - delk*kc)
@@ -3947,12 +3220,10 @@ class Economy:
                                                                         np.mean( (1.-data_is_o[:,t])*data_is_o[:,t-1])))
             print('  Frac of Old   who was Young, Old = {}, {} '.format(np.mean( (data_is_o[:,t])*(1.-data_is_o[:,t-1])),
                                                                         np.mean( (data_is_o[:,t])*data_is_o[:,t-1])))
-            
             print('  Frac of Young who is  C  ,   S   = {}, {} '.format(np.mean( (1.-data_is_o[:,t])*(data_is_c[:,t])),
                                                                         np.mean( (1.-data_is_o[:,t])*(1.-data_is_c[:,t]))))
             print('  Frac of Old   who is  C  ,   S   = {}, {} '.format(np.mean( (data_is_o[:,t])*(data_is_c[:,t])),
                                                                         np.mean( (data_is_o[:,t])*(1.-data_is_c[:,t]))))
-
             print('  Deterioraton of kapn due to succeession = {}'.format(np.mean(data_kap0[:,t]) - np.mean(data_kap[:,t])))
             print('  Deterioraton of kap  due to succeession = {}'.format(np.mean(data_kap0[:,t-1]) - np.mean(data_kap[:,t-1])))
 
@@ -3970,15 +3241,15 @@ class Economy:
             print('  E(nu p ys - w ns)/GDP = {}'.format((nu*p*Eys - w*Ens)/GDP))            
             
             
-            if self.data_val_sweat is not None:
-                EVb_sdicount = np.mean(data_val_sweat[:,-1])
-                print('  EVb (bh un_c/u_c)              = {}'.format(EVb_sdicount))
-                print('  EVb/GDP (bh un_c/u_c)          = {}'.format(EVb_sdicount/GDP))
+            # if self.data_val_sweat is not None:
+            #     EVb_sdicount = np.mean(data_val_sweat[:,-1])
+            #     print('  EVb (bh un_c/u_c)              = {}'.format(EVb_sdicount))
+            #     print('  EVb/GDP (bh un_c/u_c)          = {}'.format(EVb_sdicount/GDP))
                 
-            if self.data_val_sweat_1gR is not None:
-                EVb_1gR = np.mean(data_val_sweat[:,-1])
-                print('  EVb  ((1+grate)/(1+rbar))      = {}'.format(EVb_1gR))
-                print('  EVb/GDP ((1+grate)/(1+rbar))   = {}'.format(EVb_1gR/GDP))                            
+            # if self.data_val_sweat_1gR is not None:
+            #     EVb_1gR = np.mean(data_val_sweat[:,-1])
+            #     print('  EVb  ((1+grate)/(1+rbar))      = {}'.format(EVb_1gR))
+            #     print('  EVb/GDP ((1+grate)/(1+rbar))   = {}'.format(EVb_1gR/GDP))                            
                 
 
 
@@ -4006,318 +3277,6 @@ class Economy:
 
         return
     
-    def calc_moments_old(self):
-        Econ = self
-
-        #import data from Econ
-        alpha = Econ.alpha
-        beta = Econ.beta
-        chi = Econ.chi
-        delk = Econ.delk
-        delkap = Econ.delkap
-        eta = Econ.eta
-        g = Econ.g
-        grate = Econ.grate
-        la = Econ.la
-        mu = Econ.mu
-        ome = Econ.ome
-        phi = Econ.phi
-        rho = Econ.rho
-        tauc = Econ.tauc
-        taud = Econ.taud
-        taum = Econ.taum
-        taun = Econ.taun
-        taup = Econ.taup
-        theta = Econ.theta
-        tran = Econ.tran
-        trans_retire = Econ.trans_retire
-        veps = Econ.veps
-        vthet = Econ.vthet
-        xnb = Econ.xnb
-        yn = Econ.yn
-        zeta= Econ.zeta
-
-        #new!
-        A = Econ.A
-
-        agrid = Econ.agrid
-        kapgrid = Econ.kapgrid
-        epsgrid = Econ.epsgrid
-        zgrid = Econ.zgrid
-
-        prob = Econ.prob
-
-        is_to_iz = Econ.is_to_iz
-        is_to_ieps = Econ.is_to_ieps
-
-        amin = Econ.amin
-        num_suba_inner = Econ.num_suba_inner
-        num_subkap_inner = Econ.num_subkap_inner
-
-        num_a = Econ.num_a
-        num_kap = Econ.num_kap
-        num_eps = Econ.num_eps
-        num_z = Econ.num_z
-        num_s = Econ.num_s
-
-        nu = Econ.nu
-        bh = Econ.bh
-        varrho = Econ.varrho
-
-        w = Econ.w
-        p = Econ.p
-        rc = Econ.rc
-
-        rbar = Econ.rbar
-        rs = Econ.rs
-
-        #simulation parameters
-        sim_time = Econ.sim_time
-        num_total_pop = Econ.num_total_pop
-
-        #load main simlation result
-        data_a = self.data_a
-        data_kap = self.data_kap
-        data_kap0 = self.data_kap0        
-        data_i_s = self.data_i_s
-        data_is_c = self.data_is_c
-        data_is_o = self.data_is_o        
-        data_ss = self.data_ss
-
-
-        #print moments
-
-        mom0 = None
-        mom1 = None
-        mom2 = None
-        mom3 = None
-
-        if rank == 0:
-            print('amax = {}'.format(np.max(data_a)))
-            print('amin = {}'.format(np.min(data_a)))
-            print('kapmax = {}'.format(np.max(data_kap)))
-            print('kapmin = {}'.format(np.min(data_kap)))
-
-            t = sim_time - 1 #note that data_is_o has a dim (:, sim_time+1), so don't use -1
-
-            EIc = np.mean(data_ss[:,0])
-    #         Ea = np.mean(data_ss[:,3])
-            Ea = np.mean(data_ss[:,1])
-    #         Ekap = np.mean(data_ss[:,4])
-            Ekap = np.mean(data_ss[:,2])
-            Ecc = np.mean(data_ss[:,6])
-            Ecs = np.mean(data_ss[:,7])
-            El = np.mean(data_ss[:,9])
-            En = np.mean(data_ss[:,5]* data_ss[:,10] * (data_ss[:,0])) #this is a bad notation. should be changed to Een or something.
-        #     En = np.mean(data_ss[:,10] * (data_ss[:,0]))
-            Ex = np.mean(data_ss[:,12] * (1. - data_ss[:,0]))
-            Eks = np.mean(data_ss[:,13] * (1. - data_ss[:,0]))
-            Eys = np.mean(data_ss[:,14] * (1. - data_ss[:,0]))
-            Emx = np.mean(data_ss[:,10] * (1. - data_ss[:,0]))
-            Emy = np.mean(data_ss[:,11] * (1. - data_ss[:,0]))
-
-
-            Ecagg_c = np.mean((data_ss[:,6] + p*data_ss[:,7] )* (data_ss[:,0]))
-            Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * (1. - data_ss[:,0]))
-
-            #ETn and ETm take into account a transfer part as a negative 
-            ETn = np.mean((taun*w*data_ss[:,5]*data_ss[:,10] - tran)*data_ss[:,0])
-            ETm = np.mean((taum*np.fmax(p*data_ss[:,14] - (rs + delk)*data_ss[:,13] - data_ss[:,12], 0.) - tran)*(1. - data_ss[:,0]) )
-
-            ETr = np.mean(trans_retire*data_ss[:,21]) #updated
-            
-            # yc = 1.0 #we can do this by choosing C-corp firm productivity A
-
-            nc = En
-            kc = ((w/(1. - theta)/A)**(1./theta))*nc
-
-            yc = A * (kc**theta)*(nc**(1.-theta))
-
-            yc_sub = Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn
-
-            Tc = tauc*(Ecc + p*Ecs)
-            Tp = taup*(yc - w*nc - delk*kc)
-            Td = taud*(yc - w*nc - (grate + delk)*kc - Tp)
-
-            #b = (Tc + ETn + ETm + Tp + Td - g)/(rbar - grate) #old def
-            b = Ea - (1. - taud)*kc - Eks
-    #         netb = (grate + delk)*b ##typo
-            netb = (rbar - grate)*b
-#            tax_rev = Tc + ETn + ETm + Td + Tp + tran + ETr
-            tax_rev = Tc + ETn + ETm + Td + Tp + tran
-
-            
-            GDP = yc + yn + p*Eys
-            C = Ecc + p*Ecs
-            xc = (grate + delk)*kc
-            Exs = (grate + delk)*Eks
-
-            def gini(array):
-                """Calculate the Gini coefficient of a numpy array."""
-                # based on bottom eq: http://www.statsdirect.com/help/content/image/stat0206_wmf.gif
-                # from: http://www.statsdirect.com/help/default.htm#nonparametric_methods/gini.htm
-                array = array.flatten() #all values are treated equally, arrays must be 1d
-                if np.amin(array) < 0:
-                    array -= np.amin(array) #values cannot be negative
-                array += 0.0000001 #values cannot be 0
-                array = np.sort(array) #values must be sorted
-                index = np.arange(1,array.shape[0]+1) #index per array element
-                n = array.shape[0]#number of array elements
-                return ((np.sum((2 * index - n  - 1) * array)) / (n * np.sum(array))) #Gini coefficient
-
-
-
-
-    #         print()
-    #         print('yc = {}'.format(yc)) 
-    #         print('nc = {}'.format(nc))
-    #         print('kc = {}'.format(kc))
-    #         print('Tc = {}'.format(Tc))
-    #         print('Tp = {}'.format(Tp))
-    #         print('Td = {}'.format(Td))
-    #         print('b = {}'.format(b))
-
-            print('')
-            print('RESULT')
-            print('Simulation Parameters')
-            print('Simulation Periods = ', sim_time)
-            print('Simulation Pops = ', num_total_pop)
-            print('')
-            print('Prices')
-
-            print('Wage (w) = {}'.format(w))
-            print('S-good price (p) = {}'.format(p))
-            print('Interest rate (r_c) = {}'.format(rc))
-
-            # mom0 = 1. - (1. - theta)*yc/(w*nc)
-            mom0 = 1. - theta/(rc + delk) * yc/kc
-            mom1 = 1. - Ecs/Eys
-#            mom2 = 1. - (tax_rev - tran - netb)/g
-            mom2 = 1. - (tax_rev - tran - ETr - netb)/g
-            mom3 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
-            print('')
-
-            # print('1-(1-thet)*yc/(E[w*eps*n]) = {}'.format(mom0))
-            print('1-thet/(rc+delk)*yc/kc = {}'.format(mom0))
-            print('1-E(cs)/E(ys) = {}'.format(mom1))
-            #print('1-((1-taud)kc+E(ks)+b)/Ea = {}'.format(1. - (b + (1.- taud)*kc + Eks)/Ea))
-            print('1-(tax-all_transfer -netb)/g = {}'.format(mom2))
-            print('1-(Ecc+Ex+(grate+delk)*(kc + Eks)+ g + xnb - yn)/yc = {}'.format(mom3))
-
-            print('')
-            print('Important Moments')
-            print('  Financial assets = {}'.format(Ea))
-            print('  Sweat assets = {}'.format(Ekap))
-            print('  Govt. debt = {}'.format(b))
-            print('  S-Corp Rental Capital (ks) =  {}'.format(Eks))
-            print('  Ratio of C-corp workers = {}'.format(EIc))
-            print('  GDP = {}'.format(GDP))
-
-            print('')
-            print('C-corporation production:')
-            print('  Consumption = {}'.format(Ecc))
-            print('  Investment = {}'.format(kc*(grate + delk)))
-            print('  Govt purchase = {}'.format(g))
-            print('  Output = {}'.format(yc))
-            print('  Capital (kc) = {}'.format(kc))
-            print('  Effective Worked Hours = {}'.format(En)) 
-
-            print('')
-            print('S-corporation production:')
-            print('  Consumption = {}'.format(Ecs))
-            print('  Output = {}'.format(Eys))
-            print('  investment, sweat = {}'.format(Ex))
-            print('  Hours, production = {}'.format(Emy))
-            print('  Hours, sweat = {}'.format(Emx))
-            print('  Sweat equity (kap) = {}'.format(Ekap))
-
-            print('')
-            print('National Income Shares (./GDP):')
-            print('  C-wages (w*nc) = {}'.format((w*nc)/GDP))
-            print('  Rents = {}'.format((rc*kc + rs*Eks)/GDP))
-            print('  Sweat = {}'.format((p*Eys - (rs+delk)*Eks)/GDP))
-            print('  Deprec. = {}'.format((delk*(kc+Eks))/GDP))
-            print('  NonBusiness income = {}'.format(yn/GDP))
-
-
-            print('')
-            print('National Product Shares (./GDP):')
-            print('  Consumption = {}'.format(C/GDP))
-            print('  Investments(xc) = {}'.format((xc)/GDP))
-            print('  Investments(xs) = {}'.format((Exs)/GDP))
-            print('  Govt Consumption = {}'.format(g/GDP))
-            print('  Nonbusiness investment = {}'.format((xnb)/GDP))
-
-            print('')
-            print('Govt Budget:')
-            print('  Public Consumption = {}'.format(g))
-            print('  Net borrowing = {}'.format(netb))
-            print('  Transfer (Non-retire + retire) = {}'.format(tran + ETr))
-            print('  Tax revenue = {}'.format(tax_rev))
-
-            print('')
-            print('Gini Coefficients:')
-            print('  Financial Assets = {}'.format(gini(data_ss[:,1])))
-            print('  Sweats Assets = {}'.format(gini(data_ss[:,2])))
-            print('  C-wages = {}'.format(gini(w*data_ss[:,5]* data_ss[:,10]*data_ss[:,0])))
-            print('  S-income = {}'.format(gini((p*data_ss[:,14] ) * (1. - data_ss[:,0]))))
-        #     print('  S-income = {}'.format(gini((p*data_ss[:,14]) * (1. - data_ss[:,0]))))
-        #     print('  Total Income'.format('?'))
-        #     print()
-
-
-
-
-            print('')
-            print('Characteristics of Owners:')
-            print('  Frac of S-corp owner = {}'.format(1. - EIc))
-            print('  Switched from S to C = {}'.format(np.mean((1. - data_is_c[:, t-1]) * (data_is_c[:, t]))))
-            print('  Switched from C to S = {}'.format(np.mean(data_is_c[:, t-1] * (1. - data_is_c[:, t]) )))
-
-
-            print('')
-            print('Started N years ago:') #Aquired?
-
-            #t is already used... be careful.
-            for tt in range(40):
-                print(' N = ', tt, ', with = {:f}'.format((np.mean(np.all(data_is_c[:,-(tt+2):-1] == False, axis = 1)) -
-                                                           np.mean(np.all(data_is_c[:,-(tt+3):-1] == False, axis = 1)) )/ np.mean(1. - data_ss[:,0]))) 
-
-            print('')
-            print('Additional Moments for the Lifecycle version model')
-            print('  Frac of Old         = {}'.format(np.mean(data_ss[:,15])))
-            print('  Frac of Old (check) = {}'.format(np.mean(data_is_o[:,t])))
-            #add double check
-            print('  Frac of Young who was Young, Old = {}, {} '.format(np.mean( (1.-data_is_o[:,t])*(1.-data_is_o[:,t-1])),
-                                                                        np.mean( (1.-data_is_o[:,t])*data_is_o[:,t-1])))
-            print('  Frac of Old   who was Young, Old = {}, {} '.format(np.mean( (data_is_o[:,t])*(1.-data_is_o[:,t-1])),
-                                                                        np.mean( (data_is_o[:,t])*data_is_o[:,t-1])))
-            
-            print('  Frac of Young who is  C  ,   S   = {}, {} '.format(np.mean( (1.-data_is_o[:,t])*(data_is_c[:,t])),
-                                                                        np.mean( (1.-data_is_o[:,t])*(1.-data_is_c[:,t]))))
-            print('  Frac of Old   who is  C  ,   S   = {}, {} '.format(np.mean( (data_is_o[:,t])*(data_is_c[:,t])),
-                                                                        np.mean( (data_is_o[:,t])*(1.-data_is_c[:,t]))))
-
-            print('  Deterioraton of kapn due to succeession = {}'.format(np.mean(data_kap0[:,t]) - np.mean(data_kap[:,t])))
-            print('  Deterioraton of kap  due to succeession = {}'.format(np.mean(data_kap0[:,t-1]) - np.mean(data_kap[:,t-1])))
-
-            print('  Transfer (Non-retire) = {}'.format(tran))
-            print('  Transfer (retire)     = {}'.format(ETr))
-            
-
-
-
-        mom0 = comm.bcast(mom0)
-        mom1 = comm.bcast(mom1)
-        mom2 = comm.bcast(mom2)
-        mom3 = comm.bcast(mom3)
-
-
-        
-        self.moms = [mom0, mom1, mom2, mom3]
-
-        return
-
 
 #     #to be updated. not yet.
 #     def calc_sweat_eq_value(self):
