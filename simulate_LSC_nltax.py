@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     np.save(path_to_shock + '.npy' , data_i_s)
 
-    p_, rc_ , ome_ = 0.2323425371214, 0.0609442912733173, 0.753033796603102
+    p_, rc_ , ome_ = 0.235642284701831,0.0529813388265726, 0.753033796603102
 
     ###define additional parameters###
     num_core = 4 #7 or 8 must be the best for Anmol's PC. set 3 or 4 for Yuki's laptop
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     econ = Economy(path_to_data_i_s = path_to_shock, prob = prob, zgrid = zgrid2, agrid = agrid,
                    g = g, yn = ynb, xnb = xnb, ome = ome_, chi = 0.25,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
-                   #taub = taub, psib = psib, taup = taup, 
+                   taub = taub, psib = psib, taup = taup, 
                    alpha = alpha, theta = theta)
     #taub = taub, psib = psib,taup = taup,
     

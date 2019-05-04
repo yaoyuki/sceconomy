@@ -84,6 +84,7 @@ class Economy:
                  sim_time = None,
                  num_total_pop = None,
                  A = None
+                 upsilon = None,
                  
                  path_to_data_i_s = None,
                  path_to_data_is_o = None,
@@ -150,6 +151,7 @@ class Economy:
         if sim_time is not None: self.sim_time = sim_time
         if num_total_pop is not None: self.num_total_pop = num_total_pop
         if A is not None: self.A = A
+        if upsilon is not None: self.upsilon = upsilon
 
         if path_to_data_i_s is not None: self.path_to_data_i_s = path_to_data_i_s
         if path_to_data_is_o is not None: self.path_to_data_is_o = path_to_data_is_o
@@ -193,7 +195,7 @@ class Economy:
         self.mu       = 1.5 
         self.ome      = 0.6 #omega
         self.phi      = 0.15 
-        self.rho      = 0.5
+        self.rho      = 0.01
         self.tauc     = 0.06
         self.taud     = 0.14
         self.taum     = 0.20
@@ -210,11 +212,14 @@ class Economy:
         self.sim_time = 1000
         self.num_total_pop = 100_000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
+        self.upsilon  = 0.5
 
         # self.path_to_data_i_s = './input_data/data_i_s.npy'
         self.path_to_data_i_s = './tmp/data_i_s'
         self.path_to_data_is_o = './tmp/data_is_o'
 
+
+        #nonlinear tax parameters
         self.taub = np.array([.137, .185, .202, .238, .266, .280])
         self.bbracket = np.array([0.150, 0.319, 0.824, 2.085, 2.930])
         self.scaling_b = 1.0
@@ -230,6 +235,7 @@ class Economy:
         self.psin = None         
         
 
+        #grid information
         self.agrid = np.load('./input_data/agrid.npy')
         self.kapgrid = np.load('./input_data/kapgrid.npy')
         self.epsgrid = np.load('./input_data/epsgrid.npy')    

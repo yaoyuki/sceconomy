@@ -1679,7 +1679,7 @@ class Economy:
         @nb.jit(nopython = True)
         def _inner_inner_loop_c_(_an_sup_, _EV_, _ia_, _ikap_ ,_istate_, _is_o_):
 
-             #arguments
+            #arguments
             ax = 0.0
             cx = _an_sup_
             bx = 0.5*(ax + cx)

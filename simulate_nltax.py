@@ -46,7 +46,6 @@ if __name__ == '__main__':
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0    
     
     
-
     p_, rc_, ome_, varpi_ = 1.4511445940193992, 0.053393961117462245, 0.4627459750781605, 0.6056020599342775
 
     split_shock(path_to_shock, 100_000, num_core)

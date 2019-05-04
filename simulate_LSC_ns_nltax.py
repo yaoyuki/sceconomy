@@ -36,9 +36,9 @@ if __name__ == '__main__':
 
 
 
-    taup = 0.20
-    #taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
-    #psib = np.array([0.12784033, 0.14047993, 0.15, 0.20207513, 0.30456117, 0.37657174])
+    #taup = 0.20
+    taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+    psib = np.array([0.12784033, 0.14047993, 0.15, 0.20207513, 0.30456117, 0.37657174])
     
     
 
@@ -68,8 +68,8 @@ if __name__ == '__main__':
     np.save(path_to_shock + '.npy' , data_i_s)
 
 
-    p_, rc_  = 0.853125403782442, 0.0537516695167411
-    
+    p_, rc_  = 0.827179359609876, 0.0603842603042158
+
 
     ome_ = 0.47794902702321
     nu_ = 0.371274481893513
@@ -85,9 +85,9 @@ if __name__ == '__main__':
     print('Do not simulate more than one models at the same time...')
 
     econ = Economy(path_to_data_i_s = path_to_shock, prob = prob, zgrid = zgrid2, agrid = agrid2,
-                   g = g, yn = ynb, xnb = xnb, chi = 0.0,
-                   #taub = taub, psib = psib,#
-                    taup = taup,
+                   g = g, yn = ynb, xnb = xnb, chi = 0.25,
+                   taub = taub, psib = psib,
+                   #taup = taup,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
                    alpha = alpha, theta = theta, nu = nu_, ome = ome_)
 
