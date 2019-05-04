@@ -83,10 +83,25 @@ class Economy:
                  num_subkap_inner = None,
                  sim_time = None,
                  num_total_pop = None,
-                 A = None):
-        
+                 A = None
+                 
+                 path_to_data_i_s = None,
+                 path_to_data_is_o = None,
 
-        
+                 taun = None,
+                 psin = None,
+                 psin_fixed = None,
+                 nbracket = None,
+                 nbracket_fixed = None,                 
+                 scaling_n = None,
+                 
+                 taub = None,
+                 psib = None,
+                 psib_fixed = None,                 
+                 bbracket = None,
+                 bbracket_fixed = None,                 
+                 scaling_b = None):
+
         
         self.__set_default_parameters__()
         
@@ -136,6 +151,24 @@ class Economy:
         if num_total_pop is not None: self.num_total_pop = num_total_pop
         if A is not None: self.A = A
 
+        if path_to_data_i_s is not None: self.path_to_data_i_s = path_to_data_i_s
+        if path_to_data_is_o is not None: self.path_to_data_is_o = path_to_data_is_o
+        
+        if taun is not None: self.taun = taun
+        if psin is not None: self.psin = psin
+        if psin_fixed is not None: self.psin_fixed = psin_fixed
+        if nbracket is not None: self.nbracket = nbracket
+        if nbracket_fixed is not None: self.nbracket_fixed = nbracket_fixed                
+        if scaling_n is not None: self.scaling_n = scaling_n
+
+        if taub is not None: self.taub = taub
+        if psib is not None: self.psib = psib
+        if psib_fixed is not None: self.psib_fixed = psib_fixed        
+        if bbracket is not None: self.bbracket = bbracket
+        if bbracket_fixed is not None: self.bbracket_fixed = bbracket_fixed  
+        if scaling_b is not None: self.scaling_b = scaling_b        
+        
+
         self.__set_implied_parameters__()
     
     def __set_default_parameters__(self):
@@ -179,10 +212,9 @@ class Economy:
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
 
         # self.path_to_data_i_s = './input_data/data_i_s.npy'
-        # self.path_to_data_i_s = './tmp/data_i_s'
+        self.path_to_data_i_s = './tmp/data_i_s'
+        self.path_to_data_is_o = './tmp/data_is_o'
 
-
-        
         self.taub = np.array([.137, .185, .202, .238, .266, .280])
         self.bbracket = np.array([0.150, 0.319, 0.824, 2.085, 2.930])
         self.scaling_b = 1.0
@@ -198,9 +230,6 @@ class Economy:
         self.psin = None         
         
 
-
-
-
         self.agrid = np.load('./input_data/agrid.npy')
         self.kapgrid = np.load('./input_data/kapgrid.npy')
         self.epsgrid = np.load('./input_data/epsgrid.npy')    
@@ -211,10 +240,11 @@ class Economy:
         #s = (e,z)'
 
         #pi(t,t+1)
-        self.prob = np.load('./DeBacker/prob_epsz.npy')
+        self.prob = np.load('./DeBacker/prob_epsz.npy') #default transition is taken from DeBakcer
+        self.prob_yo = np.array([[44./45., 1./45.], [3./45., 42./45.]]) #[[y -> y, y -> o], [o -> y, o ->o]]
+
         # self.prob = np.load('./input_data/transition_matrix.npy')
-#        self.prob_yo = np.array([[0.5, 0.5], [0.5, 0.5]]) #[[y -> y, y -> o], [o -> y, o ->o]]
-        self.prob_yo = np.array([[44./45., 1./45.], [3./45., 42./45.]]) #[[y -> y, y -> o], [o -> y, o ->o]]    
+        # self.prob_yo = np.array([[0.5, 0.5], [0.5, 0.5]]) #[[y -> y, y -> o], [o -> y, o ->o]]
 
         # ####do we need this one here?
         # #normalization to correct rounding error.
@@ -2605,13 +2635,19 @@ class Economy:
     #     ###end codes to generate shocks###
 
 
+    
         ###load productivity shock data###
 
-        data_i_s_import = np.load('./input_data/data_i_s_lifecycle.npy')        
-        data_i_s_elem[:] = data_i_s_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]
+        self.path_to_data_i_s
+        path_to_data_i_s = './input_data/data_i_s'
 
-        del data_i_s_import
+        self.path_to_data_is_o
+        path_to_data_is_o = './input_data/data_is_o_lifecycle'
         
+        data_i_s_elem[:] = np.load(self.path_to_data_i_s + '_' + str(rank) + '.npy')
+
+
+        data_is_o_elem[:] = np.load(self.path_to_data_is_o + '_' + str(rank) + '.npy')
         ###load personal age shock data###
         data_is_o_import = np.load('./input_data/data_is_o_lifecycle.npy')
         data_is_o_elem[:] = data_is_o_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time+1]
@@ -3948,6 +3984,22 @@ def export_econ(econ, name = 'econ.pickle'):
             pickle_dump(econ, name)
         else:
             with open(name, mode='wb') as f: pickle.dump(econ, f)   
+
+    return
+
+#here we need to split two kinds of shock -- i_istate and is_old
+def split_shock(path_to_data_shock, num_total_pop, size):
+
+
+    m = num_total_pop // size
+    r = num_total_pop % size
+
+    data_shock = np.load(path_to_data_shock + '.npy')
+    
+
+    for rank in range(size):
+        assigned_pop_range =  (rank*m+min(rank,r)), ((rank+1)*m+min(rank+1,r))
+        np.save(path_to_data_shock + '_' + str(rank) + '.npy', data_shock[assigned_pop_range[0]:assigned_pop_range[1], :])
 
     return
 
