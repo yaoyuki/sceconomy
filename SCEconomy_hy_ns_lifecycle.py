@@ -1683,7 +1683,7 @@ class Economy:
                                      _ind_s_util_finemesh_cached_o_,
                                      _ind_s_util_finemesh_cached_y_,
                                      _s_util_finemesh_cached_o_,
-                                     _s_util_finemesh_cached_y_):
+                                     _s_util_finemesh_cached_y_)
 
                 # if _is_o_:
                 #     ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp =\
@@ -1788,7 +1788,7 @@ class Economy:
 
 
         @nb.jit(nopython = True) 
-        def _inner_loop_s_with_range_(assigned_indexes, _EV_, _vs_an_, _vs_kapn_, _vsn_, _vs_util_, _num_cached_, _is_o_
+        def _inner_loop_s_with_range_(assigned_indexes, _EV_, _vs_an_, _vs_kapn_, _vsn_, _vs_util_, _num_cached_, _is_o_,
                                      _ind_s_util_finemesh_cached_o_,
                                      _ind_s_util_finemesh_cached_y_,
                                      _s_util_finemesh_cached_o_,
@@ -1816,11 +1816,11 @@ class Economy:
                 u_tmp = -3.0
 
                 an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_ =\
-                    _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_, _is_o_
+                    _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_, _is_o_,
                                              _ind_s_util_finemesh_cached_o_,
                                              _ind_s_util_finemesh_cached_y_,
                                              _s_util_finemesh_cached_o_,
-                                             _s_util_finemesh_cached_y_):
+                                             _s_util_finemesh_cached_y_)
 
             
                 _vs_an_[ind] = an_tmp
@@ -2263,8 +2263,9 @@ class Economy:
             if rank == 0:
                 tyc1 = time.time()
 
-            _inner_loop_c_with_range_(assigned_state_range, bEV_yc, v_yc_an_tmp, vn_yc_tmp, v_yc_util_tmp, _is_o_ = 0,
-                        ind_s_util_finemesh_cached_o, ind_s_util_finemesh_cached_y, s_util_finemesh_cached_o, s_util_finemesh_cached_y) #_is_o_ = False
+            #_is_o_ = 0
+            _inner_loop_c_with_range_(assigned_state_range, bEV_yc, v_yc_an_tmp, vn_yc_tmp, v_yc_util_tmp, 0)
+                    
 
             comm.Barrier()
             if rank == 0:
@@ -2277,8 +2278,10 @@ class Economy:
             if rank == 0:
                 toc1 = time.time()
 
-            _inner_loop_c_with_range_(assigned_state_range, bEV_oc, v_oc_an_tmp, vn_oc_tmp, v_oc_util_tmp, _is_o_ = 1,
-                        ind_s_util_finemesh_cached_o, ind_s_util_finemesh_cached_y, s_util_finemesh_cached_o, s_util_finemesh_cached_y) #_is_o_ = True
+            #_is_o_ = 1                
+            _inner_loop_c_with_range_(assigned_state_range, bEV_oc, v_oc_an_tmp, vn_oc_tmp, v_oc_util_tmp, 1)
+            
+                       # ind_s_util_finemesh_cached_o, ind_s_util_finemesh_cached_y, s_util_finemesh_cached_o, s_util_finemesh_cached_y) #_is_o_ = True
 
             comm.Barrier()
             if rank == 0:
@@ -2296,7 +2299,7 @@ class Economy:
 
                 
 
-            num_cached_y = _inner_loop_s_with_range_(assigned_state_range, bEV_ys, v_ys_an_tmp ,v_ys_kapn_tmp, vn_ys_tmp, v_ys_util_tmp, num_cached_y, _is_o_ = 0) 
+            num_cached_y = _inner_loop_s_with_range_(assigned_state_range, bEV_ys, v_ys_an_tmp ,v_ys_kapn_tmp, vn_ys_tmp, v_ys_util_tmp, num_cached_y, 0, ind_s_util_finemesh_cached_o, ind_s_util_finemesh_cached_y, s_util_finemesh_cached_o, s_util_finemesh_cached_y) #_is_o_ = False) 
 
             comm.Barrier()
             if rank == 0:
@@ -2310,7 +2313,7 @@ class Economy:
                 tos1 = time.time()
 
 
-            num_cached_o = _inner_loop_s_with_range_(assigned_state_range, bEV_os, v_os_an_tmp ,v_os_kapn_tmp, vn_os_tmp, v_os_util_tmp, num_cached_o, _is_o_ = 1) 
+            num_cached_o = _inner_loop_s_with_range_(assigned_state_range, bEV_os, v_os_an_tmp ,v_os_kapn_tmp, vn_os_tmp, v_os_util_tmp, num_cached_o, 1, ind_s_util_finemesh_cached_o, ind_s_util_finemesh_cached_y, s_util_finemesh_cached_o, s_util_finemesh_cached_y) #_is_o_ = False) 
 
             comm.Barrier()
             if rank == 0:
