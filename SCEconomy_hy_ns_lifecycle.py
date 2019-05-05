@@ -12,6 +12,7 @@ import numba as nb
 #my library
 #import
 #from FEM import fem_peval #1D interpolation
+from orderedTableSearch import locate, hunt
 from FEM_2D import fem2d_peval, fem2deval_mesh
 from markov import Stationary
 from ravel_unravel_nb import unravel_index_nb
@@ -60,8 +61,6 @@ class Economy:
                  rho = None,
                  tauc = None,
                  taud = None,
-                 taum = None,
-                 taun = None,
                  taup = None,
                  theta = None,
                  trans_retire = None, #retirement benefit which is not included in tran
@@ -83,8 +82,9 @@ class Economy:
                  num_subkap_inner = None,
                  sim_time = None,
                  num_total_pop = None,
-                 A = None
+                 A = None,
                  upsilon = None,
+                 varpi = None,
                  
                  path_to_data_i_s = None,
                  path_to_data_is_o = None,
@@ -127,8 +127,6 @@ class Economy:
         if rho is not None: self.rho = rho
         if tauc is not None: self.tauc = tauc
         if taud is not None: self.taud = taud
-        if taum is not None: self.taum = taum
-        if taun is not None: self.taun = taun
         if taup is not None: self.taup = taup
         if theta is not None: self.theta = theta
         if trans_retire is not None: self.trans_retire = trans_retire #added
@@ -152,6 +150,7 @@ class Economy:
         if num_total_pop is not None: self.num_total_pop = num_total_pop
         if A is not None: self.A = A
         if upsilon is not None: self.upsilon = upsilon
+        if varpi is not None: self.varpi = varpi        
 
         if path_to_data_i_s is not None: self.path_to_data_i_s = path_to_data_i_s
         if path_to_data_is_o is not None: self.path_to_data_is_o = path_to_data_is_o
@@ -171,6 +170,7 @@ class Economy:
         if scaling_b is not None: self.scaling_b = scaling_b        
         
 
+        self.__set_nltax_parameters__()
         self.__set_implied_parameters__()
     
     def __set_default_parameters__(self):
@@ -213,6 +213,7 @@ class Economy:
         self.num_total_pop = 100_000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
         self.upsilon  = 0.5
+        self.varpi    = 0.5
 
         # self.path_to_data_i_s = './input_data/data_i_s.npy'
         self.path_to_data_i_s = './tmp/data_i_s'
@@ -265,7 +266,6 @@ class Economy:
         self.num_suba_inner = 20
         self.num_subkap_inner = 30
 
-        
 
     def __set_nltax_parameters__(self):
         
@@ -327,10 +327,16 @@ class Economy:
         
         
         
-    def set_prices(self, w, p, rc):
-        self.w = w
+    def set_prices(self, p, rc):
+
+
         self.p = p
         self.rc = rc
+
+        #assuming CRS technology for C-corp
+        self.kcnc_ratio = ((self.theta * self.A)/(self.delk + self.rc))**(1./(1. - self.theta))
+        self.w = (1. - self.theta)*self.A*self.kcnc_ratio**self.theta
+        
         
         self.__is_price_set__ = True
         
@@ -339,30 +345,59 @@ class Economy:
         self.rbar = (1. - self.taup) * self.rc
         self.rs = (1. - self.taup) * self.rc
 
+        #set Xi-s.
         self.xi1 = ((self.ome*self.p)/(1. - self.ome))**(1./(self.rho-1.0))
         self.xi2 = (self.ome + (1. - self.ome) * self.xi1**self.rho)**(1./self.rho)
-        self.xi3 = self.eta/(1. - self.eta) * self.ome * (1. - self.taun) / (1. + self.tauc) * self.w / self.xi2**self.rho
-        self.xi8 = (self.alpha*self.p/(self.rs + self.delk))**(1./(1. - self.alpha))
-        self.xi9 = self.eta / (1. - self.eta) * self.ome * self.p * self.nu * (1. - self.taum) / (1. + self.tauc) * self.xi8**self.alpha / self.xi2**self.rho
-
+        self.xi3 = self.eta/(1. - self.eta) * self.ome / (1. + self.tauc) / self.xi2**self.rho #changed
+        
         self.denom = (1. + self.p*self.xi1)*(1. + self.tauc)
+        
         self.xi4 = (1. + self.rbar) / self.denom
         self.xi5 = (1. + self.grate) / self.denom
+        self.xi6 = (self.yn - self.xnb) / self.denom #changed
+        self.xi7 = 1./ self.denom #changed
+
+        
+        ### to be updated ###
+        self.xi8 = ((self.alpha * self.p)/(self.rs + self.delk))**(1./(1.-self.alpha))        
+        self.xi11 = self.xi7 #modified
+        self.xi10 = (self.p*self.xi8**self.alpha - (self.rs + self.delk)*self.xi8)/self.denom
+        self.xi13 = (self.nu*self.varpi*(self.rs + self.delk)/(self.alpha * self.w))**(1./(1.- self.upsilon)) #same
+        self.xi14 = self.w*self.xi13*(self.xi8**(1./(1.-self.upsilon)))/self.denom #updated
+        self.xi9 = (self.eta*self.ome*self.nu*(1.-self.varpi)*self.p*self.xi8**self.alpha)\
+                   /((1.-self.eta)*(1.+self.tauc)*self.xi2**self.rho)
+        self.xi12 = (self.vthet/self.veps)*self.nu*(1.-self.varpi)*self.p*self.xi8**self.alpha
+        ### end to be updated ###
+        
+
+        # self.xi1 = ((self.ome*self.p)/(1. - self.ome))**(1./(self.rho-1.0))
+        # self.xi2 = (self.ome + (1. - self.ome) * self.xi1**self.rho)**(1./self.rho)
+        # self.xi3 = self.eta/(1. - self.eta) * self.ome * (1. - self.taun) / (1. + self.tauc) * self.w / self.xi2**self.rho
+        # self.xi8 = (self.alpha*self.p/(self.rs + self.delk))**(1./(1. - self.alpha))
+        # self.xi9 = self.eta / (1. - self.eta) * self.ome * self.p * self.nu * (1. - self.taum) / (1. + self.tauc) * self.xi8**self.alpha / self.xi2**self.rho
+
+        # self.denom = (1. + self.p*self.xi1)*(1. + self.tauc)
+        # self.xi4 = (1. + self.rbar) / self.denom
+        # self.xi5 = (1. + self.grate) / self.denom
 
 
-        self.xi6 = (self.yn - self.xnb) / self.denom
+        # self.xi6 = (self.yn - self.xnb) / self.denom
 
-        # needs to update
-        # self.xi6_y = (self.tran + self.yn - self.xnb) / self.denom
-        # self.xi6_o = (self.tran + self.trans_retire + self.yn - self.xnb) / self.denom
+        # # needs to update
+        # # self.xi6_y = (self.tran + self.yn - self.xnb) / self.denom
+        # # self.xi6_o = (self.tran + self.trans_retire + self.yn - self.xnb) / self.denom
 
-        self.xi7 = 1. / self.denom
-        # self.xi7 = (1. - self.taun)*self.w/self.denom
+        # self.xi7 = 1. / self.denom
+        # # self.xi7 = (1. - self.taun)*self.w/self.denom
 
 
-        self.xi11 = (1. - self.taum) / self.denom
-        self.xi10 = (self.p*self.xi8**self.alpha - (self.rs + self.delk)*self.xi8)*(1. - self.taum)/self.denom
-        self.xi12 = self.vthet/self.veps*self.nu*self.p*self.xi8**self.alpha
+        # self.xi11 = (1. - self.taum) / self.denom
+        # self.xi10 = (self.p*self.xi8**self.alpha - (self.rs + self.delk)*self.xi8)*(1. - self.taum)/self.denom
+        # self.xi12 = self.vthet/self.veps*self.nu*self.p*self.xi8**self.alpha
+
+        # self.xi13 = (self.nu*self.varpi*(self.rs + self.delk)/(self.alpha * self.w))**(1./(1.- self.upsilon)) #same
+        # self.xi14 = self.w*self.xi13*(self.xi8**(1./(1.-self.upsilon)))/self.denom #updated
+        
         
         
 
@@ -385,11 +420,8 @@ class Economy:
         print('rho = ', self.rho)
         print('tauc = ', self.tauc)
         print('taud = ', self.taud)
-        print('taum = ', self.taum)
-        print('taun = ', self.taun)
         print('taup = ', self.taup)
         print('theta = ', self.theta)
-        print('tran (transfer) = ', self.tran)
         print('veps = ', self.veps)
         print('vthet = ', self.vthet)
         print('xnb = ', self.xnb)
@@ -442,6 +474,9 @@ class Economy:
             print('xi10 = ', self.xi10)
             print('xi11 = ', self.xi11)
             print('xi12 = ', self.xi12)
+            print('xi13 = ', self.xi13)
+            print('xi14 = ', self.xi14)
+
             
         else:
             print('')
@@ -1296,7 +1331,7 @@ class Economy:
                     
         #for old c-corp workers
         for ia, a in enumerate(agrid):
-                for ieps, eps in enumerate(epsgrid):;
+                for ieps, eps in enumerate(epsgrid):
 
                     cvals_supan[ia, ieps, 1] = ((1. + rbar)*a + (1. - taun[0])*tau_wo*w*eps + psin[0] + trans_retire + yn - xnb)/(1. + grate)
                     
@@ -2644,32 +2679,21 @@ class Economy:
     
         ###load productivity shock data###
 
-        self.path_to_data_i_s
         path_to_data_i_s = './input_data/data_i_s'
-
-        self.path_to_data_is_o
         path_to_data_is_o = './input_data/data_is_o_lifecycle'
         
         data_i_s_elem[:] = np.load(self.path_to_data_i_s + '_' + str(rank) + '.npy')
-
-
         data_is_o_elem[:] = np.load(self.path_to_data_is_o + '_' + str(rank) + '.npy')
-        ###load personal age shock data###
-        data_is_o_import = np.load('./input_data/data_is_o_lifecycle.npy')
-        data_is_o_elem[:] = data_is_o_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time+1]
-
-        #check the dimension of data_is_o
-        #I assume that data_is_o.shape[1] >  sim_time+1
-
-        if rank == 0:
-
-            if data_is_o.shape[1]  <  sim_time+1:
-                print('data_is_o.shape[1]  <  sim_time+1:')
-                print('code will be terminated...')
-                return None
         
-        del data_is_o_import
+        # #check the dimension of data_is_o
+        # #I assume that data_is_o.shape[1] >  sim_time+1
 
+        # if rank == 0:
+
+        #     if data_is_o.shape[1]  <  sim_time+1:
+        #         print('data_is_o.shape[1]  <  sim_time+1:')
+        #         print('code will be terminated...')
+        #         return None
         
 
 
@@ -2822,7 +2846,7 @@ class Economy:
                     data_ss[i,5] = z*(1. - is_o) + tau_bo*z*is_o
                     
                     tmp = get_sstatic(np.array([a, an, kap, kapn, z, float(is_o)]))
-                    data_ss[i,6:15] = tmp[1:]
+                    data_ss[i,6:20] = tmp[1:]
                     data_ss[i,20] = is_o                    
         
 
