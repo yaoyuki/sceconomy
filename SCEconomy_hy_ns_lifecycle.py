@@ -1453,16 +1453,21 @@ class Economy:
 
         #define inner loop functions
 
+        # @nb.jit(nopython = True)
+        # def _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ip,
+        #                              _num_cached_, _is_o_,
+        #                              _ind_s_util_finemesh_cached_o_ = ind_s_util_finemesh_cached_o,
+        #                              _ind_s_util_finemesh_cached_y_ = ind_s_util_finemesh_cached_y,                                    
+        #                              _s_util_finemesh_cached_o_ = s_util_finemesh_cached_o,
+        #                              _s_util_finemesh_cached_y_ = s_util_finemesh_cached_y ):
         @nb.jit(nopython = True)
         def _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ip,
                                      _num_cached_, _is_o_,
-                                     _ind_s_util_finemesh_cached_o_ = ind_s_util_finemesh_cached_o,
-                                     _ind_s_util_finemesh_cached_y_ = ind_s_util_finemesh_cached_y,                                     
-                                     _s_util_finemesh_cached_o_ = s_util_finemesh_cached_o,
-                                     _s_util_finemesh_cached_y_ = s_util_finemesh_cached_y ):
+                                     _ind_s_util_finemesh_cached_o_,
+                                     _ind_s_util_finemesh_cached_y_,
+                                     _s_util_finemesh_cached_o_,
+                                     _s_util_finemesh_cached_y_):
                                      
-#                                     _ind_s_util_finemesh_cached_ = ind_s_util_finemesh_cached,
-#                                     _s_util_finemesh_cached_ = s_util_finemesh_cached, _is_o_):
 
             _ind_s_util_finemesh_cached_ = _ind_s_util_finemesh_cached_y_
             _s_util_finemesh_cached_ = _s_util_finemesh_cached_y_
@@ -1582,7 +1587,12 @@ class Economy:
 
 
         @nb.jit(nopython = True)    
-        def _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_, _is_o_): #, an_tmp, kapn_tmp, _val_tmp_, u_tmp):
+        def _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_, _is_o_,
+                                     _ind_s_util_finemesh_cached_o_,
+                                     _ind_s_util_finemesh_cached_y_,
+                                     _s_util_finemesh_cached_o_,
+                                     _s_util_finemesh_cached_y_):
+
 
             istate, ia, ikap = unravel_ip(ipar_loop)
 
@@ -1669,8 +1679,11 @@ class Economy:
                 ans = np.array([0, 0])
 
                 ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp =\
-                        _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ipar_loop, _num_cached_,_is_o_)
-                 
+                        _search_on_finer_grid_2_(ian_lo, ian_hi, ikapn_lo, ikapn_hi, _EV_, ipar_loop, _num_cached_,_is_o_,
+                                     _ind_s_util_finemesh_cached_o_,
+                                     _ind_s_util_finemesh_cached_y_,
+                                     _s_util_finemesh_cached_o_,
+                                     _s_util_finemesh_cached_y_):
 
                 # if _is_o_:
                 #     ans[0], ans[1], _num_cached_, an_tmp, kapn_tmp, val_tmp, u_tmp =\
@@ -1775,8 +1788,11 @@ class Economy:
 
 
         @nb.jit(nopython = True) 
-        def _inner_loop_s_with_range_(assigned_indexes, _EV_, _vs_an_, _vs_kapn_, _vsn_, _vs_util_, _num_cached_, _is_o_):
-
+        def _inner_loop_s_with_range_(assigned_indexes, _EV_, _vs_an_, _vs_kapn_, _vsn_, _vs_util_, _num_cached_, _is_o_
+                                     _ind_s_util_finemesh_cached_o_,
+                                     _ind_s_util_finemesh_cached_y_,
+                                     _s_util_finemesh_cached_o_,
+                                     _s_util_finemesh_cached_y_):
 
         #     for istate in range(num_s):
         #         for ia in range(num_a):
@@ -1799,13 +1815,18 @@ class Economy:
                 val_tmp = -3.0
                 u_tmp = -3.0
 
-                an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_ = _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_, _is_o_)#, an_tmp, kapn_tmp, val_tmp, u_tmp)
+                an_tmp, kapn_tmp, val_tmp, u_tmp, _num_cached_ =\
+                    _inner_inner_loop_s_par_(ipar_loop, _EV_, _num_cached_, _is_o_
+                                             _ind_s_util_finemesh_cached_o_,
+                                             _ind_s_util_finemesh_cached_y_,
+                                             _s_util_finemesh_cached_o_,
+                                             _s_util_finemesh_cached_y_):
 
+            
                 _vs_an_[ind] = an_tmp
                 _vs_kapn_[ind] = kapn_tmp
                 _vsn_[ind] = val_tmp
                 _vs_util_[ind] = u_tmp
-
 
 
                 ind = ind+1
@@ -2235,12 +2256,15 @@ class Economy:
             comm.Bcast([bEV_os, MPI.DOUBLE])            
 
 
+
+            
             ###yc-loop begins####            	;
             comm.Barrier()
             if rank == 0:
                 tyc1 = time.time()
 
-            _inner_loop_c_with_range_(assigned_state_range, bEV_yc, v_yc_an_tmp, vn_yc_tmp, v_yc_util_tmp, _is_o_ = 0) #_is_o_ = False
+            _inner_loop_c_with_range_(assigned_state_range, bEV_yc, v_yc_an_tmp, vn_yc_tmp, v_yc_util_tmp, _is_o_ = 0,
+                        ind_s_util_finemesh_cached_o, ind_s_util_finemesh_cached_y, s_util_finemesh_cached_o, s_util_finemesh_cached_y) #_is_o_ = False
 
             comm.Barrier()
             if rank == 0:
@@ -2248,12 +2272,13 @@ class Economy:
                 print('time for c = {:f}'.format(tyc2 - tyc1), end = ', ')
             ###yc-loop ends####
 
-            ###oc-loop begins####            	;
+            ###oc-loop begins####            	
             comm.Barrier()
             if rank == 0:
                 toc1 = time.time()
 
-            _inner_loop_c_with_range_(assigned_state_range, bEV_oc, v_oc_an_tmp, vn_oc_tmp, v_oc_util_tmp, _is_o_ = 1) #_is_o_ = True
+            _inner_loop_c_with_range_(assigned_state_range, bEV_oc, v_oc_an_tmp, vn_oc_tmp, v_oc_util_tmp, _is_o_ = 1,
+                        ind_s_util_finemesh_cached_o, ind_s_util_finemesh_cached_y, s_util_finemesh_cached_o, s_util_finemesh_cached_y) #_is_o_ = True
 
             comm.Barrier()
             if rank == 0:
@@ -2267,6 +2292,9 @@ class Economy:
             if rank == 0:
                 tys1 = time.time()
 
+
+
+                
 
             num_cached_y = _inner_loop_s_with_range_(assigned_state_range, bEV_ys, v_ys_an_tmp ,v_ys_kapn_tmp, vn_ys_tmp, v_ys_util_tmp, num_cached_y, _is_o_ = 0) 
 
@@ -2894,7 +2922,7 @@ class Economy:
 
                 for t in range(1, sim_time):
 
-                #if reborn
+                    #if reborn
                     if data_is_o_[i, t] and not data_is_o_[i, t+1]:
                         data_kap_bornwith_[i, t] = data_kap_[i, t]
                     else:
@@ -3769,7 +3797,7 @@ class Economy:
 
 
         @nb.jit(nopython = True, parallel = True)
-        def calc_all(data_a, data_kap0_, data_i_s_, data_is_c_, data_is_o_,
+        def calc_all(data_a_, data_kap_, data_kap0_, data_i_s_, data_is_c_, data_is_o_,
                      data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_, data_hy_, data_hkap_, data_h_, data_x_, data_ks_, data_ys_, data_ns_, data_i_tax_bracket_):
 
             for i in nb.prange(num_total_pop):
@@ -3825,6 +3853,7 @@ class Economy:
                     # 17: i_bracket
                     # 18: taub[] or taun[]
                     # 19: psib[] or psin[] + is_o*trans_retire
+                    # 20: is_old
             
 
                     if is_c:
@@ -3863,7 +3892,7 @@ class Economy:
         data_i_tax_bracket = np.zeros(data_a.shape)
 
         #note that this does not store some impolied values,,,, say div or value of sweat equity
-        calc_all(data_a, data_kap0_, data_i_s_, data_is_c_, data_is_o_, ##input
+        calc_all(data_a, data_kap, data_kap0, data_i_s, data_is_c, data_is_o, ##input
                  data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_hy, data_hkap, data_h, data_x, data_ks, data_ys, data_ns, data_i_tax_bracket ##output
             )
 
@@ -3943,28 +3972,44 @@ class Economy:
         if rank == 0:
             print('Saving results under ', dir_path_save, '...')
 
+            
+            np.save(dir_path_save + 'agrid', self.agrid)
+            np.save(dir_path_save + 'kapgrid', self.kapgrid)
+            np.save(dir_path_save + 'zgrid', self.zgrid)
+            np.save(dir_path_save + 'epsgrid', self.epsgrid)
 
+            np.save(dir_path_save + 'prob', self.prob)
+            np.save(dir_path_save + 'is_to_iz', self.is_to_iz)
+            np.save(dir_path_save + 'is_to_ieps', self.is_to_ieps)                        
+
+            np.save(dir_path_save + 'taub', self.taub)
+            np.save(dir_path_save + 'psib', self.psib)
+            np.save(dir_path_save + 'bbracket', self.bbracket)                                                             
+
+            np.save(dir_path_save + 'taun', self.taun)
+            np.save(dir_path_save + 'psin', self.psin)
+            np.save(dir_path_save + 'nbracket', self.nbracket)                                                             
             
             np.save(dir_path_save + 'data_a', self.data_a[:, -100:])
             np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:])
-            np.save(dir_path_save + 'data_kap0', self.data_kap0[:, -100:])
-            np.save(dir_path_save + 'data_kap_bornwith', self.data_kap_bornwith[:, -100:])                        
+            np.save(dir_path_save + 'data_kap0', self.data_kap0[:, -100:])            
             np.save(dir_path_save + 'data_i_s', self.data_i_s[:, -100:])
             np.save(dir_path_save + 'data_is_c', self.data_is_c[:, -100:])
-            np.save(dir_path_save + 'data_is_o', self.data_is_o[:, -101:])
             np.save(dir_path_save + 'data_u', self.data_u[:, -100:])
             np.save(dir_path_save + 'data_cc', self.data_cc[:, -100:])
             np.save(dir_path_save + 'data_cs', self.data_cs[:, -100:])
             np.save(dir_path_save + 'data_cagg', self.data_cagg[:, -100:])
             np.save(dir_path_save + 'data_l', self.data_l[:, -100:])
             np.save(dir_path_save + 'data_n', self.data_n[:, -100:])
-            np.save(dir_path_save + 'data_mx', self.data_mx[:, -100:])
-            np.save(dir_path_save + 'data_my', self.data_my[:, -100:])
+            np.save(dir_path_save + 'data_hy', self.data_hy[:, -100:])
+            np.save(dir_path_save + 'data_hkap', self.data_hkap[:, -100:])
+            np.save(dir_path_save + 'data_h', self.data_h[:, -100:])            
             np.save(dir_path_save + 'data_x', self.data_x[:, -100:])
             np.save(dir_path_save + 'data_ks', self.data_ks[:, -100:])
             np.save(dir_path_save + 'data_ys', self.data_ys[:, -100:])
-            np.save(dir_path_save + 'data_ss', self.data_ss)
-
+            np.save(dir_path_save + 'data_ns', self.data_ns[:, -100:])
+            np.save(dir_path_save + 'data_i_tax_bracket', self.data_i_tax_bracket[:, -100:])
+            
             np.save(dir_path_save + 'v_yc_an', self.v_yc_an)
             np.save(dir_path_save + 'v_oc_an', self.v_oc_an)            
             np.save(dir_path_save + 'v_ys_an', self.v_ys_an)
@@ -3976,13 +4021,13 @@ class Economy:
             np.save(dir_path_save + 'vn_ys', self.vn_ys)
             np.save(dir_path_save + 'vn_os', self.vn_os)            
 
-            np.save(dir_path_save + 'sweat_div', self.sweat_div)
-            np.save(dir_path_save + 'sweat_val_dyna', self.sweat_val_dyna)
-            np.save(dir_path_save + 'sweat_val_life', self.sweat_val_life)
+            # np.save(dir_path_save + 'sweat_div', self.sweat_div)
+            # np.save(dir_path_save + 'sweat_val_dyna', self.sweat_val_dyna)
+            # np.save(dir_path_save + 'sweat_val_life', self.sweat_val_life)
 
-            np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
-            np.save(dir_path_save + 'data_val_sweat_dyna', self.data_val_sweat_dyna[:, -100:])
-            np.save(dir_path_save + 'data_val_sweat_life', self.data_val_sweat_life[:, -100:])            
+            # np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
+            # np.save(dir_path_save + 'data_val_sweat_dyna', self.data_val_sweat_dyna[:, -100:])
+            # np.save(dir_path_save + 'data_val_sweat_life', self.data_val_sweat_life[:, -100:])            
 
             np.save(dir_path_save + 's_age', self.s_age)
             np.save(dir_path_save + 'c_age', self.c_age)
