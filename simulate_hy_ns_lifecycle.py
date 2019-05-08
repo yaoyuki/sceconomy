@@ -57,11 +57,12 @@ if __name__ == '__main__':
     # additional info
     
     agrid2 = curvedspace(0., 100., 2., 40)
-    kapgrid2 = curvedspace(0., 1.5, 2., 30)
+    kapgrid2 = curvedspace(0., 2.0, 2., 30)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0    
     
 
-    p_, rc_, ome_, varpi_ = 1.4511445940193992, 0.062, 0.4627459750781605, 0.6056020599342775
+    # p_, rc_, ome_, varpi_ = 1.4511445940193992, 0.062, 0.4627459750781605, 0.6056020599342775
+    p_, rc_, ome_, varpi_ = 1.0, 0.062, 0.4627459750781605, 0.6056020599342775
 
     
     

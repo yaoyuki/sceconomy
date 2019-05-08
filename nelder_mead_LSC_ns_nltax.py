@@ -57,9 +57,9 @@ xnb = xnb_p_gdp*GDP_implied
 g = g_p_gdp*GDP_implied
     
 
-taup = 0.20
-#taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
-#psib = np.array([0.12784033, 0.14047993, 0.15,      0.20207513, 0.30456117, 0.37657174])
+# taup = 0.20
+taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+psib = np.array([0.12784033, 0.14047993, 0.15,      0.20207513, 0.30456117, 0.37657174])
 
 
 
@@ -83,13 +83,13 @@ def target(prices):
 
 
     econ = Economy(path_to_data_i_s = path_to_data_i_s, prob = prob, zgrid = zgrid2, agrid = agrid2,
-                   g = g, yn = ynb, xnb = xnb,
+                   g = g, yn = ynb, xnb = xnb, chi = 0.25,
                    scaling_n = GDP_implied, scaling_b = GDP_implied,
+                   taub = taub, psib = psib,
+                   #taup = taup,                                          
                    alpha = alpha, theta = theta,
-                   # taub = taub, psib = psib,#
-                   taup = taup,                                          
                    ome = ome_, nu = nu_)
-
+                   # 
 
     econ.set_prices(p = p_, rc = rc_)
     

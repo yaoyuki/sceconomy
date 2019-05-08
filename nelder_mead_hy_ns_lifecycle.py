@@ -17,7 +17,7 @@ varpi_init = float(args[4])
 ome_ = ome_init
 varpi_ = varpi_init
 
-num_core = args[5]
+num_core = int(args[5])
 
 print('the code is running with ', num_core, 'cores...')
 # prices_init = [p_init, rc_init, ome_init, varpi_init]
@@ -86,7 +86,7 @@ def target(prices):
     t0 = time.time()
 
     #result = subprocess.run(['mpiexec', '-n', num_core, '--machinefile=node.hf' ,'python', 'SCEconomy_s_emp.py'], stdout=subprocess.PIPE)
-    result = subprocess.run(['mpiexec', '-n', num_core ,'python', 'SCEconomy_hy_ns_lifecycle.py'], stdout=subprocess.PIPE)
+    result = subprocess.run(['mpiexec', '-n', str(num_core) ,'python', 'SCEconomy_hy_ns_lifecycle.py'], stdout=subprocess.PIPE)
     t1 = time.time()
     
 
@@ -162,7 +162,7 @@ if __name__ == '__main__':
     data_i_s = data_i_s[:, 2000:]
     np.save(path_to_data_i_s + '.npy' , data_i_s)
     split_shock(path_to_data_i_s, 100_000, num_core)
-    del data_rand, data_i_s    
+    del data_rand
     
 
     np.random.seed(2)
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     data_is_o = data_is_o[:, 2000:]
     np.save(path_to_data_is_o + '.npy' , data_is_o)
     split_shock(path_to_data_is_o, 100_000, num_core)
-    del data_rand, data_is_o
+    del data_rand
 
     ### end generate shocks ###
     
@@ -189,6 +189,8 @@ if __name__ == '__main__':
     # f.writelines('yc_init = ' +  str(yc_init) + '\n')
     # f.writelines('GDP_implied = ' +  str(GDP_implied) + '\n')    
     f.close()
+
+    del data_i_s, data_is_o
 
 
     nm_result = None
