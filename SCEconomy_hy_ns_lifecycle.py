@@ -2213,7 +2213,7 @@ class Economy:
 
             if rank == 0:
                 it = it + 1
-                print(f'it = {it}...')
+                print(f'it = {it}', end = ', ')
 
                 #for c-corp guys, it is always true that kapn = la*kap
                 bEV_yc[:] = prob_yo[0,0]*bh*((v_y_max**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s)) +\
@@ -2270,7 +2270,7 @@ class Economy:
             comm.Barrier()
             if rank == 0:
                 tyc2 = time.time()
-                print('time for c = {:f}'.format(tyc2 - tyc1), end = ', ')
+                print('time for yc = {:f}'.format(tyc2 - tyc1), end = ', ')
             ###yc-loop ends####
 
             ###oc-loop begins####            	
@@ -2286,7 +2286,7 @@ class Economy:
             comm.Barrier()
             if rank == 0:
                 toc2 = time.time()
-                print('time for c = {:f}'.format(toc2 - toc1), end = ', ')
+                print('time for oc = {:f}'.format(toc2 - toc1), end = ', ')
             ###oc-loop ends####
 
             
@@ -2296,15 +2296,12 @@ class Economy:
                 tys1 = time.time()
 
 
-
-                
-
             num_cached_y = _inner_loop_s_with_range_(assigned_state_range, bEV_ys, v_ys_an_tmp ,v_ys_kapn_tmp, vn_ys_tmp, v_ys_util_tmp, num_cached_y, 0, ind_s_util_finemesh_cached_o, ind_s_util_finemesh_cached_y, s_util_finemesh_cached_o, s_util_finemesh_cached_y) #_is_o_ = False) 
 
             comm.Barrier()
             if rank == 0:
                 tys2 = time.time()
-                print('time for s = {:f}'.format(tys2 - tys1), end = ', ')
+                print('time for ys = {:f}'.format(tys2 - tys1), end = ', ')
             ###ys-loop ends####
 
             ###os-loop begins####
@@ -4086,6 +4083,10 @@ if __name__ == '__main__':
     econ = import_econ()
 
     econ.get_policy()
+
+    if rank == 0:
+        econ.print_parameters()
+                    
     econ.simulate_model()
 
     export_econ(econ)
