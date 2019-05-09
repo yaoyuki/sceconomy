@@ -2192,8 +2192,8 @@ class Economy:
         v_os_util = np.ones((num_a, num_kap, num_s))*100.0
         
 
-        max_iter = 20
-        max_howard_iter = 200
+        max_iter = 50
+        max_howard_iter = 50
         tol = 1.0e-5
         dist = 10000.0
         dist_sub = 10000.0
