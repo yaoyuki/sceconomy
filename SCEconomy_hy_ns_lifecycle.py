@@ -25,17 +25,13 @@ size = comm.Get_size() #get the number of processes
 
 import time
 
-
-
 # %matplotlib inline
 # import matplotlib as mpl
 # mpl.rc("savefig",dpi=100)
 # from matplotlib import pyplot as plt
 
-
-
-
 class Economy:
+    
     """
     class Economy stores all the economic parameters, prices, computational parameters, 
     grids information for a, kappa, eps, z, and shock transition matrix
@@ -77,7 +73,6 @@ class Economy:
                  prob_yo = None, #young-old transition matrix
                  is_to_iz = None,
                  is_to_ieps = None,
-                 amin = None,
                  num_suba_inner = None,
                  num_subkap_inner = None,
                  sim_time = None,
@@ -143,7 +138,6 @@ class Economy:
         if prob_yo is not None: self.prob_yo = prob_yo
         if is_to_iz is not None: self.is_to_iz = is_to_iz
         if is_to_ieps is not None: self.is_to_ieps = is_to_ieps
-        if amin is not None: self.amin = amin
         if num_suba_inner is not None: self.num_suba_inner = num_suba_inner
         if num_subkap_inner is not None: self.num_subkap_inner = num_subkap_inner
         if sim_time is not None: self.sim_time = sim_time
@@ -174,6 +168,7 @@ class Economy:
         self.__set_implied_parameters__()
     
     def __set_default_parameters__(self):
+
         """
         Load the baseline value
         """
@@ -198,11 +193,8 @@ class Economy:
         self.rho      = 0.01
         self.tauc     = 0.06
         self.taud     = 0.14
-        self.taum     = 0.20
-        self.taun     = 0.40
         self.taup     = 0.30
         self.theta    = 0.41
-        # self.tran     = 0.03 #deleted for now. 
         self.trans_retire = 0.48 #added retirement benefit
         self.veps     = 0.4
         self.vthet    = 0.4
@@ -224,14 +216,14 @@ class Economy:
         self.taub = np.array([.137, .185, .202, .238, .266, .280])
         self.bbracket = np.array([0.150, 0.319, 0.824, 2.085, 2.930])
         self.scaling_b = 1.0
-        self.psib_fixed = 0.15
+        self.psib_fixed = 0.03 #0.15
         self.bbracket_fixed = 2
         self.psib = None 
 
         self.taun = np.array([.2930, .3170, .3240, .3430, .3900, .4050, .4080, .4190])
         self.nbracket = np.array([.1760, .2196, .2710, .4432, 0.6001, 1.4566, 2.7825])
         self.scaling_n = 1.0
-        self.psin_fixed = 0.15
+        self.psin_fixed = 0.03 #0.15
         self.nbracket_fixed = 5
         self.psin = None         
         
@@ -262,7 +254,6 @@ class Economy:
         self.is_to_ieps = np.load('./input_data/is_to_ieps.npy')
         
         #computational parameters
-        self.amin      = 0.0
         self.num_suba_inner = 20
         self.num_subkap_inner = 30
 
@@ -358,56 +349,22 @@ class Economy:
         self.xi7 = 1./ self.denom #changed
 
         
-        ### to be updated ###
-        self.xi8 = ((self.alpha * self.p)/(self.rs + self.delk))**(1./(1.-self.alpha))        
+
+        self.xi8 = ((self.alpha*self.p)/(self.rs + self.delk))**(1./(1.-self.alpha))        
         self.xi11 = self.xi7 #modified
         self.xi10 = (self.p*self.xi8**self.alpha - (self.rs + self.delk)*self.xi8)/self.denom
-        self.xi13 = (self.nu*self.varpi*(self.rs + self.delk)/(self.alpha * self.w))**(1./(1.- self.upsilon)) #same
-        self.xi14 = self.w*self.xi13*(self.xi8**(1./(1.-self.upsilon)))/self.denom #updated
+        self.xi13 = (self.nu*self.varpi*(self.rs + self.delk)/(self.alpha * self.w))**(1./(1.- self.upsilon))
+        self.xi14 = self.w*self.xi13*(self.xi8**(1./(1.-self.upsilon)))/self.denom
         self.xi9 = (self.eta*self.ome*self.nu*(1.-self.varpi)*self.p*self.xi8**self.alpha)\
                    /((1.-self.eta)*(1.+self.tauc)*self.xi2**self.rho)
         self.xi12 = (self.vthet/self.veps)*self.nu*(1.-self.varpi)*self.p*self.xi8**self.alpha
-        ### end to be updated ###
-        
-
-        # self.xi1 = ((self.ome*self.p)/(1. - self.ome))**(1./(self.rho-1.0))
-        # self.xi2 = (self.ome + (1. - self.ome) * self.xi1**self.rho)**(1./self.rho)
-        # self.xi3 = self.eta/(1. - self.eta) * self.ome * (1. - self.taun) / (1. + self.tauc) * self.w / self.xi2**self.rho
-        # self.xi8 = (self.alpha*self.p/(self.rs + self.delk))**(1./(1. - self.alpha))
-        # self.xi9 = self.eta / (1. - self.eta) * self.ome * self.p * self.nu * (1. - self.taum) / (1. + self.tauc) * self.xi8**self.alpha / self.xi2**self.rho
-
-        # self.denom = (1. + self.p*self.xi1)*(1. + self.tauc)
-        # self.xi4 = (1. + self.rbar) / self.denom
-        # self.xi5 = (1. + self.grate) / self.denom
-
-
-        # self.xi6 = (self.yn - self.xnb) / self.denom
-
-        # # needs to update
-        # # self.xi6_y = (self.tran + self.yn - self.xnb) / self.denom
-        # # self.xi6_o = (self.tran + self.trans_retire + self.yn - self.xnb) / self.denom
-
-        # self.xi7 = 1. / self.denom
-        # # self.xi7 = (1. - self.taun)*self.w/self.denom
-
-
-        # self.xi11 = (1. - self.taum) / self.denom
-        # self.xi10 = (self.p*self.xi8**self.alpha - (self.rs + self.delk)*self.xi8)*(1. - self.taum)/self.denom
-        # self.xi12 = self.vthet/self.veps*self.nu*self.p*self.xi8**self.alpha
-
-        # self.xi13 = (self.nu*self.varpi*(self.rs + self.delk)/(self.alpha * self.w))**(1./(1.- self.upsilon)) #same
-        # self.xi14 = self.w*self.xi13*(self.xi8**(1./(1.-self.upsilon)))/self.denom #updated
-        
-        
-        
 
     def print_parameters(self):
-        
+
         print('')
         print('Parameters')
         print('alpha = ', self.alpha)
         print('beta = ', self.beta)
-
         print('chi = ', self.chi)
         print('delk = ', self.delk)
         print('delkap = ', self.delkap)
@@ -415,9 +372,12 @@ class Economy:
         print('g (govt spending) = ', self.g)
         print('grate (growth rate of the economy) = ', self.grate)
         print('la = ', self.la)
+        print('mu = ', self.mu)
         print('ome = ', self.ome)
+        print('upsilon = ', self.upsilon)        
         print('phi = ', self.phi)
         print('rho = ', self.rho)
+        print('varpi = ', self.varpi)
         print('tauc = ', self.tauc)
         print('taud = ', self.taud)
         print('taup = ', self.taup)
@@ -429,6 +389,23 @@ class Economy:
         print('zeta = ', self.zeta)
         print('A = ', self.A)
 
+        print('')
+        print('nonlinear tax function')
+
+
+        for ib, tmp in enumerate(self.taub):
+            print(f'taub{ib} = {tmp}')
+        for ib, tmp in enumerate(self.psib):
+            print(f'psib{ib} = {tmp}')            
+        for ib, tmp in enumerate(self.bbracket):
+            print(f'bbracket{ib} = {tmp}')
+        for i, tmp in enumerate(self.taun):
+            print(f'taun{i} = {tmp}')
+        for i, tmp in enumerate(self.psin):
+            print(f'psin{i} = {tmp}')            
+        for i, tmp in enumerate(self.nbracket):
+            print(f'nbracket{i} = {tmp}')
+        
 
         print('')
         print('Parameters specific to a lifecycle model')
@@ -436,7 +413,8 @@ class Economy:
         print('la_tilde = ', self.la_tilde) #added
         print('tau_wo = ', self.tau_wo) #added
         print('tau_bo = ', self.tau_bo) #added
-        print('trans_retire = ', self.trans_retire) #added        
+        print('trans_retire = ', self.trans_retire)
+        
         print(f'prob_yo =  {self.prob_yo[0,0]}, {self.prob_yo[0,1]}, {self.prob_yo[1,0]}, {self.prob_yo[1,1]}.') #added
         print('statinary dist of prob_yo = ', self.prob_yo_st) #added
         print('')
@@ -485,7 +463,6 @@ class Economy:
         print('')
         print('Computational Parameters')
 
-        print('amin = ', self.amin)
         print('num_suba_inner = ', self.num_suba_inner)
         print('num_subkap_inner = ', self.num_subkap_inner)
         print('sim_time = ', self.sim_time)
@@ -567,7 +544,6 @@ class Economy:
         is_to_iz = self.is_to_iz
         is_to_ieps = self.is_to_ieps
 
-        amin = self.amin
         num_suba_inner = self.num_suba_inner
         num_subkap_inne = self.num_subkap_inner
 
@@ -620,7 +596,7 @@ class Economy:
             n = -1.0
 
 
-            #this is a bit dangerous since is_o can be other than 0 and 1
+            #here, I directly modify epsilon
             if is_o:
                 eps = tau_wo*eps #replace eps with tau_wo*eps
 
@@ -642,11 +618,13 @@ class Economy:
 
             obj_i = 0.
             obj_i1 = 0.
+
+            
             #when solution is at a kink
             flag = True
             flag2 = False
             
-            if i == len(taun) - 1 and i != j:
+            if i == len(taun) - 1 and i != j: #if i is not identified above
                 flag = False
                 flag2 = True
 
@@ -751,7 +729,6 @@ class Economy:
         is_to_iz = self.is_to_iz
         is_to_ieps = self.is_to_ieps
 
-        amin = self.amin
         num_suba_inner = self.num_suba_inner
         num_subkap_inne = self.num_subkap_inner
 
@@ -789,8 +766,6 @@ class Economy:
 
         
         util = self.generate_util()
-
-
 
         
         @nb.jit(nopython = True)
@@ -834,7 +809,7 @@ class Economy:
                 alp2 = vthet*(xi4*a - xi5*an + xi6 + xi7*(psib + is_o*trans_retire))/(1.-taub)/veps/ ((1.+grate)*kapn/zeta)**(1./vthet) 
                 alp3 = vthet/(veps*((1. + p*xi1)*(1. + tauc))) #updated
 
-                hk_min = 0.0
+                hk_min = 1.0e-10 #used to be 0., but hk_min**(-1) = 0.**(-1.) is not ok in python grammer. in numba, it works though.
                 hk_max = 1.0
                 
 
@@ -864,6 +839,7 @@ class Economy:
                 tol = 1.0e-12
                 maxit = 200
                 val_m = 10000.
+                diff = 1.0e23
 
                 while it < maxit:
                     it = it + 1
@@ -885,7 +861,7 @@ class Economy:
                         break
 
                 #convergence check
-                if it == maxit:
+                if it == maxit or diff >= tol:
                     print('err: bisection method for hmax did not converge.')
                     print('val_m = ', val_m)
                     print('hk = ', hk)                    
@@ -940,7 +916,7 @@ class Economy:
             elif kap > 0.0 and kapn > (1. - delkap)/(1. + grate) * kap:
 
                 alp1 = xi9 
-                alp2 = (xi4*a - xi5*an + xi6 + xi7*(psib+is_o*trans_retire))/(1.-taub)/((z*kap**phi)**(1./(1.- alpha))) #updated
+                alp2 = (xi4*a - xi5*an + xi6 + xi7*(psib+is_o*trans_retire))/(1.-taub)/((z*kap**phi)**(1./(1.-alpha))) #updated
                 alp3 = xi10 
                 alp5 = (((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))/(xi12 * (z*kap**phi)**(1./(1.-alpha))))**(vthet/(vthet + veps))
                 alp4 = xi11 * xi12 * alp5
@@ -992,7 +968,7 @@ class Economy:
                         break
 
                 #convergence check
-                if it == maxit:
+                if it == maxit or dist >= tol:
                     print('err: bisection method for hmax did not converge.')
                     print('val_m = ', val_m)
                     print('mymax = ', hmax)
@@ -1001,7 +977,7 @@ class Economy:
 
 
                 ####bisection start
-                #setting h = h_lb makes x = inf, problematic. no warning will show up.
+                #setting h = h_lb makes x = inf, which is problematic. no warning will show up in numba.
                 #in the end, x = inf makes bizinc = -inf, so we correctly infer the lowest bracket for now.
                 h_lb = h_lbar + 1.0e-10 
                 
@@ -1012,6 +988,7 @@ class Economy:
                 x_lb = ((((1. + grate)*kapn - (1. - delkap)*kap)/zeta)**(1./vthet))*hk_lb**(-veps/vthet)
                 ys_lb = (xi8**alpha)*(z*(kap**phi)*(h_lb**nu))**(1./(1.-alpha))
                 ks_lb = xi8*(z*(kap**phi)*(h_lb**nu))**(1./(1.-alpha))
+                
                 if h_lb > 0.0:
                     ns_lb = xi13*(ks_lb/(h_lb**upsilon))**(1./(1.-upsilon))
                 else:
@@ -1238,7 +1215,7 @@ class Economy:
                     
                     cc = xi4*a - xi5*an + xi6 + xi7*(psib[ib] + is_o*trans_retire) - xi11*(1.-taub[ib])*x \
                         + xi10*(1.-taub[ib])*(z*kap**phi)**(1./(1.-alpha))*(h**(nu/(1.-alpha))) \
-                        - xi14*(1.-taub[ib])*(z*kap**phi)**(1./((1. - alpha)*(1.-upsilon)))*h**((nu/(1.-alpha) - upsilon)*(1./(1.-upsilon)))
+                        - xi14*(1.-taub[ib])*(z*kap**phi)**(1./((1.-alpha)*(1.-upsilon)))*h**((nu/(1.-alpha)-upsilon)*(1./(1.-upsilon)))
 
                     cs = xi1 * cc
                     cagg = xi2 * cc
@@ -3064,11 +3041,19 @@ class Economy:
         mom7 = None
 
         if rank == 0:
-            print('amax = {}'.format(np.max(data_a)))
-            print('amin = {}'.format(np.min(data_a)))
-            print('kapmax = {}'.format(np.max(data_kap)))
-            print('kapmin = {}'.format(np.min(data_kap)))
+            print('max of a in simulation = {}'.format(np.max(data_a)))
+            print('min of a in simulation = {}'.format(np.min(data_a)))
+            print('max of kap in simulation = {}'.format(np.max(data_kap)))
+            print('min of kap in simulation = {}'.format(np.min(data_kap)))
 
+            print('')
+            print(f'min of agrid = {agrid[0]}')
+            print(f'max of agrid = {agrid[-1]}')            
+            print(f'min of kapgrid = {kapgrid[0]}')
+            print(f'max of kapgrid = {kapgrid[-1]}')
+            print('')
+
+            
             t = -1
 
             # data_ss
