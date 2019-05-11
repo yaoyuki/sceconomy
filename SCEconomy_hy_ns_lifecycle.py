@@ -524,11 +524,14 @@ class Economy:
         rho = self.rho
         tauc = self.tauc
         taud = self.taud
-        taum = self.taum
-        taun = self.taun
+        
         taup = self.taup
         theta = self.theta
-        veps = self.veps
+
+        taun = self.taun
+        psin = self.psin
+        nbracket = self.nbracket
+        
         vthet = self.vthet
         xnb = self.xnb
         yn = self.yn
@@ -545,7 +548,7 @@ class Economy:
         is_to_ieps = self.is_to_ieps
 
         num_suba_inner = self.num_suba_inner
-        num_subkap_inne = self.num_subkap_inner
+        num_subkap_inner = self.num_subkap_inner
 
         num_a = self.num_a
         num_kap = self.num_kap
