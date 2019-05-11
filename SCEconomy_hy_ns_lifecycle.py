@@ -185,7 +185,7 @@ class Economy:
         self.grate    = 0.02 #gamma, growth rate for detrending
         self.la       = 0.5 #lambda
         self.la_tilde = 0.1 #added lambda_tilde
-        self.tau_wo   = 0.0 #added
+        self.tau_wo   = 0.1 #added
         self.tau_bo   = 0.9 #added
         self.mu       = 1.5 
         self.ome      = 0.6 #omega
