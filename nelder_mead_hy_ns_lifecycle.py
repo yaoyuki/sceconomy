@@ -81,7 +81,6 @@ def target(prices):
     econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
                    scaling_n = 1.82, scaling_b = 1.82,
-                   ome = ome_, varpi = varpi_
     )
 
 
