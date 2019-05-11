@@ -184,9 +184,9 @@ class Economy:
         self.g        = 0.234 #govt spending
         self.grate    = 0.02 #gamma, growth rate for detrending
         self.la       = 0.5 #lambda
-        self.la_tilde = 0.5 #added lambda_tilde
-        self.tau_wo   = 0.5 #added
-        self.tau_bo   = 0.5 #added
+        self.la_tilde = 0.1 #added lambda_tilde
+        self.tau_wo   = 0.0 #added
+        self.tau_bo   = 0.9 #added
         self.mu       = 1.5 
         self.ome      = 0.6 #omega
         self.phi      = 0.15 
@@ -3067,7 +3067,7 @@ class Economy:
             # 2: kap
             # 3: an
             # 4: kapn
-            # 5: eps or z
+            # 5: eps or z (after adjusting tau_wo and tau_bo)
             # 6: cc
             # 7: cs
             # 8: cagg

@@ -20,8 +20,8 @@ varpi_ = varpi_init
 num_core = int(args[5])
 
 print('the code is running with ', num_core, 'cores...')
-# prices_init = [p_init, rc_init, ome_init, varpi_init]
-prices_init = [p_init, rc_init]
+prices_init = [p_init, rc_init, ome_init, varpi_init]
+#prices_init = [p_init, rc_init]
 
 
 nd_log_file = './log/log.txt'
@@ -57,14 +57,18 @@ kapgrid2 = curvedspace(0., 2., 2., 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 prob = np.load('./DeBacker/prob_epsz.npy') #DeBacker
 
+pure_sweat_share = 0.10 #target
+s_emp_share = 0.30 #target
+
+
 def target(prices):
     global dist_min
     global econ_save
     
     p_ = prices[0]
     rc_ = prices[1]
-    # ome_ = prices[2]
-    # varpi_ = prices[3]
+    ome_ = prices[2]
+    varpi_ = prices[3]
     
     
     # print('computing for the case w = {:f}, p = {:f}, rc = {:f}'.format(w_, p_, rc_), end = ', ')
@@ -75,7 +79,9 @@ def target(prices):
     #econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.6, varpi = 0.1)
 
     econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob,
-                   ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o
+                   ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
+                   scaling_n = 1.82, scaling_b = 1.82,
+                   ome = ome_, varpi = varpi_
     )
 
 
@@ -119,16 +125,16 @@ def target(prices):
         
     
 
-    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0) #mom3 should be missing.
-    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0) #mom3 should be missing.
+    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0) #mom3 should be missing.
+    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0) #mom3 should be missing.
     
-    #if p != p_ or  rc != rc_ or ome != ome_ or varpi != varpi_:
-    if p != p_ or  rc != rc_:
+    if p != p_ or  rc != rc_ or ome != ome_ or varpi != varpi_:
+    #if p != p_ or  rc != rc_:
         print('err: input prices and output prices do not coincide.')
         print('p = ', p, ', p_ = ', p_)
         print('rc = ', rc, ', rc_ = ', rc_)
-        # print('ome = ', ome, ', ome_ = ', ome_)
-        # print('varpi = ', varpi, ', varpi_ = ', varpi_)
+        print('ome = ', ome, ', ome_ = ', ome_)
+        print('varpi = ', varpi, ', varpi_ = ', varpi_)
 
 
         
