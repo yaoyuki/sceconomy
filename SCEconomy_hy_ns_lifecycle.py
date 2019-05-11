@@ -954,6 +954,8 @@ class Economy:
                 tol = 1.0e-12
                 maxit = 200
                 val_m = 10000.
+
+                diff = 1.0e23
                 
                 while it < maxit:
                     it = it + 1
@@ -971,7 +973,7 @@ class Economy:
                         break
 
                 #convergence check
-                if it == maxit or dist >= tol:
+                if it == maxit or diff >= tol:
                     print('err: bisection method for hmax did not converge.')
                     print('val_m = ', val_m)
                     print('mymax = ', hmax)
