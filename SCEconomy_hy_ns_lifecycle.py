@@ -174,7 +174,7 @@ class Economy:
         """
         
         self.__is_price_set__ = False
-        self.alpha    = 0.4
+        self.alpha    = 0.3
         self.beta     = 0.98
         self.iota     = 1.0 #added
         self.chi      = 0.0 #param for borrowing constarint
@@ -183,7 +183,7 @@ class Economy:
         self.eta      = 0.42
         self.g        = 0.234 #govt spending
         self.grate    = 0.02 #gamma, growth rate for detrending
-        self.la       = 0.5 #lambda
+        self.la       = 0.7 #lambda
         self.la_tilde = 0.1 #added lambda_tilde
         self.tau_wo   = 0.1 #added
         self.tau_bo   = 0.9 #added
