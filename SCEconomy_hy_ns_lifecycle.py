@@ -3312,8 +3312,9 @@ class Economy:
             print('  Deterioraton of kapn due to succeession = {}'.format(np.mean(data_kap0[:,t]) - np.mean(data_kap[:,t])))
             print('  Deterioraton of kap  due to succeession = {}'.format(np.mean(data_kap0[:,t-1]) - np.mean(data_kap[:,t-1])))
 
-            print('  Transfer (Non-retire) = {}'.format(E_transfer - ETr))
-            print('  Transfer (retire)     = {}'.format(ETr))
+            print('  Transfer                = {}'.format(E_transfer))
+            print('    Transfer (Non-retire) = {}'.format(E_transfer - ETr))
+            print('    Transfer (retire)     = {}'.format(ETr))
             
 
             print('')
