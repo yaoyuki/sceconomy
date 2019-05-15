@@ -2870,7 +2870,7 @@ class Economy:
         self.data_ss = data_ss
 
 
-        self.calc_moments()
+        # self.calc_moments()
 
         return
 
@@ -4098,5 +4098,6 @@ if __name__ == '__main__':
         econ.print_parameters()
                     
     econ.simulate_model()
+    #econ.calc_age()
 
     export_econ(econ)

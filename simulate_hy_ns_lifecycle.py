@@ -56,15 +56,13 @@ if __name__ == '__main__':
 
     # additional info
     
-    agrid2 = curvedspace(0., 100., 2., 40)
+    agrid2 = curvedspace(0., 200., 2., 40)
     kapgrid2 = curvedspace(0., 2.0, 2., 30)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0    
     
 
     # p_, rc_, ome_, varpi_ = 1.4511445940193992, 0.062, 0.4627459750781605, 0.6056020599342775
-    p_, rc_, ome_, varpi_ = 1.0, 0.062, 0.4627459750781605, 0.6056020599342775
-
-    
+    p_, rc_, ome_, varpi_ = 1.4739842128778278, 0.060648197365324764, 0.46388548260346824, 0.6002410397243539
     
     ###end defining additional parameters#
 
@@ -99,8 +97,10 @@ if __name__ == '__main__':
     
 
     econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob,
-                   ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o
+                   ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
+                   scaling_n = 1.82, scaling_b = 1.82
     )
+    
     econ.set_prices(p = p_, rc = rc_)
     
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
