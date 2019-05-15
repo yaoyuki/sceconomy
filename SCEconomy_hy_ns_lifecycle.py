@@ -3329,6 +3329,11 @@ class Economy:
             if (self.s_age is not None) and (self.c_age is not None):
                 print('')
                 print('Average age/tenure of worker/passthru')
+
+                tmp = self.s_age
+                print('  All   Passthru = {}'.format(tmp[tmp != -1].mean()))
+                tmp = self.c_age
+                print('  All   Worker   = {}'.format(tmp[tmp != -1].mean()))
                 tmp = self.s_age[self.data_is_o[:,t-1]]
                 print('  Old   Passthru = {}'.format(tmp[tmp != -1].mean()))
                 tmp = self.s_age[~self.data_is_o[:,t-1]]            
