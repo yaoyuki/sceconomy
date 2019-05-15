@@ -3284,9 +3284,10 @@ class Economy:
             print('Acquired N years ago:')
 
             for t in range(40):
-                print(' N = ', t, ', with = {:f}'.format((np.mean(np.all(data_is_c[:,-(t+2):-1] == False, axis = 1)) - np.mean(np.all(data_is_c[:,-(t+3):-1] == False, axis = 1)) )/ np.mean(1. - data_ss[:,0]))) 
+                print(' N is ', t, ', with = {:f}'.format((np.mean(np.all(data_is_c[:,-(t+2):-1] == False, axis = 1)) - np.mean(np.all(data_is_c[:,-(t+3):-1] == False, axis = 1)) )/ np.mean(1. - data_ss[:,0]))) 
 
-
+            t = -1
+            
             print('')
             print('Labor Market')
             print('  Labor Supply(En)   = {}'.format(En))
@@ -3322,7 +3323,20 @@ class Economy:
             print('  E(ks)                 = {}'.format(Eks))
             print('  E(ks)/GDP             = {}'.format(Eks/GDP))
             print('  E(nu p ys - w ns)     = {}'.format((nu*p*Eys - w*Ens)))                        
-            print('  E(nu p ys - w ns)/GDP = {}'.format((nu*p*Eys - w*Ens)/GDP))            
+            print('  E(nu p ys - w ns)/GDP = {}'.format((nu*p*Eys - w*Ens)/GDP))
+
+
+            if (self.s_age is not None) and (self.c_age is not None):
+                print('')
+                print('Average age/tenure of worker/passthru')
+                tmp = self.s_age[self.data_is_o[:,t]]
+                print('  Old   Passthru = {}'.format(tmp[tmp != -1].mean()))
+                tmp = self.s_age[~self.data_is_o[:,t]]            
+                print('  Young Passthru = {}'.format(tmp[tmp != -1].mean()))           
+                tmp = self.c_age[self.data_is_o[:,t]]
+                print('  Old   Worker   = {}'.format(tmp[tmp != -1].mean()))
+                tmp = self.c_age[~self.data_is_o[:,t]]            
+                print('  Young Worker   = {}'.format(tmp[tmp != -1].mean()))           
             
             
             # if self.data_val_sweat is not None:
