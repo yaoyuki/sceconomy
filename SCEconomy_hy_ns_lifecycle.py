@@ -3299,7 +3299,7 @@ class Economy:
             print('')
             print('Additional Moments for the Lifecycle version model')
             print('  Frac of Old         = {}'.format(np.mean(data_ss[:,20])))
-            print('  Frac of Old (check) = {}'.format(np.mean(data_is_o[:,t])))
+            print('  Frac of Old (check) = {}'.format(np.mean(data_is_o[:,t-1])))
             #add double check
             print('  Frac of Young who was Young, Old = {}, {} '.format(np.mean( (1.-data_is_o[:,t])*(1.-data_is_o[:,t-1])),
                                                                         np.mean( (1.-data_is_o[:,t])*data_is_o[:,t-1])))
@@ -3329,13 +3329,13 @@ class Economy:
             if (self.s_age is not None) and (self.c_age is not None):
                 print('')
                 print('Average age/tenure of worker/passthru')
-                tmp = self.s_age[self.data_is_o[:,t]]
+                tmp = self.s_age[self.data_is_o[:,t-1]]
                 print('  Old   Passthru = {}'.format(tmp[tmp != -1].mean()))
-                tmp = self.s_age[~self.data_is_o[:,t]]            
+                tmp = self.s_age[~self.data_is_o[:,t-1]]            
                 print('  Young Passthru = {}'.format(tmp[tmp != -1].mean()))           
-                tmp = self.c_age[self.data_is_o[:,t]]
+                tmp = self.c_age[self.data_is_o[:,t-1]]
                 print('  Old   Worker   = {}'.format(tmp[tmp != -1].mean()))
-                tmp = self.c_age[~self.data_is_o[:,t]]            
+                tmp = self.c_age[~self.data_is_o[:,t-1]]            
                 print('  Young Worker   = {}'.format(tmp[tmp != -1].mean()))           
             
             
