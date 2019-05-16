@@ -4050,7 +4050,7 @@ class Economy:
             np.save(dir_path_save + 'psin', self.psin)
             np.save(dir_path_save + 'nbracket', self.nbracket)                                                             
 
-            np.save(dir_path_save + 'data_is_o', self.data_is_o[:, -100:])            
+            np.save(dir_path_save + 'data_is_o', self.data_is_o[:, -100-1:])            
             np.save(dir_path_save + 'data_a', self.data_a[:, -100:])
             np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:])
             np.save(dir_path_save + 'data_kap0', self.data_kap0[:, -100:])            
