@@ -3047,7 +3047,6 @@ class Economy:
         self.c_age = c_age
         self.sind_age = sind_age
         self.cind_age = cind_age
-
         self.y_age = y_age
         self.o_age = o_age
         self.ind_age = ind_age        
@@ -4152,6 +4151,7 @@ if __name__ == '__main__':
         econ.print_parameters()
                     
     econ.simulate_model()
+    econ.calc_moments()
     #econ.calc_age()
 
     export_econ(econ)
