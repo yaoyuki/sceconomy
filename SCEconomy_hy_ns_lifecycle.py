@@ -2997,8 +2997,13 @@ class Economy:
                 else:
                     t = 0
                     while t < sim_time:
-                        if _data_is_[i, -t-1] and not _data_is_born_[i, -t-1]: #as long as they stay the same occupation and NOT age 0
+                        if _data_is_[i, -t-1]: #as long as they stay the same occupation and NOT age 0
                             _age_[i] = t
+                            
+                        elif _data_is_born_[i, -t-1]:
+                            _age_[i] = t
+                            break
+                    
                         else:
                             break
 
