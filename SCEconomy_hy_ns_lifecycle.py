@@ -257,6 +257,13 @@ class Economy:
         self.num_suba_inner = 20
         self.num_subkap_inner = 30
 
+        self.s_age = None
+        self.c_age = None
+        self.sind_age = None
+        self.cind_age = None
+        self.y_age = None
+        self.o_age = None
+
 
     def __set_nltax_parameters__(self):
         
