@@ -3010,8 +3010,8 @@ class Economy:
         _calc_age_(data_is_s, s_age)                                        
         _calc_age_(data_is_y[:,0:-1], y_age)
         _calc_age_(data_is_o[:,0:-1], o_age)
-        _calc_age_adjust_born_(data_is_c, data_is_born[:,0:-1] cind_age)
-        _calc_age_adjust_born_(data_is_s, data_is_born[:,0:-1] sind_age)        
+        _calc_age_adjust_born_(data_is_c, data_is_born[:,0:-1], cind_age)
+        _calc_age_adjust_born_(data_is_s, data_is_born[:,0:-1], sind_age)        
         _calc_ind_age_(data_is_born[:,0:-1], ind_age)
 
         
