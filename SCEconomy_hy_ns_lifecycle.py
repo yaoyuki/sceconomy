@@ -2875,47 +2875,48 @@ class Economy:
         return
 
 
-    def calc_kap_bornwith(self):
+    # def calc_kap_bornwith(self):
+    #     #kap_bornwith is kap when the agent is/was age zero.
 
-        #simulation parameters
-        sim_time = self.sim_time
-        num_total_pop = self.num_total_pop
+    #     #simulation parameters
+    #     sim_time = self.sim_time
+    #     num_total_pop = self.num_total_pop
 
-        #load main simlation result
-        data_is_c = self.data_is_c
-        data_is_s = ~data_is_c
+    #     #load main simlation result
+    #     data_is_c = self.data_is_c
+    #     data_is_s = ~data_is_c
 
 
-        data_is_o = self.data_is_o
-        data_is_y = ~data_is_o
+    #     data_is_o = self.data_is_o
+    #     data_is_y = ~data_is_o
 
-        data_kap = self.data_kap
+    #     data_kap = self.data_kap
 
-        data_kap_bornwith = np.full(data_kap.shape, -1.0)
+    #     data_kap_bornwith = np.full(data_kap.shape, -1.0)
 
-        @nb.jit(nopython = True, parallel = True)
-        def _calc_kap_bornwith_(data_kap_bornwith_, data_kap_, data_is_o_):
+    #     @nb.jit(nopython = True, parallel = True)
+    #     def _calc_kap_bornwith_(data_kap_bornwith_, data_kap_, data_is_o_):
 
-            for i in nb.prange(num_total_pop):
+    #         for i in nb.prange(num_total_pop):
 
-                t = 0
-                data_kap_bornwith_[i, t] = data_kap_[i, t]
-                data_kap_bornwith_[i, t+1] = data_kap_[i, t+1]
+    #             t = 0
+    #             data_kap_bornwith_[i, t] = data_kap_[i, t]
+    #             data_kap_bornwith_[i, t+1] = data_kap_[i, t+1]
 
-                for t in range(1, sim_time):
+    #             for t in range(1, sim_time):
 
-                    #if reborn
-                    if data_is_o_[i, t] and not data_is_o_[i, t+1]:
-                        data_kap_bornwith_[i, t] = data_kap_[i, t]
-                    else:
-                        data_kap_bornwith_[i, t] = data_kap_bornwith_[i, t-1]
+    #                 #if reborn
+    #                 if data_is_o_[i, t] and not data_is_o_[i, t+1]:
+    #                     data_kap_bornwith_[i, t] = data_kap_[i, t]
+    #                 else:
+    #                     data_kap_bornwith_[i, t] = data_kap_bornwith_[i, t-1]
             
         
-        _calc_kap_bornwith_(data_kap_bornwith, data_kap, data_is_o)
+    #     _calc_kap_bornwith_(data_kap_bornwith, data_kap, data_is_o)
 
-        self.data_kap_bornwith = data_kap_bornwith
+    #     self.data_kap_bornwith = data_kap_bornwith
 
-        return
+    #     return
     
         
     #this calculate age of S-corp. 
@@ -2942,14 +2943,18 @@ class Economy:
         s_age = np.ones(num_total_pop, dtype = int) * -1
         c_age = np.ones(num_total_pop, dtype = int) * -1
 
+        sind_age = np.ones(num_total_pop, dtype = int) * -1
+        cind_age = np.ones(num_total_pop, dtype = int) * -1
+        
         o_age = np.ones(num_total_pop, dtype = int) * -1
         y_age = np.ones(num_total_pop, dtype = int) * -1
+
+        
 
         ind_age = np.ones(num_total_pop, dtype = int) * -1
         
 
         @nb.jit(nopython = True, parallel = True)
-#        @nb.jit(nopython = True)
         def _calc_age_(_data_is_, _age_):
             for i in nb.prange(num_total_pop):
                 if not _data_is_[i,-1]:
@@ -2961,8 +2966,8 @@ class Economy:
                             _age_[i] = t
                         else:
                             break
-
                         t = t + 1
+
 
         @nb.jit(nopython = True, parallel = True)
 #        @nb.jit(nopython = True)
@@ -2976,12 +2981,30 @@ class Economy:
                         break
                     else:
                         t = t+1
+
+        @nb.jit(nopython = True, parallel = True)
+        def _calc_age_adjust_born_(_data_is_, _data_is_born_, _age_):
+            for i in nb.prange(num_total_pop):
+                if not _data_is_[i,-1]:
+                    _age_[i] = -1
+                else:
+                    t = 0
+                    while t < sim_time:
+                        if _data_is_[i, -t-1] and not _data_is_born_[i, -t-1]: #as long as they stay the same occupation and NOT age 0
+                            _age_[i] = t
+                        else:
+                            break
+
+                        t = t + 1
+                        
                         
 
         _calc_age_(data_is_c, c_age)                
         _calc_age_(data_is_s, s_age)                                        
         _calc_age_(data_is_y[:,0:-1], y_age)
         _calc_age_(data_is_o[:,0:-1], o_age)
+        _calc_age_adjust_born_(data_is_c, data_is_born[:,0:-1] cind_age)
+        _calc_age_adjust_born_(data_is_s, data_is_born[:,0:-1] sind_age)        
         _calc_ind_age_(data_is_born[:,0:-1], ind_age)
 
         
@@ -3015,6 +3038,9 @@ class Economy:
 
         self.s_age = s_age
         self.c_age = c_age
+        self.sind_age = sind_age
+        self.cind_age = cind_age
+
         self.y_age = y_age
         self.o_age = o_age
         self.ind_age = ind_age        
@@ -3342,7 +3368,25 @@ class Economy:
                 tmp = self.c_age[self.data_is_o[:,t-1]]
                 print('  Old   Worker   = {}'.format(tmp[tmp != -1].mean()))
                 tmp = self.c_age[~self.data_is_o[:,t-1]]            
+                print('  Young Worker   = {}'.format(tmp[tmp != -1].mean()))
+
+            if (self.sind_age is not None) and (self.cind_age is not None):
+                print('')
+                print('Average age/tenure of worker/passthru within their lifetime')
+
+                tmp = self.sind_age
+                print('  All   Passthru = {}'.format(tmp[tmp != -1].mean()))
+                tmp = self.cind_age
+                print('  All   Worker   = {}'.format(tmp[tmp != -1].mean()))
+                tmp = self.sind_age[self.data_is_o[:,t-1]]
+                print('  Old   Passthru = {}'.format(tmp[tmp != -1].mean()))
+                tmp = self.sind_age[~self.data_is_o[:,t-1]]            
+                print('  Young Passthru = {}'.format(tmp[tmp != -1].mean()))           
+                tmp = self.cind_age[self.data_is_o[:,t-1]]
+                print('  Old   Worker   = {}'.format(tmp[tmp != -1].mean()))
+                tmp = self.cind_age[~self.data_is_o[:,t-1]]            
                 print('  Young Worker   = {}'.format(tmp[tmp != -1].mean()))           
+                
             
             
             # if self.data_val_sweat is not None:
@@ -3999,7 +4043,8 @@ class Economy:
             np.save(dir_path_save + 'taun', self.taun)
             np.save(dir_path_save + 'psin', self.psin)
             np.save(dir_path_save + 'nbracket', self.nbracket)                                                             
-            
+
+            np.save(dir_path_save + 'data_is_o', self.data_is_o[:, -100:])            
             np.save(dir_path_save + 'data_a', self.data_a[:, -100:])
             np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:])
             np.save(dir_path_save + 'data_kap0', self.data_kap0[:, -100:])            
@@ -4037,8 +4082,10 @@ class Economy:
 
             # np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
             # np.save(dir_path_save + 'data_val_sweat_dyna', self.data_val_sweat_dyna[:, -100:])
-            # np.save(dir_path_save + 'data_val_sweat_life', self.data_val_sweat_life[:, -100:])            
+            # np.save(dir_path_save + 'data_val_sweat_life', self.data_val_sweat_life[:, -100:])
 
+            np.save(dir_path_save + 'sind_age', self.sind_age)
+            np.save(dir_path_save + 'cind_age', self.cind_age)
             np.save(dir_path_save + 's_age', self.s_age)
             np.save(dir_path_save + 'c_age', self.c_age)
             np.save(dir_path_save + 'y_age', self.y_age)
