@@ -43,6 +43,11 @@ if __name__ == '__main__':
     np.save(path_to_data_is_o + '.npy' , data_is_o)
     split_shock(path_to_data_is_o, 100_000, num_core)
     del data_rand, data_is_o
+
+    taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+    psib = np.array([0.007026139999999993, 0.02013013999999999, 0.03, 0.08398847999999996, 0.19024008000000006, 0.2648964800000001])
+    # taup = 0.20
+    
     
 
     
@@ -61,8 +66,9 @@ if __name__ == '__main__':
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0    
     
 
-    # p_, rc_, ome_, varpi_ = 1.4511445940193992, 0.062, 0.4627459750781605, 0.6056020599342775
-    p_, rc_, ome_, varpi_ = 1.4739842128778278, 0.060648197365324764, 0.46388548260346824, 0.6002410397243539
+    p_, rc_, ome_, varpi_ = 1.43615487485722, 0.05971182534103185, 0.46388548260346824, 0.6002410397243539
+
+    # 1.5209092097405632, 0.053192497033077685, 0.46388548260346824, 0.6002410397243539
     
     ###end defining additional parameters#
 
@@ -98,7 +104,7 @@ if __name__ == '__main__':
 
     econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
-                   scaling_n = 1.82, scaling_b = 1.82
+                   scaling_n = 1.82, scaling_b = 1.82, taub = taub, psib = psib
     )
     
     econ.set_prices(p = p_, rc = rc_)
