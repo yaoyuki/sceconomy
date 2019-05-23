@@ -13,6 +13,7 @@ import numba as nb
 #import
 #from FEM import fem_peval #1D interpolation
 from orderedTableSearch import locate, hunt
+from FEM import femeval
 from FEM_2D import fem2d_peval, fem2deval_mesh
 from markov import Stationary
 from ravel_unravel_nb import unravel_index_nb
@@ -325,11 +326,16 @@ class Economy:
         
         
         
-    def set_prices(self, p, rc):
+    def set_prices(self, p, rc, pkap, kapbar):
 
 
         self.p = p
         self.rc = rc
+
+        self.pkap = pkap
+        self.kapbar = kapbar
+
+        
 
         #assuming CRS technology for C-corp
         self.kcnc_ratio = ((self.theta * self.A)/(self.delk + self.rc))**(1./(1. - self.theta))
@@ -2025,10 +2031,45 @@ class Economy:
 
             #
             _v_y_succeeded_ = np.zeros(_vmax_y_.shape)
+
+            _vn_ys_acq_ = np.zeros(_vmax_y_.shape)
+            _vn_os_acq_ = np.zeros(_vmax_o_.shape)            
             
             for it_ho in range(_howard_iter_):
-                _vmax_y_[:] = np.fmax(_vn_yc_, _vn_ys_)
-                _vmax_o_[:] = np.fmax(_vn_oc_, _vn_os_)                
+
+                ### update vn_acq ###
+                for istate in range(num_s):
+                    for ia in range(num_a):
+                        for ikap in range(num_kap):
+
+                            #need to take into account borrowing constraint
+                            #an_tmp = vs_an[ia, ikap,istate] - pkap*kapbar
+                            a_tmp = agrid[ia] - pkap*kapbar
+
+                            #update ys_acq
+                            if a_tmp >= 0.: 
+                                _vn_ys_acq_[ia, ikap, istate] = \
+                                    fem2d_peval(a_tmp,  kapgrid[ikap] + kapbar , agrid, kapgrid, _vn_ys_[:,:,istate])
+                            else:
+                                #if an_tmp is not feasible (an_tmp < amin)
+                                _vn_ys_acq_[ia, ikap, istate] = -np.inf
+                            
+                            #update os_acq
+                            if a_tmp >= 0.: 
+                                _vn_os_acq_[ia, ikap, istate] = \
+                                    fem2d_peval(a_tmp,  kapgrid[ikap] + kapbar , agrid, kapgrid, _vn_os_[:,:,istate])
+                            else:
+                                #if an_tmp is not feasible (an_tmp < amin)
+                                _vn_os_acq_[ia, ikap, istate] = -np.inf
+
+                ### end update vn_acq ###
+                
+
+                
+                #update the value functions
+                _vmax_y_[:] = np.fmax(_vn_yc_, np.fmax(_vn_ys_, _vn_ys_acq_))
+                _vmax_o_[:] = np.fmax(_vn_oc_, np.fmax(_vn_os_, _vn_os_acq_))
+                
             
 
                 #numba does not support matmul for 3D or higher matrice
@@ -2179,10 +2220,19 @@ class Economy:
         v_os_kapn = np.zeros((num_a, num_kap, num_s)) 
         vn_os = np.ones((num_a, num_kap, num_s))*100.0
         v_os_util = np.ones((num_a, num_kap, num_s))*100.0
+
+
+        vn_os_acq = np.ones((num_a, num_kap, num_s))*100.0        
+        vn_ys_acq = np.ones((num_a, num_kap, num_s))*100.0
+    
+        R_y = np.ones((num_a, num_kap, num_s))*100.0
+        R_o = np.ones((num_a, num_kap, num_s))*100.0        
+        
+
         
 
         max_iter = 50
-        max_howard_iter = 50
+        max_howard_iter = 0 #needs to update
         tol = 1.0e-5
         dist = 10000.0
         dist_sub = 10000.0
@@ -2204,13 +2254,8 @@ class Economy:
                 it = it + 1
                 print(f'it = {it}', end = ', ')
 
-                #for c-corp guys, it is always true that kapn = la*kap
                 bEV_yc[:] = prob_yo[0,0]*bh*((v_y_max**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s)) +\
                             prob_yo[0,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s))
-
-#                bEV_oc[:] = prob_yo[1,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s)) +\
-#                            prob_yo[1,0]*iota*bh*((v_y_max**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s))
-
 
                 bEV_oc[:] = prob_yo[1,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s)) +\
                             prob_yo[1,0]*iota*bh*((v_y_max**(1. - mu))@(prob_st)).reshape((1, 1, num_a, num_kap, 1)) #does this reshape work?
@@ -2228,9 +2273,6 @@ class Economy:
                 for istate in range(num_s):
                     v_y_succeeded[:,:,istate] = fem2deval_mesh(agrid, la_tilde*kapgrid, agrid, kapgrid, v_y_max[:,:,istate])
 
-
-#                bEV_os[:] = prob_yo[1,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s)) +\
-#                            prob_yo[1,0]*iota*bh*((v_y_succeeded**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s))
                     
 
                 #if one dies, productivities are drawn from the stationary one.
@@ -2247,7 +2289,7 @@ class Economy:
 
 
             
-            ###yc-loop begins####            	;
+            ###yc-loop begins####            	
             comm.Barrier()
             if rank == 0:
                 tyc1 = time.time()
@@ -2381,11 +2423,47 @@ class Economy:
             ####post_calc
             if rank == 0:
 
-                pol_y = vn_yc > vn_ys
-                v_y_maxn[:] = np.fmax(vn_yc, vn_ys)
-                pol_o = vn_oc > vn_os
-                v_o_maxn[:] = np.fmax(vn_oc, vn_os)
 
+                ###calc val for acquisiiton###
+
+                for istate in range(num_s):
+                    for ia in range(num_a):
+                        for ikap in range(num_kap):
+
+                            #need to take into account borrowing constraint
+                            #an_tmp = vs_an[ia, ikap,istate] - pkap*kapbar
+                            a_tmp = agrid[ia] - pkap*kapbar
+
+                            #update ys_acq
+                            if a_tmp >= 0.: 
+                                vn_ys_acq[ia, ikap, istate] = \
+                                    fem2d_peval(a_tmp,  kapgrid[ikap] + kapbar , agrid, kapgrid, vn_ys[:,:,istate])
+                            else:
+                                #if an_tmp is not feasible (an_tmp < amin)
+                                vn_ys_acq[ia, ikap, istate] = -np.inf
+                            
+                            #update os_acq
+                            if a_tmp >= 0.: 
+                                vn_os_acq[ia, ikap, istate] = \
+                                    fem2d_peval(a_tmp,  kapgrid[ikap] + kapbar , agrid, kapgrid, vn_os[:,:,istate])
+                            else:
+                                #if an_tmp is not feasible (an_tmp < amin)
+                                vn_os_acq[ia, ikap, istate] = -np.inf
+                                
+
+                ###end calc val for acquisiiton###
+                
+
+                pol_yc = vn_yc > vn_ys
+                pol_ys_acq = vn_ys_acq > vn_ys
+                v_y_maxn[:] = np.fmax(vn_yc, np.fmax(vn_ys, vn_ys_acq))
+
+                pol_oc = vn_oc > vn_os
+                pol_os_acq = vn_os_acq > vn_os
+                v_o_maxn[:] = np.fmax(vn_oc, np.fmax(vn_os, vn_os_acq))
+
+
+                #we can also measure distance in terms 
                 dist_y_sub = np.max(np.abs(v_y_maxn - v_y_max))
                 dist_o_sub = np.max(np.abs(v_o_maxn - v_o_max))
                 dist_sub = max(dist_y_sub, dist_o_sub)
@@ -2416,6 +2494,65 @@ class Economy:
             print('Iteration terminated at {}th loop. dist = {}'.format(it, dist))
             print('Elapsed time: {:f} sec'.format(t2 - t1)) 
 
+        ###calc fair price R(a, kap, s, age)###
+
+        if rank == 0:
+
+            t1 = time.time()
+            from scipy.optimize import brentq
+            
+            for istate in range(num_s):
+                for ia in range(num_a):
+                    for ikap in range(num_kap):
+
+                        #young
+                        #the solution is assumed to be [0, 10].`10' is a random number
+                        obj = lambda x: femeval(agrid[ia] + x, agrid, vn_yc[:, 0, istate]) - vn_yc[ia, ikap, istate]
+                        fa = obj(0.)
+                        fb = obj(30.)
+                        if fa*fb >= 0.:
+                            if abs(fa) <= 1.0e-8:
+                                R_y[ia, ikap, istate] = 0.0
+                            else:
+
+                                print('a =' , agrid[ia])
+                                print('kap =' , kapgrid[ikap])
+                                print('istate =' , istate)
+                                print('young')
+                                print('fa = ', fa)
+                                print('fb = ', fb)
+
+                        else:
+
+                            R_y[ia, ikap, istate] = brentq(obj, 0., 30.)
+
+                        #old
+                        obj = lambda x: femeval(agrid[ia] + x, agrid, vn_oc[:, 0, istate]) - vn_oc[ia, ikap, istate]
+                        fa = obj(0.)
+                        fb = obj(30.)
+                        if fa*fb >= 0.:
+                            if abs(fa) <= 1.0e-8:
+                                R_o[ia, ikap, istate] = 0.0
+                            else:
+
+                                print('a =' , agrid[ia])
+                                print('kap =' , kapgrid[ikap])
+                                print('istate =' , istate)
+                                print('old')
+                                print('fa = ', fa)
+                                print('fb = ', fb)
+
+                        else:
+
+                            R_o[ia, ikap, istate] = brentq(obj, 0., 30.)
+
+            t2 = time.time()
+
+            print(f'Elapsed time for calculating R(s) = {t2 -t1}')
+                            
+
+        ###end calc fair price R(a, kap, s, age)###
+            
 
 
 
@@ -2433,9 +2570,13 @@ class Economy:
         comm.Bcast([v_ys_kapn, MPI.DOUBLE])
         comm.Bcast([v_os_kapn, MPI.DOUBLE])        
         comm.Bcast([vn_ys, MPI.DOUBLE])
-        comm.Bcast([vn_os, MPI.DOUBLE])        
+        comm.Bcast([vn_os, MPI.DOUBLE])
+        comm.Bcast([vn_ys_acq, MPI.DOUBLE])
+        comm.Bcast([vn_os_acq, MPI.DOUBLE])        
         comm.Bcast([vn_yc, MPI.DOUBLE])
-        comm.Bcast([vn_oc, MPI.DOUBLE])        
+        comm.Bcast([vn_oc, MPI.DOUBLE])
+        comm.Bcast([R_y, MPI.DOUBLE])
+        comm.Bcast([R_o, MPI.DOUBLE])        
 
 
 
@@ -2449,7 +2590,10 @@ class Economy:
         self.vn_yc = vn_yc
         self.vn_oc = vn_oc        
         self.vn_ys = vn_ys
-        self.vn_os = vn_os        
+        self.vn_os = vn_os
+        self.vn_ys_acq = vn_ys_acq
+        self.vn_os_acq = vn_os_acq        
+        
 
         self.bEV_yc = bEV_yc
         self.bEV_oc = bEV_oc
@@ -4152,11 +4296,11 @@ if __name__ == '__main__':
 
     econ.get_policy()
 
-    if rank == 0:
-        econ.print_parameters()
+    # if rank == 0:
+    #     econ.print_parameters()
                     
-    econ.simulate_model()
-    econ.calc_moments()
-    #econ.calc_age()
+    # econ.simulate_model()
+    # econ.calc_moments()
+    # #econ.calc_age()
 
     export_econ(econ)

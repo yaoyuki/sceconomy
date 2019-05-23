@@ -66,7 +66,7 @@ if __name__ == '__main__':
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0    
     
 
-    p_, rc_, pbar_, kapbar_, ome_, varpi_ = 1.43615487485722, 0.05971182534103185, 1.25, 0.03, 0.46388548260346824, 0.6002410397243539
+    p_, rc_, pkap_, kapbar_, ome_, varpi_ = 1.43615487485722, 0.05971182534103185, 1.25, 0.03, 0.46388548260346824, 0.6002410397243539
     
     ###end defining additional parameters#
 
@@ -79,7 +79,7 @@ if __name__ == '__main__':
                    scaling_n = 1.82, scaling_b = 1.82
     )
     
-    econ.set_prices(p = p_, rc = rc_, pbar = pbar_, kapbar = kapbar_)
+    econ.set_prices(p = p_, rc = rc_, pkap = pkap_, kapbar = kapbar_)
     
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
 
@@ -99,14 +99,17 @@ if __name__ == '__main__':
 
     p = econ.p
     rc = econ.rc
-    moms = econ.moms
+    pkap = econ.pkap
+    kapbar = econ.kapbar
     
-    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0)
+    # moms = econ.moms
     
-    if p != p_ or  rc != rc_:
-        print('err: input prices and output prices do not coincide.')
-        print('p = ', p, ', p_ = ', p_)
-        print('rc = ', rc, ', rc_ = ', rc_)
+    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0)
+    
+    # if p != p_ or  rc != rc_:
+    #     print('err: input prices and output prices do not coincide.')
+    #     print('p = ', p, ', p_ = ', p_)
+    #     print('rc = ', rc, ', rc_ = ', rc_)
 
     
     #calc main moments
@@ -114,10 +117,10 @@ if __name__ == '__main__':
     
     ###calculate other important variables###
     ##econ.calc_sweat_eq_value()
-    econ.calc_age()
-    econ.simulate_other_vars()
-    econ.calc_moments()    
-    econ.save_result()
+    # econ.calc_age()
+    # econ.simulate_other_vars()
+    # econ.calc_moments()    
+    # econ.save_result()
 
 
     
