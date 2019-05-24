@@ -2232,7 +2232,7 @@ class Economy:
         
 
         max_iter = 50
-        max_howard_iter = 0 #needs to update
+        max_howard_iter = 50 #needs to update
         tol = 1.0e-5
         dist = 10000.0
         dist_sub = 10000.0
@@ -2411,7 +2411,7 @@ class Economy:
             
                     
 
-#                    _howard_iteration_(vmaxn, vcn, vsn, vc_an, vc_util, vs_an, vs_kapn, vs_util ,max_howard_iter)
+                #_howard_iteration_(vmaxn, vcn, vsn, vc_an, vc_util, vs_an, vs_kapn, vs_util ,max_howard_iter)
 
                 if max_howard_iter > 0:
                     t4 = time.time()
@@ -2431,8 +2431,7 @@ class Economy:
                         for ikap in range(num_kap):
 
                             #need to take into account borrowing constraint
-                            #an_tmp = vs_an[ia, ikap,istate] - pkap*kapbar
-                            a_tmp = agrid[ia] - pkap*kapbar
+                            a_tmp = agrid[ia] - pkap
 
                             #update ys_acq
                             if a_tmp >= 0.: 
@@ -2507,11 +2506,14 @@ class Economy:
 
                         #young
                         #the solution is assumed to be [0, 10].`10' is a random number
+                        
                         obj = lambda x: femeval(agrid[ia] + x, agrid, vn_yc[:, 0, istate]) - vn_yc[ia, ikap, istate]
                         fa = obj(0.)
                         fb = obj(30.)
+
+                        
                         if fa*fb >= 0.:
-                            if abs(fa) <= 1.0e-8:
+                            if abs(fa) <= 1.0e-8 or vn_yc[ia, 0, istate] - vn_yc[ia, ikap, istate] >= 0.:
                                 R_y[ia, ikap, istate] = 0.0
                             else:
 
@@ -2526,12 +2528,12 @@ class Economy:
 
                             R_y[ia, ikap, istate] = brentq(obj, 0., 30.)
 
-                        #old
+                        
                         obj = lambda x: femeval(agrid[ia] + x, agrid, vn_oc[:, 0, istate]) - vn_oc[ia, ikap, istate]
                         fa = obj(0.)
                         fb = obj(30.)
                         if fa*fb >= 0.:
-                            if abs(fa) <= 1.0e-8:
+                            if abs(fa) <= 1.0e-8 or vn_oc[ia, 0, istate] - vn_oc[ia, ikap, istate] >= 0.:
                                 R_o[ia, ikap, istate] = 0.0
                             else:
 
@@ -2714,20 +2716,26 @@ class Economy:
         for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())        
         #load the value functions
 
-        v_yc_an = Econ.v_yc_an
-        v_oc_an = Econ.v_oc_an        
-        v_ys_an = Econ.v_ys_an
-        v_os_an = Econ.v_os_an        
-        v_ys_kapn = Econ.v_ys_kapn
-        v_os_kapn = Econ.v_os_kapn
+        v_yc_an = self.v_yc_an
+        v_oc_an = self.v_oc_an        
+        v_ys_an = self.v_ys_an
+        v_os_an = self.v_os_an        
+        v_ys_kapn = self.v_ys_kapn
+        v_os_kapn = self.v_os_kapn
         
-        vn_yc = Econ.vn_yc
-        vn_oc = Econ.vn_oc        
-        vn_ys = Econ.vn_ys
-        vn_os = Econ.vn_os
+        vn_yc = self.vn_yc
+        vn_oc = self.vn_oc        
+        vn_ys = self.vn_ys
+        vn_os = self.vn_os
+        vn_ys_acq = self.vn_ys_acq
+        vn_os_acq = self.vn_os_acq
 
-        vn_y = np.fmax(vn_yc, vn_ys)
-        vn_o = np.fmax(vn_oc, vn_os)
+        R_y = self.R_y
+        R_o = self.R_o        
+        
+
+        vn_y = np.fmax(vn_yc, np.fmax(vn_ys, vn_ys_acq))
+        vn_o = np.fmax(vn_oc, np.fmax(vn_os, vn_os_acq))
 
         #for c-corp guys, it is always true that kapn = la*kap
         bEV_yc = prob_yo[0,0]*bh*((vn_y**(1. - mu))@(prob.T)).reshape((1, 1, num_a, num_kap, num_s)) +\
@@ -2788,7 +2796,7 @@ class Economy:
 
         data_is_o_elem = np.zeros((num_pop_assigned, sim_time+1), dtype = bool)
 
-        #main data container
+
         data_a = None
         data_kap = None
         data_kap0 = None
@@ -2804,38 +2812,6 @@ class Economy:
             data_i_s = np.zeros((num_total_pop, sim_time), dtype = int)
             data_is_c = np.zeros((num_total_pop, sim_time), dtype = bool)
             data_is_o = np.zeros((num_total_pop, sim_time+1), dtype = bool) 
-
-    #     ###codes to generate shocks###
-    #     @nb.jit(nopython = True)
-    #     def transit(i, r):
-
-    #         if r <= prob[i,0]:
-    #             return 0
-
-    #         for j in range(1, num_s):
-
-    #             #print(np.sum(prob[i,0:j]))
-    #             if r <= np.sum(prob[i,0:j]):
-    #                 return j - 1
-
-    #         if r > np.sum(prob[i,0:-1]) and r <= 1.:
-    #             return num_s - 1
-
-    #         print('error')
-
-    #         return -1    
-
-    #     np.random.seed(rank) #fix the seed
-    #     data_rnd = np.random.rand(num_pop_assigned, sim_time)
-
-    #     @nb.jit(nopython = True)
-    #     def calc_trans(data_i_s_):
-    #         for t in range(1, sim_time):
-    #             for i in range(num_pop_assigned):
-    #                 data_i_s_[i, t] = transit(data_i_s_[i, t-1], data_rnd[i, t])
-    #     calc_trans(data_i_s_elem)
-    #     ###end codes to generate shocks###
-
 
     
         ###load productivity shock data###
@@ -2859,7 +2835,7 @@ class Economy:
 
 
         @nb.jit(nopython = True)
-        def calc(data_a_, data_kap_, data_kap0_ ,data_i_s_, data_is_o_ ,data_is_c_):
+        def calc(data_a_, data_kap_, data_kap0_ ,data_i_s_, data_is_o_ ,data_is_c_, data_salesshock_):
 
             
             for i in range(num_pop_assigned):
@@ -2867,11 +2843,11 @@ class Economy:
                     a = data_a_[i, t-1]
                     kap = data_kap_[i, t-1]
 
-
                     is_o = data_is_o_[i,t]
                     is_o_m1 = data_is_o_[i,t-1]
                     is_c_m1 = data_is_c_[i,t-1] 
                     istate = data_i_s_[i, t]
+                    is_sold = data_salesshock[i,t]
 
                     eps = epsgrid[is_to_ieps[istate]]
                     z = zgrid[is_to_iz[istate]]
@@ -2885,6 +2861,8 @@ class Economy:
 
 
                     if not is_o: #if young
+
+                        
                         an_c = fem2d_peval(a, kap, agrid, kapgrid, v_yc_an[:,:,istate])
                         kapn_c = la*kap #fem2d_peval(a, kap, agrid, kapgrid, vc_kapn[:,:,istate]) #or lambda * kap
                         #kapn_c = fem2d_peval(a, kap, agrid, kapgrid, vc_kapn[:,:,istate])
@@ -2894,9 +2872,19 @@ class Economy:
                         #if we dont 'want to allow for extraplation
                         #kapn_s = max((1. - delkap)/(1.+grate)*kap, fem2d_peval(a, kap, agrid, kapgrid, vs_kapn[:,:,istate]))
 
+                        a_acq = a - pkap #can be negative
+                        kap_acq = kap + kapbar
+
+                        an_acq = fem2d_peval(a_acq, kap_acq, agrid, kapgrid, v_ys_an[:,:,istate])
+                        kapn_acq = fem2d_peval(a_acq, kap_acq, agrid, kapgrid, v_ys_kapn[:,:,istate])
+
 
                         val_c = (get_cstatic([a, an_c, eps, is_o])[0] + fem2d_peval(an_c, kapn_c, agrid, kapgrid, bEV_yc[0, 0, :, :, istate]))**(1./(1.- mu))
                         val_s = (get_sstatic([a, an_s, kap, kapn_s, z, is_o])[0] + fem2d_peval(an_s, kapn_s, agrid, kapgrid, bEV_ys[0, 0, : ,: ,istate]))**(1./(1.- mu))
+
+                        val_acq = -np.inf
+                        if a_acq >= 0.0:
+                            val_acq = (get_sstatic([a_acq, an_acq, kap_acq, kapn_acq, z, is_o])[0] + fem2d_peval(an_acq, kapn_acq, agrid, kapgrid, bEV_ys[0, 0, : ,: ,istate]))**(1./(1.- mu))
 
                     else: #elif old
 
@@ -2910,15 +2898,50 @@ class Economy:
                         #kapn_s = max((1. - delkap)/(1.+grate)*kap, fem2d_peval(a, kap, agrid, kapgrid, vs_kapn[:,:,istate]))
 
 
+                        a_acq = a - pkap #can be negative
+                        kap_acq = kap + kapbar
+
+                        an_acq = fem2d_peval(a_acq, kap_acq, agrid, kapgrid, v_os_an[:,:,istate])
+                        kapn_acq = fem2d_peval(a_acq, kap_acq, agrid, kapgrid, v_os_kapn[:,:,istate])
+                        
+
                         val_c = (get_cstatic([a, an_c, eps, is_o])[0] + fem2d_peval(an_c, kapn_c, agrid, kapgrid, bEV_oc[0, 0, :,:,istate])) **(1./(1.- mu))
                         val_s = (get_sstatic([a, an_s, kap, kapn_s, z, is_o])[0] + fem2d_peval(an_s, kapn_s, agrid, kapgrid, bEV_os[0, 0, :,:,istate])) **(1./(1.- mu))
 
+                        val_acq = -np.inf
+                        if a_acq >= 0.0:
+                            val_acq = (get_sstatic([a_acq, an_acq, kap_acq, kapn_acq, z, is_o])[0] + fem2d_peval(an_acq, kapn_acq, agrid, kapgrid, bEV_os[0, 0, : ,: ,istate]))**(1./(1.- mu))
                         
 
-                    if val_c == val_s:
-                        print('error: val_c == val_s')
+                        
 
-                    i_c = val_c > val_s
+                    #if val_c == val_s:
+                    #    print('error: val_c == val_s')
+
+                    is_c = False
+                    is_s = False
+                    is_acq = False
+
+                    max_posi = np.argmax(np.array([val_c, val_s, val_acq]))
+                    
+                    if max_posi == 0:
+                        is_c = True
+                    elif max_posi == 1:
+                        is_s = True
+                    elif max_posi == 2:
+                        is_acq = True
+                    else:
+                        print('error')
+
+                    an = is_c * an_c + is_s * an_s + is_acq * an_acq
+                    kapn = is_c * kapn_c + is_s * kapn_s + is_acq * kapn_acq
+
+                    if is_c and is_sold:
+                        an = an
+                        kapn = is_c * kapn_c + is_s * kapn_s + is_acq * kapn_acq
+
+                        
+
 
                     an = i_c * an_c + (1. - i_c) * an_s
                     kapn = i_c * kapn_c + (1. - i_c) * kapn_s
