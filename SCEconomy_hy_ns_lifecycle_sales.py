@@ -84,6 +84,7 @@ class Economy:
                  
                  path_to_data_i_s = None,
                  path_to_data_is_o = None,
+                 path_to_data_sales_shock = None,
 
                  taun = None,
                  psin = None,
@@ -211,6 +212,7 @@ class Economy:
         # self.path_to_data_i_s = './input_data/data_i_s.npy'
         self.path_to_data_i_s = './tmp/data_i_s'
         self.path_to_data_is_o = './tmp/data_is_o'
+        self.path_to_data_sales_shock = './tmp/data_sales_shock'        
 
 
         #nonlinear tax parameters
@@ -2793,8 +2795,10 @@ class Economy:
         data_i_s_elem = np.ones((num_pop_assigned, sim_time), dtype = int)*7
         data_is_c_elem = np.zeros((num_pop_assigned, sim_time), dtype = bool) 
         data_is_c_elem[0:int(num_pop_assigned*0.7), 0] = True
-
         data_is_o_elem = np.zeros((num_pop_assigned, sim_time+1), dtype = bool)
+        data_sales_shock_elem = np.zeros((num_pop_assigned, sim_time), dtype = bool)
+        data_option_elem = np.ones((num_pop_assigned, sim_time), dtype = int)*(-1)
+        data_R_elem = np.ones((num_pop_assigned, sim_time))*(-10000.)        
 
 
         data_a = None
@@ -2803,6 +2807,11 @@ class Economy:
         data_i_s = None
         data_is_c = None
         data_is_o = None
+        data_R = None
+
+        data_sales_shock = None
+        data_option = None
+
 
 
         if rank == 0:
@@ -2811,16 +2820,18 @@ class Economy:
             data_kap0 = np.zeros((num_total_pop, sim_time))            
             data_i_s = np.zeros((num_total_pop, sim_time), dtype = int)
             data_is_c = np.zeros((num_total_pop, sim_time), dtype = bool)
-            data_is_o = np.zeros((num_total_pop, sim_time+1), dtype = bool) 
+            data_is_o = np.zeros((num_total_pop, sim_time+1), dtype = bool)
+            data_sales_shock = np.zeros((num_total_pop, sim_time), dtype = bool)
+            data_option = np.zeros((num_total_pop, sim_time), dtype = int)
+            data_R = np.zeros((num_total_pop, sim_time))*(-10000.)        
 
     
         ###load productivity shock data###
 
-        path_to_data_i_s = './input_data/data_i_s'
-        path_to_data_is_o = './input_data/data_is_o_lifecycle'
         
         data_i_s_elem[:] = np.load(self.path_to_data_i_s + '_' + str(rank) + '.npy')
         data_is_o_elem[:] = np.load(self.path_to_data_is_o + '_' + str(rank) + '.npy')
+        data_sales_shock[:] = np.load(self.path_to_data_sales_shock + '_' + str(rank) + '.npy')        
         
         # #check the dimension of data_is_o
         # #I assume that data_is_o.shape[1] >  sim_time+1
@@ -2835,19 +2846,19 @@ class Economy:
 
 
         @nb.jit(nopython = True)
-        def calc(data_a_, data_kap_, data_kap0_ ,data_i_s_, data_is_o_ ,data_is_c_, data_salesshock_):
+        def calc(data_a_, data_kap_, data_kap0_ ,data_i_s_, data_is_o_ ,data_is_c_, data_sales_shock_, data_option_, data_R_):
 
             
             for i in range(num_pop_assigned):
                 for t in range(1, sim_time):
                     a = data_a_[i, t-1]
-                    kap = data_kap_[i, t-1]
+                    kap = data_kap0_[i, t-1]
 
                     is_o = data_is_o_[i,t]
                     is_o_m1 = data_is_o_[i,t-1]
                     is_c_m1 = data_is_c_[i,t-1] 
                     istate = data_i_s_[i, t]
-                    is_sold = data_salesshock[i,t]
+                    is_sold = data_sales_shock[i,t]
 
                     eps = epsgrid[is_to_ieps[istate]]
                     z = zgrid[is_to_iz[istate]]
@@ -2859,7 +2870,29 @@ class Economy:
                         data_kap_[i, t-1] = kap
 
 
+                    a_acq = a - pkap #can be negative
+                    kap_acq = kap + kapbar
 
+
+                    
+                    R = -100.
+                    if is_o:
+                        #this linear interpolation is a bit dangerous.
+                        #it is better to find an optimal R everytime.
+                        R = fem2d_peval(a, kap, agrid, kapgrid, R_o[:,:,istate])
+
+                    else:
+                        R = fem2d_peval(a, kap, agrid, kapgrid, R_y[:,:,istate])
+
+                    
+
+                    a_sale = a + R
+                    kap_sale = 0.
+
+                    option = -1
+
+                        
+                        
                     if not is_o: #if young
 
                         
@@ -2872,8 +2905,9 @@ class Economy:
                         #if we dont 'want to allow for extraplation
                         #kapn_s = max((1. - delkap)/(1.+grate)*kap, fem2d_peval(a, kap, agrid, kapgrid, vs_kapn[:,:,istate]))
 
-                        a_acq = a - pkap #can be negative
-                        kap_acq = kap + kapbar
+
+                        an_c_sale = fem2d_peval(a_sale, kap_sale, agrid, kapgrid, v_yc_an[:,:,istate])
+                        kapn_c_sale = la*kap_sale
 
                         an_acq = fem2d_peval(a_acq, kap_acq, agrid, kapgrid, v_ys_an[:,:,istate])
                         kapn_acq = fem2d_peval(a_acq, kap_acq, agrid, kapgrid, v_ys_kapn[:,:,istate])
@@ -2898,11 +2932,11 @@ class Economy:
                         #kapn_s = max((1. - delkap)/(1.+grate)*kap, fem2d_peval(a, kap, agrid, kapgrid, vs_kapn[:,:,istate]))
 
 
-                        a_acq = a - pkap #can be negative
-                        kap_acq = kap + kapbar
-
                         an_acq = fem2d_peval(a_acq, kap_acq, agrid, kapgrid, v_os_an[:,:,istate])
                         kapn_acq = fem2d_peval(a_acq, kap_acq, agrid, kapgrid, v_os_kapn[:,:,istate])
+
+                        an_c_sale = fem2d_peval(a_sale, kap_sale, agrid, kapgrid, v_oc_an[:,:,istate])
+                        kapn_c_sale = la*kap_sale
                         
 
                         val_c = (get_cstatic([a, an_c, eps, is_o])[0] + fem2d_peval(an_c, kapn_c, agrid, kapgrid, bEV_oc[0, 0, :,:,istate])) **(1./(1.- mu))
@@ -2933,23 +2967,36 @@ class Economy:
                     else:
                         print('error')
 
+                    del max_posi
+
+                    if is_c:
+                        if is_sold:
+                            option = 0
+                        else:
+                            option = 1
+                    elif is_s:
+                        option = 2
+                    elif is_acq:
+                        option = 3
+                    else:
+                        print('error in determining option')
+
+                    
+
                     an = is_c * an_c + is_s * an_s + is_acq * an_acq
                     kapn = is_c * kapn_c + is_s * kapn_s + is_acq * kapn_acq
 
                     if is_c and is_sold:
-                        an = an
-                        kapn = is_c * kapn_c + is_s * kapn_s + is_acq * kapn_acq
+                        an = an_c_sale
+                        kapn = kapn_c_sale
 
-                        
-
-
-                    an = i_c * an_c + (1. - i_c) * an_s
-                    kapn = i_c * kapn_c + (1. - i_c) * kapn_s
-
+                    
                     data_a_[i, t] = an
-                    data_kap_[i, t] = kapn
+                    # data_kap_[i, t] = kapn
                     data_kap0_[i, t] = kapn
                     data_is_c_[i, t] = i_c
+                    data_option_[i,t] = option
+                    data_R_[i, t] = R
 
                 # for t = sim_time+1:
                 # we need this part since decrease in kap due to succeession depends on realization of a elderly shock
@@ -2968,7 +3015,8 @@ class Economy:
                     data_kap_[i, t-1] = kap
 
             
-        calc(data_a_elem, data_kap_elem, data_kap0_elem ,data_i_s_elem, data_is_o_elem ,data_is_c_elem)
+        calc(data_a_elem, data_kap_elem, data_kap0_elem ,data_i_s_elem, data_is_o_elem,
+             data_is_c_elem, data_sales_shock_elem, data_option_elem, data_R_elem)
 
 
         comm.Gatherv(data_a_elem, [data_a, all_num_pop_assigned, all_istart_pop_assigned,  MPI.DOUBLE.Create_contiguous(sim_time).Commit() ])
@@ -2976,7 +3024,10 @@ class Economy:
         comm.Gatherv(data_kap0_elem, [data_kap0, all_num_pop_assigned, all_istart_pop_assigned,  MPI.DOUBLE.Create_contiguous(sim_time).Commit() ])        
         comm.Gatherv(data_i_s_elem, [data_i_s, all_num_pop_assigned, all_istart_pop_assigned,  MPI.LONG.Create_contiguous(sim_time).Commit() ])   
         comm.Gatherv(data_is_c_elem, [data_is_c, all_num_pop_assigned, all_istart_pop_assigned,  MPI.BOOL.Create_contiguous(sim_time).Commit() ])
-        comm.Gatherv(data_is_o_elem, [data_is_o, all_num_pop_assigned, all_istart_pop_assigned,  MPI.BOOL.Create_contiguous(sim_time+1).Commit() ])   
+        comm.Gatherv(data_is_o_elem, [data_is_o, all_num_pop_assigned, all_istart_pop_assigned,  MPI.BOOL.Create_contiguous(sim_time+1).Commit() ])
+        comm.Gatherv(data_sales_shock_elem, [data_sales_shock, all_num_pop_assigned, all_istart_pop_assigned,  MPI.BOOL.Create_contiguous(sim_time).Commit() ])
+        comm.Gatherv(data_option_elem, [data_option, all_num_pop_assigned, all_istart_pop_assigned,  MPI.LONG.Create_contiguous(sim_time).Commit() ])
+        comm.Gatherv(data_R_elem, [data_R, all_num_pop_assigned, all_istart_pop_assigned,  MPI.DOUBLE.Create_contiguous(sim_time).Commit() ])        
 
     
 
@@ -2992,7 +3043,7 @@ class Economy:
             for i in range(num_total_pop):
 
                 #need to check the consistency within variables... there may be errors...
-                if data_is_c[i, t]: 
+                if data_is_c[i, t]:
 
                     a = data_a[i, t-1]
                     kap = data_kap[i, t-1]
@@ -3000,6 +3051,15 @@ class Economy:
                     kapn = data_kap0[i, t] #this must be kap0, not kap
                     eps = epsgrid[is_to_ieps[data_i_s[i, t]]]
                     is_o = data_is_o[i, t]
+                    R = data_R[i,t]
+
+                    atilde = a
+                    kaptilde = kap
+                    #R can be negative
+                    if data_option[i,t] == 0 and R < 0.:
+                        atilde = a + R
+                        kaptilde = 0.0
+                        
 
                     data_ss[i,0] = 1.
                     data_ss[i,1] = a
@@ -3008,7 +3068,7 @@ class Economy:
                     data_ss[i,4] = kapn
                     data_ss[i,5] = eps*(1.-is_o) + tau_wo*eps*is_o
 
-                    tmp = get_cstatic(np.array([a, an, eps, float(is_o)]))
+                    tmp = get_cstatic(np.array([atilde, an, eps, float(is_o)]))
                     data_ss[i,6:11] = tmp[1:6]
                     data_ss[i,17:20] = tmp[6:9]
                     data_ss[i,20] = is_o
@@ -3020,7 +3080,17 @@ class Economy:
                     an = data_a[i, t]
                     kapn = data_kap0[i, t] #this must be kap0, not kap
                     z = zgrid[is_to_iz[data_i_s[i, t]]]
-                    is_o = data_is_o[i, t]                    
+                    is_o = data_is_o[i, t]
+
+                    atilde = a
+                    kaptilde = kap
+                    
+                    if data_option[i,t] == 3:
+                        atilde = a - pkap
+                        kaptilde = kap + kapbar
+                        if atilde < 0.:
+                            print('simulation error: atilde is negative')
+                    
 
                     data_ss[i,0] = 0.
                     data_ss[i,1] = a
@@ -3029,7 +3099,7 @@ class Economy:
                     data_ss[i,4] = kapn
                     data_ss[i,5] = z*(1. - is_o) + tau_bo*z*is_o
                     
-                    tmp = get_sstatic(np.array([a, an, kap, kapn, z, float(is_o)]))
+                    tmp = get_sstatic(np.array([atilde, an, kaptilde, kapn, z, float(is_o)]))
                     data_ss[i,6:20] = tmp[1:]
                     data_ss[i,20] = is_o                    
         
@@ -3041,6 +3111,9 @@ class Economy:
         self.data_i_s = data_i_s
         self.data_is_c = data_is_c
         self.data_is_o = data_is_o
+        self.data_option = data_option
+        self.data_sales_shock = data_sales_shock
+        self.data_R = data_R
         self.data_ss = data_ss
 
 
