@@ -59,6 +59,7 @@ class Economy:
                  tauc = None,
                  taud = None,
                  taup = None,
+                 taucg = None, #capital gain tax for R
                  theta = None,
                  trans_retire = None, #retirement benefit which is not included in tran
                  veps = None,
@@ -70,7 +71,7 @@ class Economy:
                  kapgrid = None,
                  epsgrid = None,
                  zgrid = None,
-                 prob = None,
+                 prob = None, #transition matrix for (eps, z)
                  prob_yo = None, #young-old transition matrix
                  is_to_iz = None,
                  is_to_ieps = None,
@@ -178,17 +179,17 @@ class Economy:
         self.__is_price_set__ = False
         self.alpha    = 0.3
         self.beta     = 0.98
-        self.iota     = 1.0 #added
+        self.iota     = 1.0 
         self.chi      = 0.0 #param for borrowing constarint
         self.delk     = 0.05
         self.delkap   = 0.05 
         self.eta      = 0.42
-        self.g        = 0.234 #govt spending
+        self.g        = 0.234 
         self.grate    = 0.02 #gamma, growth rate for detrending
         self.la       = 0.7 #lambda
         self.la_tilde = 0.1 #added lambda_tilde
-        self.tau_wo   = 0.5 #added
-        self.tau_bo   = 0.5 #added
+        self.tau_wo   = 0.5 
+        self.tau_bo   = 0.5 
         self.mu       = 1.5 
         self.ome      = 0.6 #omega
         self.phi      = 0.15 
@@ -196,6 +197,7 @@ class Economy:
         self.tauc     = 0.06
         self.taud     = 0.14
         self.taup     = 0.30
+        self.taucg    = 0.20
         self.theta    = 0.41
         self.trans_retire = 0.48 #added retirement benefit
         self.veps     = 0.4
@@ -2509,7 +2511,7 @@ class Economy:
                         #young
                         #the solution is assumed to be [0, 10].`10' is a random number
                         
-                        obj = lambda x: femeval(agrid[ia] + x, agrid, vn_yc[:, 0, istate]) - vn_yc[ia, ikap, istate]
+                        obj = lambda x: femeval(agrid[ia] + (1. - taucg)*x, agrid, vn_yc[:, 0, istate]) - vn_yc[ia, ikap, istate]
                         fa = obj(0.)
                         fb = obj(30.)
 
@@ -2531,7 +2533,7 @@ class Economy:
                             R_y[ia, ikap, istate] = brentq(obj, 0., 30.)
 
                         
-                        obj = lambda x: femeval(agrid[ia] + x, agrid, vn_oc[:, 0, istate]) - vn_oc[ia, ikap, istate]
+                        obj = lambda x: femeval(agrid[ia] + (1. - taucg)*x, agrid, vn_oc[:, 0, istate]) - vn_oc[ia, ikap, istate]
                         fa = obj(0.)
                         fb = obj(30.)
                         if fa*fb >= 0.:
@@ -2869,7 +2871,9 @@ class Economy:
                     #that is, if he was old in t-1 and S-guy, he is young in t.
                     if is_o_m1 and (not is_o) and (not is_c_m1):
                         kap = la_tilde * kap
-                        data_kap_[i, t-1] = kap
+
+                    #save kap here.
+                    data_kap_[i, t-1] = kap
 
 
                     a_acq = a - pkap #can be negative
@@ -3039,7 +3043,7 @@ class Economy:
 
         if rank == 0:
 
-            data_ss = np.ones((num_total_pop, 21)) * (-2.0)
+            data_ss = np.ones((num_total_pop, 22)) * (-2.0)
 
             t =  sim_time - 1 #don't set t = -1 since data_is_o has different length
             for i in range(num_total_pop):
@@ -3058,12 +3062,12 @@ class Economy:
                     atilde = a
                     kaptilde = kap
                     #R can be negative
-                    if data_option[i,t] == 0 and R < 0.:
-                        atilde = a + R
+                    if data_option[i,t] == 0 and R > 0.: #if the option is 0 (C-and sale kappa) and R has a positive value
+                        atilde = a + (1.-taucg)*R
                         kaptilde = 0.0
                         
 
-                    data_ss[i,0] = 1.
+                    data_ss[i,0] = data_option[i,t]
                     data_ss[i,1] = a
                     data_ss[i,2] = kap
                     data_ss[i,3] = an
@@ -3074,6 +3078,7 @@ class Economy:
                     data_ss[i,6:11] = tmp[1:6]
                     data_ss[i,17:20] = tmp[6:9]
                     data_ss[i,20] = is_o
+                    data_ss[i,21] = R
 
                 else:
 
@@ -3094,7 +3099,7 @@ class Economy:
                             print('simulation error: atilde is negative')
                     
 
-                    data_ss[i,0] = 0.
+                    data_ss[i,0] = data_option[i,t]
                     data_ss[i,1] = a
                     data_ss[i,2] = kap
                     data_ss[i,3] = an
@@ -3104,7 +3109,9 @@ class Economy:
                     tmp = get_sstatic(np.array([atilde, an, kaptilde, kapn, z, float(is_o)]))
                     data_ss[i,6:20] = tmp[1:]
                     data_ss[i,20] = is_o                    
-        
+                    data_ss[i,21] = -1000000.
+
+
 
 
         self.data_a = data_a
@@ -3303,14 +3310,13 @@ class Economy:
     def calc_moments(self):
 
         for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())
-        Econ = self
 
-        #load main simlation result
-        data_a = self.data_a
-        data_kap = self.data_kap
-        data_i_s = self.data_i_s
-        data_is_c = self.data_is_c
-        data_ss = self.data_ss
+        # #load main simlation result
+        # data_a = self.data_a
+        # data_kap = self.data_kap
+        # data_i_s = self.data_i_s
+        # data_is_c = self.data_is_c
+        # data_ss = self.data_ss
 
 
         #print moments
@@ -3323,6 +3329,9 @@ class Economy:
         mom5 = None
         mom6 = None
         mom7 = None
+        mom8 = None
+        mom9 = None
+        
 
         if rank == 0:
             print('max of a in simulation = {}'.format(np.max(data_a)))
@@ -3338,10 +3347,10 @@ class Economy:
             print('')
 
             
-            t = -1
+            t = sim_time - 2
 
             # data_ss
-            # 0: is_c
+            # 0: option
             # 1: a
             # 2: kap
             # 3: an
@@ -3362,39 +3371,56 @@ class Economy:
             # 18: taub[] or taun[]
             # 19: psib[] or psin[] + is_o*trans_retire
             # 20: is_o
+            # 21: R
+
+
+
+            is_c = np.isin(data_ss[:, 0], [0, 1])
+            is_c_sale = np.isin(data_ss[:, 0], [0])
+            is_c_nonsale = np.isin(data_ss[:, 0], [1])
+            
+            is_s = np.isin(data_ss[:, 0], [2, 3])            
+            is_s_nonacq = np.isin(data_ss[:, 0], [2])
+            is_s_acq = np.isin(data_ss[:, 0], [3])                        
             
             
-            EIc = np.mean(data_ss[:,0])
+            EIc = np.mean(is_c)
             Ea = np.mean(data_ss[:,1])
             Ekap = np.mean(data_ss[:,2])
             Ecc = np.mean(data_ss[:,6])
             Ecs = np.mean(data_ss[:,7])
             El = np.mean(data_ss[:,9])
-            En = np.mean(data_ss[:,5]* data_ss[:,10] * (data_ss[:,0]))
+            En = np.mean(data_ss[:,5]* data_ss[:,10] * is_c)
             
-            Ex = np.mean(data_ss[:,13] * (1. - data_ss[:,0]))
-            Eks = np.mean(data_ss[:,14] * (1. - data_ss[:,0]))
-            Eys = np.mean(data_ss[:,15] * (1. - data_ss[:,0]))
-            Ehkap = np.mean(data_ss[:,11] * (1. - data_ss[:,0]))
-            Ehy = np.mean(data_ss[:,10] * (1. - data_ss[:,0]))
-            Eh = np.mean(data_ss[:,12] * (1. - data_ss[:,0]))            
-            Ens = np.mean(data_ss[:,16] * (1. - data_ss[:,0])) #new! labor supply for each firms
+            Ex = np.mean(data_ss[:,13] * is_s)
+            Eks = np.mean(data_ss[:,14] * is_s)
+            Eys = np.mean(data_ss[:,15] * is_s)
+            Ehkap = np.mean(data_ss[:,11] * is_s)
+            Ehy = np.mean(data_ss[:,10] * is_s)
+            Eh = np.mean(data_ss[:,12] * is_s)
+            Ens = np.mean(data_ss[:,16] * is_s)
 
 
-            Ecagg_c = np.mean((data_ss[:,6] + p*data_ss[:,7] )* (data_ss[:,0]))
-            Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * (1. - data_ss[:,0]))
+            Ecagg_c = np.mean((data_ss[:,6] + p*data_ss[:,7] )* is_c)
+            Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * is_s)
 
-            wepsn_i = w*data_ss[:,5]*data_ss[:,10]*data_ss[:,0]
-            ETn = np.mean((data_ss[:,18]*wepsn_i - data_ss[:,19])*data_ss[:,0])            
+            wepsn_i = w*data_ss[:,5]*data_ss[:,10]*is_c
+            ETn = np.mean((data_ss[:,18]*wepsn_i - data_ss[:,19])*is_c)
 
             # ETm = np.mean((taum*(p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13]) - tran)*(1. - data_ss[:,0]) )
             
-            bizinc_i = (p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13])*(1.-data_ss[:,0])
-            ETm = np.mean((data_ss[:,18]*(bizinc_i) - data_ss[:,19])*(1. - data_ss[:,0]))
+            bizinc_i = (p*data_ss[:,15] - (rs + delk)*data_ss[:,14] - w*data_ss[:,16] - data_ss[:,13])*is_s
+            ETm = np.mean((data_ss[:,18]*(bizinc_i) - data_ss[:,19])*is_s)
 
             E_transfer = np.mean(data_ss[:,19]) #E_transfer includes E_transfer
             ETr = np.mean(trans_retire*data_ss[:,20]) # for now,E_transfer includes ETr, so we don't need include this term.
+            ER = np.mean(data_ss[:,21]*is_c_sale)
+            ETcg = taucg*ER
 
+
+            pkap_implied = (1.-taucg)*ER/np.mean(is_s_acq)
+            kapbar_implied = np.mean(data_ss[:,2]*is_c_sale)
+                          
             # yc = 1.0 #we can do this by choosing C-corp firm productivity A
 
             #here we impose labor market clearing. need to be clearful.
@@ -3404,6 +3430,7 @@ class Economy:
             self.nc = nc
             self.En = En
             self.Ens = Ens
+        
 
             kc = nc*kcnc_ratio
             
@@ -3421,7 +3448,7 @@ class Economy:
             b = Ea - (1. - taud)*kc - Eks
     #         netb = (grate + delk)*b ##typo
             netb = (rbar - grate)*b
-            tax_rev = Tc + ETn + ETm + Td + Tp + E_transfer
+            tax_rev = Tc + ETn + ETm + Td + Tp + E_transfer + ETcg
 
             GDP = yc + yn + p*Eys
             C = Ecc + p*Ecs
@@ -3460,6 +3487,7 @@ class Economy:
             print('Simulation Pops = ', num_total_pop)
             print('')
             print('Prices')
+                          
 
             print('Wage (w) = {}'.format(w))
             print('S-good price (p) = {}'.format(p))
@@ -3544,9 +3572,9 @@ class Economy:
             print('  Financial Assets = {}'.format(gini(data_ss[:,1])))
             print('  Sweats Assets = {}'.format(gini(data_ss[:,2])))
             print('  C-wages (wepsn) (S\' wage is set to zero)= {}'.format(gini(wepsn_i)))
-            print('  C-wages (wepsn) (conditional on C)= {}'.format(gini(wepsn_i[data_ss[:,0] == True])))            
-            print('  S-inc (pys - (rs +delk) - wns - x) (C\'s is set to zero )= {}'.format(gini(bizinc_i*(1. - data_ss[:,0]))))
-            print('  S-inc (pys - (rs +delk) - wns - x) (conditional on S)= {}'.format(gini(bizinc_i[data_ss[:,0] == False])))            
+            print('  C-wages (wepsn) (conditional on C)= {}'.format(gini(wepsn_i[is_c])))            
+            print('  S-inc (pys - (rs +delk) - wns - x) (C\'s is set to zero )= {}'.format(gini(bizinc_i*(is_s))))
+            print('  S-inc (pys - (rs +delk) - wns - x) (conditional on S)= {}'.format(gini(bizinc_i[is_s])))            
         #     print('  S-income = {}'.format(gini((p*data_ss[:,14]) * (1. - data_ss[:,0]))))
         #     print('  Total Income'.format('?'))
         #     print()
@@ -3604,6 +3632,16 @@ class Economy:
             print('  E(ks)/GDP             = {}'.format(Eks/GDP))
             print('  E(nu p ys - w ns)     = {}'.format((nu*p*Eys - w*Ens)))                        
             print('  E(nu p ys - w ns)/GDP = {}'.format((nu*p*Eys - w*Ens)/GDP))
+
+            print('')
+            print('Additional Moments for Kappa-Sales')
+            print('ER           = {}'.format(ER))
+            print('pkap_implied = {}'.format(pkap_implied))
+            print('pkap (param) = {}'.format(pkap))
+            print('kapbar_implied = {}'.format(kapbar_implied))
+            print('kapbar (param) = {}'.format(kapbar))
+            
+
 
 
             if (self.s_age is not None) and (self.c_age is not None):
@@ -3663,6 +3701,8 @@ class Economy:
             mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
             mom6 = nc
             mom7 = 1. - EIc
+            mom8 = 1. - pkap_implied/pkap
+            mom9 = 1. - kapbar_implied/kapbar                          
             
         mom0 = comm.bcast(mom0) #1. - Ecs/Eys
         mom1 = comm.bcast(mom1) # 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
@@ -3672,9 +3712,11 @@ class Economy:
         mom5 = comm.bcast(mom5) # (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
         mom6 = comm.bcast(mom6) # nc
         mom7 = comm.bcast(mom7) # 1. - EIc
+        mom8 = comm.bcast(mom8) # 1. - pkap_implied/pkap
+        mom9 = comm.bcast(mom9) # 1. - kapbar_implied/kapbar
         
 
-        self.moms = [mom0, mom1, mom2, mom3, mom4, mom5, mom6, mom7]
+        self.moms = [mom0, mom1, mom2, mom3, mom4, mom5, mom6, mom7, mom8, mom9]
 
         return
     
