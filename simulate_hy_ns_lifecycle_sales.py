@@ -80,7 +80,7 @@ if __name__ == '__main__':
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0    
     
 
-    p_, rc_, pkap_, kapbar_, ome_, varpi_ = 1.5, 0.05971182534103185, 0.05, 0.10, 0.46388548260346824, 0.6002410397243539
+    p_, rc_, pkap_, kapbar_, ome_, varpi_ = 1.3, 0.05971182534103185, 0.05, 0.10, 0.46388548260346824, 0.6002410397243539
     
     ###end defining additional parameters#
 

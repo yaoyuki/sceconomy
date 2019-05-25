@@ -3591,7 +3591,7 @@ class Economy:
             print('Acquired N years ago:')
 
             for t in range(40):
-                print(' N is ', t, ', with = {:f}'.format((np.mean(np.all(data_is_c[:,-(t+2):-1] == False, axis = 1)) - np.mean(np.all(data_is_c[:,-(t+3):-1] == False, axis = 1)) )/ np.mean(1. - data_ss[:,0]))) 
+                print(' N is ', t, ', with = {:f}'.format((np.mean(np.all(data_is_c[:,-(t+2):-1] == False, axis = 1)) - np.mean(np.all(data_is_c[:,-(t+3):-1] == False, axis = 1)) )/ np.mean(is_s))) 
 
             t = -1
             
@@ -3640,7 +3640,13 @@ class Economy:
             print('pkap (param) = {}'.format(pkap))
             print('kapbar_implied = {}'.format(kapbar_implied))
             print('kapbar (param) = {}'.format(kapbar))
-            
+
+            print('')
+            print('Additional Moments for Occupational Choice')
+            print('   Option 1 = {}'.format(np.mean(is_c_sale)))
+            print('   Option 2 = {}'.format(np.mean(is_c_nonsale)))
+            print('   Option 3 = {}'.format(np.mean(is_s_nonacq)))
+            print('   Option 4 = {}'.format(np.mean(is_s_acq)))            
 
 
 
@@ -4440,7 +4446,7 @@ if __name__ == '__main__':
         econ.print_parameters()
                     
     econ.simulate_model()
-    # econ.calc_moments()
+    econ.calc_moments()
     # #econ.calc_age()
 
     export_econ(econ)
