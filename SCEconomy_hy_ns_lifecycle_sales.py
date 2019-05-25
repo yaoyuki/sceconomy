@@ -2597,7 +2597,9 @@ class Economy:
         self.vn_os = vn_os
         self.vn_ys_acq = vn_ys_acq
         self.vn_os_acq = vn_os_acq        
-        
+
+        self.R_y = R_y
+        self.R_o = R_o
 
         self.bEV_yc = bEV_yc
         self.bEV_oc = bEV_oc
@@ -2831,7 +2833,7 @@ class Economy:
         
         data_i_s_elem[:] = np.load(self.path_to_data_i_s + '_' + str(rank) + '.npy')
         data_is_o_elem[:] = np.load(self.path_to_data_is_o + '_' + str(rank) + '.npy')
-        data_sales_shock[:] = np.load(self.path_to_data_sales_shock + '_' + str(rank) + '.npy')        
+        data_sales_shock_elem[:] = np.load(self.path_to_data_sales_shock + '_' + str(rank) + '.npy')        
         
         # #check the dimension of data_is_o
         # #I assume that data_is_o.shape[1] >  sim_time+1
@@ -2858,7 +2860,7 @@ class Economy:
                     is_o_m1 = data_is_o_[i,t-1]
                     is_c_m1 = data_is_c_[i,t-1] 
                     istate = data_i_s_[i, t]
-                    is_sold = data_sales_shock[i,t]
+                    is_sold = data_sales_shock_[i,t]
 
                     eps = epsgrid[is_to_ieps[istate]]
                     z = zgrid[is_to_iz[istate]]
@@ -2967,7 +2969,7 @@ class Economy:
                     else:
                         print('error')
 
-                    del max_posi
+                    # del max_posi #del is not implemented
 
                     if is_c:
                         if is_sold:
@@ -2994,7 +2996,7 @@ class Economy:
                     data_a_[i, t] = an
                     # data_kap_[i, t] = kapn
                     data_kap0_[i, t] = kapn
-                    data_is_c_[i, t] = i_c
+                    data_is_c_[i, t] = is_c
                     data_option_[i,t] = option
                     data_R_[i, t] = R
 
@@ -4392,10 +4394,10 @@ if __name__ == '__main__':
 
     econ.get_policy()
 
-    # if rank == 0:
-    #     econ.print_parameters()
+    if rank == 0:
+        econ.print_parameters()
                     
-    # econ.simulate_model()
+    econ.simulate_model()
     # econ.calc_moments()
     # #econ.calc_age()
 
