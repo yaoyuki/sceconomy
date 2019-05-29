@@ -2048,7 +2048,8 @@ class Economy:
 
                             #need to take into account borrowing constraint
                             #an_tmp = vs_an[ia, ikap,istate] - pkap*kapbar
-                            a_tmp = agrid[ia] - pkap*kapbar
+                            # a_tmp = agrid[ia] - pkap*kapbar
+                            a_tmp = agrid[ia] - pkap# *kapbar                            
 
                             #update ys_acq
                             if a_tmp >= 0.: 
@@ -3419,7 +3420,7 @@ class Economy:
 
 
             pkap_implied = (1.-taucg)*ER/np.mean(is_s_acq)
-            kapbar_implied = np.mean(data_ss[:,2]*is_c_sale)
+            kapbar_implied = np.mean(data_ss[:,2]*is_c_sale) * 10.
                           
             # yc = 1.0 #we can do this by choosing C-corp firm productivity A
 
