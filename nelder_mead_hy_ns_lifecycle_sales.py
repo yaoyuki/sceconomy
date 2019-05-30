@@ -56,7 +56,7 @@ def curvedspace(begin, end, curve, num=100):
     return ans
 
 agrid2 = curvedspace(0., 200., 2., 40)
-kapgrid2 = curvedspace(0., 2., 2., 30)
+kapgrid2 = curvedspace(0., 3., 2., 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 prob = np.load('./DeBacker/prob_epsz.npy') #DeBacker
 

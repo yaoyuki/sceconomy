@@ -2893,7 +2893,7 @@ class Economy:
 
                     
 
-                    a_sale = a + R
+                    a_sale = a + (1.-taucg)*R
                     kap_sale = 0.
 
                     option = -1
@@ -3062,6 +3062,7 @@ class Economy:
 
                     atilde = a
                     kaptilde = kap
+                    
                     #R can be negative
                     if data_option[i,t] == 0 and R > 0.: #if the option is 0 (C-and sale kappa) and R has a positive value
                         atilde = a + (1.-taucg)*R
@@ -3403,7 +3404,7 @@ class Economy:
 
 
             Ecagg_c = np.mean((data_ss[:,6] + p*data_ss[:,7] )* is_c)
-            Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] ) * is_s)
+            Ecagg_s = np.mean((data_ss[:,6] + p*data_ss[:,7] )* is_s)
 
             wepsn_i = w*data_ss[:,5]*data_ss[:,10]*is_c
             ETn = np.mean((data_ss[:,18]*wepsn_i - data_ss[:,19])*is_c)
@@ -3416,10 +3417,9 @@ class Economy:
             E_transfer = np.mean(data_ss[:,19]) #E_transfer includes E_transfer
             ETr = np.mean(trans_retire*data_ss[:,20]) # for now,E_transfer includes ETr, so we don't need include this term.
             ER = np.mean(data_ss[:,21]*is_c_sale)
+            
             ETcg = taucg*ER
-
-
-            pkap_implied = (1.-taucg)*ER/np.mean(is_s_acq)
+            pkap_implied = ER/np.mean(is_s_acq)
             kapbar_implied = np.mean(data_ss[:,2]*is_c_sale) * 10.
                           
             # yc = 1.0 #we can do this by choosing C-corp firm productivity A
