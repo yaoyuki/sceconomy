@@ -3708,7 +3708,7 @@ class Economy:
             mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
             mom6 = nc
             mom7 = 1. - EIc
-            mom8 = 1. - pkap_implied/pkap
+            mom8 = ER - pkap*np.mean(is_s_acq)# 1. - pkap_implied/pkap #ER/np.mean(is_s_acq)
             mom9 = 1. - kapbar_implied/kapbar                          
             
         mom0 = comm.bcast(mom0) #1. - Ecs/Eys
