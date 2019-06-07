@@ -3634,6 +3634,8 @@ class Economy:
             print('  E(nu p ys - w ns)     = {}'.format((nu*p*Eys - w*Ens)))                        
             print('  E(nu p ys - w ns)/GDP = {}'.format((nu*p*Eys - w*Ens)/GDP))
 
+
+
             print('')
             print('Additional Moments for Kappa-Sales')
             print('ER           = {}'.format(ER))
@@ -3641,6 +3643,14 @@ class Economy:
             print('pkap (param) = {}'.format(pkap))
             print('kapbar_implied = {}'.format(kapbar_implied))
             print('kapbar (param) = {}'.format(kapbar))
+
+            print('')
+            print('Moments for sold kappa')
+            print('   Mean      = {}'.format(np.mean(data_ss[:,2][is_c_sale])))
+            print('   STD       = {}'.format(np.std(data_ss[:,2][is_c_sale])))
+            print('   Median    = {}'.format(np.median(data_ss[:,2][is_c_sale])))                        
+            
+            
 
             print('')
             print('Additional Moments for Occupational Choice')
@@ -3708,7 +3718,7 @@ class Economy:
             mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
             mom6 = nc
             mom7 = 1. - EIc
-            mom8 = ER - pkap*np.mean(is_s_acq)# 1. - pkap_implied/pkap #ER/np.mean(is_s_acq)
+            mom8 = (ER - pkap*np.mean(is_s_acq))/yc #1. - pkap_implied/pkap #ER/np.mean(is_s_acq) #
             mom9 = 1. - kapbar_implied/kapbar                          
             
         mom0 = comm.bcast(mom0) #1. - Ecs/Eys
