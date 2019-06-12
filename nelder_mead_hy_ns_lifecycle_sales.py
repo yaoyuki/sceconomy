@@ -191,17 +191,25 @@ if __name__ == '__main__':
     split_shock(path_to_data_is_o, 100_000, num_core)
     del data_rand
 
-    prob_sales = np.array([[0.5, 0.5], [0.5, 0.5]]) #[[y -> y, y -> o], [o -> y, o ->o]]
-    np.random.seed(3)
-    data_rand = np.random.rand(num_pop, sim_time) #+1 is added since this matters in calculation
-    data_sales_shock = np.ones((num_pop, sim_time), dtype = int)
-    data_sales_shock[:, 0] = 0 #initial state. it does not matter if simulation is long enough.
-    calc_trans(data_sales_shock, data_rand, prob_sales)
+
+    
+    # prob_sales = np.array([[0.5, 0.5], [0.5, 0.5]]) #[[y -> y, y -> o], [o -> y, o ->o]]
+    # np.random.seed(3)
+    # data_rand = np.random.rand(num_pop, sim_time) #+1 is added since this matters in calculation
+    # data_sales_shock = np.ones((num_pop, sim_time), dtype = int)
+    # data_sales_shock[:, 0] = 0 #initial state. it does not matter if simulation is long enough.
+    # calc_trans(data_sales_shock, data_rand, prob_sales)
+    # data_sales_shock = data_sales_shock[:, 2000:]
+    # np.save(path_to_data_sales_shock + '.npy' , data_sales_shock)
+    # split_shock(path_to_data_sales_shock, 100_000, num_core)
+    # del data_rand
+    
+
+    #prob  of being 1 is 0.15
+    data_sales_shock = np.random.choice(2, (num_pop, sim_time), p = [0.15, 0.85])
     data_sales_shock = data_sales_shock[:, 2000:]
     np.save(path_to_data_sales_shock + '.npy' , data_sales_shock)
     split_shock(path_to_data_sales_shock, 100_000, num_core)
-    del data_rand
-    
 
     ### end generate shocks ###
     

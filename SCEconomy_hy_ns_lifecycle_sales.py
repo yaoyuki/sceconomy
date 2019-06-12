@@ -3420,7 +3420,8 @@ class Economy:
             
             ETcg = taucg*ER
             pkap_implied = ER/np.mean(is_s_acq)
-            kapbar_implied = np.mean(data_ss[:,2]*is_c_sale) * 10.
+            kapbar_implied = np.mean(data_ss[:,2][is_c_sale])
+            #kapbar_implied = np.mean(data_ss[:,2]*is_c_sale) * 10.
                           
             # yc = 1.0 #we can do this by choosing C-corp firm productivity A
 
@@ -3496,8 +3497,11 @@ class Economy:
 
             #instead of imposing labor market clearing condition
             # mom0 = 1. - (1. - theta)*yc/(w*nc)
+
+            cc_intermediary = pkap*np.mean(is_s_acq) - ER
             mom0 = 1. - Ecs/Eys
-            mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            # mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            mom1 = 1. - (cc_intermediary + Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc #modified C-goods market clearing condition
             mom2 = 1. - (tax_rev - E_transfer - netb)/g            
             print('')
 
