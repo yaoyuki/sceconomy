@@ -206,7 +206,7 @@ if __name__ == '__main__':
     
 
     #prob  of being 1 is 0.15
-    data_sales_shock = np.random.choice(2, (num_pop, sim_time), p = [0.15, 0.85])
+    data_sales_shock = np.random.choice(2, (num_pop, sim_time), p = [0.85, 0.15])
     data_sales_shock = data_sales_shock[:, 2000:]
     np.save(path_to_data_sales_shock + '.npy' , data_sales_shock)
     split_shock(path_to_data_sales_shock, 100_000, num_core)

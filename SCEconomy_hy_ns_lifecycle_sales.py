@@ -2999,7 +2999,7 @@ class Economy:
 
                     
                     data_a_[i, t] = an
-                    # data_kap_[i, t] = kapn
+                    # data_kap_[i, t] = kapn # we do not save here,...
                     data_kap0_[i, t] = kapn
                     data_is_c_[i, t] = is_c
                     data_option_[i,t] = option
@@ -3621,8 +3621,8 @@ class Economy:
                                                                         np.mean( (1.-data_is_o[:,t])*(1.-data_is_c[:,t]))))
             print('  Frac of Old   who is  C  ,   S   = {}, {} '.format(np.mean( (data_is_o[:,t])*(data_is_c[:,t])),
                                                                         np.mean( (data_is_o[:,t])*(1.-data_is_c[:,t]))))
-            print('  Deterioraton of kapn due to succeession = {}'.format(np.mean(data_kap0[:,t]) - np.mean(data_kap[:,t])))
-            print('  Deterioraton of kap  due to succeession = {}'.format(np.mean(data_kap0[:,t-1]) - np.mean(data_kap[:,t-1])))
+            print('  Deterioraton of kapn due to inheritance = {}'.format(np.mean(data_kap0[:,t]) - np.mean(data_kap[:,t])))
+            print('  Deterioraton of kap  due to inheritance = {}'.format(np.mean(data_kap0[:,t-1]) - np.mean(data_kap[:,t-1])))
 
             print('  Transfer                = {}'.format(E_transfer))
             print('    Transfer (Non-retire) = {}'.format(E_transfer - ETr))
@@ -3710,13 +3710,15 @@ class Economy:
             #     EVb_1gR = np.mean(data_val_sweat[:,-1])
             #     print('  EVb  ((1+grate)/(1+rbar))      = {}'.format(EVb_1gR))
             #     print('  EVb/GDP ((1+grate)/(1+rbar))   = {}'.format(EVb_1gR/GDP))                            
-                
-
 
 
             mom0 = 1. - Ecs/Eys
-            mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            mom1 = 1. - (cc_intermediary + Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc #modified C-goods market clearing condition
             mom2 = 1. - (tax_rev - E_transfer - netb)/g            
+            
+            # mom0 = 1. - Ecs/Eys
+            # mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
+            # mom2 = 1. - (tax_rev - E_transfer - netb)/g            
             mom3 = 0.0
             mom4 = Ens/En
             mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
@@ -4155,7 +4157,9 @@ class Economy:
         data_kap0 = Econ.data_kap0
         data_i_s = Econ.data_i_s
         data_is_c = Econ.data_is_c
-        data_is_o = Econ.data_is_o        
+        data_is_o = Econ.data_is_o
+        data_option = Econ.data_option
+        data_R = Econ.data_R        
         
 
         #simulation parameters
@@ -4167,13 +4171,14 @@ class Economy:
 
 
         @nb.jit(nopython = True, parallel = True)
-        def calc_all(data_a_, data_kap_, data_kap0_, data_i_s_, data_is_c_, data_is_o_,
-                     data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_, data_hy_, data_hkap_, data_h_, data_x_, data_ks_, data_ys_, data_ns_, data_i_tax_bracket_):
+        def calc_all(data_a_, data_kap_, data_kap0_, data_i_s_, data_is_c_, data_is_o_, data_option_, data_R_,
+                     data_atilde_, data_kaptilde_, data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_, data_hy_, data_hkap_, data_h_, data_x_, data_ks_, data_ys_, data_ns_, data_i_tax_bracket_):
 
             for i in nb.prange(num_total_pop):
                 for t in range(1, sim_time):
 
 
+                    option = data_option_[i,t]
                     istate = data_i_s_[i, t]
                     eps = epsgrid[is_to_ieps[istate]]
                     z = zgrid[is_to_iz[istate]]
@@ -4199,8 +4204,43 @@ class Economy:
                     kapn = data_kap0_[i, t] #this should be kap0
 
                     is_c = data_is_c_[i, t]
-                    is_o = data_is_o_[i, t]                    
+                    is_o = data_is_o_[i, t]
 
+                    atilde = np.nan
+                    kaptilde = np.nan
+
+                    R = data_R_[i,t]
+                    
+                    if option == 0: #C and Sell all the kappa
+
+                        atilde = a + (1.-taucg)*R
+                        kaptilde = 0.
+
+                        u, cc, cs, cagg, l , n, i_bra, tau, psi = get_cstatic([atilde, an, eps, is_o])
+
+                    elif option == 1: #C and keep kappa
+
+                        atilde = a
+                        kaptilde = kap
+
+                        u, cc, cs, cagg, l , n, i_bra, tau, psi = get_cstatic([atilde, an, eps, is_o])
+                        
+                    elif option == 2: #S and no purchase of p
+                        atilde = a
+                        kaptilde = kap
+
+                        u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns, i_bra, tau, psi = get_sstatic([atilde, an, kap, kapn, z, is_o])
+
+                    elif option == 3: #S and acquisition
+                        atilde = a - pkap
+                        kaptilde = kap + kapbar
+
+                        u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns, i_bra, tau, psi = get_sstatic([atilde, an, kap, kapn, z, is_o])
+
+                    else:
+                        print('error: option value is ', option)
+
+                        
 
                     # data_ss
                     # 0: is_c
@@ -4226,10 +4266,8 @@ class Economy:
                     # 20: is_old
             
 
-                    if is_c:
-                        u, cc, cs, cagg, l , n, i_bra, tau, psi = get_cstatic([a, an, eps, is_o])
-                    else:
-                        u, cc, cs, cagg, l, hy, hkap, h, x, ks, ys, ns, i_bra, tau, psi = get_sstatic([a, an, kap, kapn, z, is_o])
+                    data_atilde_[i, t-1] = atilde
+                    data_kaptilde_[i, t-1] = kaptilde
 
                     data_u_[i, t] = u
                     data_cc_[i, t] = cc
@@ -4245,7 +4283,9 @@ class Economy:
                     data_ys_[i, t] = ys
                     data_ns_[i, t] = ns
                     data_i_tax_bracket_[i, t] = i_bra
-                    
+
+        data_atilde = np.zeros(data_a.shape)
+        data_kaptilde = np.zeros(data_a.shape)        
         data_u = np.zeros(data_a.shape)
         data_cc = np.zeros(data_a.shape)
         data_cs = np.zeros(data_a.shape)
@@ -4262,8 +4302,8 @@ class Economy:
         data_i_tax_bracket = np.zeros(data_a.shape)
 
         #note that this does not store some impolied values,,,, say div or value of sweat equity
-        calc_all(data_a, data_kap, data_kap0, data_i_s, data_is_c, data_is_o, ##input
-                 data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_hy, data_hkap, data_h, data_x, data_ks, data_ys, data_ns, data_i_tax_bracket ##output
+        calc_all(data_a, data_kap, data_kap0, data_i_s, data_is_c, data_is_o, data_option, data_R,##input
+                 data_atilde, data_kaptilde, data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_hy, data_hkap, data_h, data_x, data_ks, data_ys, data_ns, data_i_tax_bracket ##output
             )
 
 
@@ -4314,7 +4354,8 @@ class Economy:
 #         # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_bh, data_val_sweat_bh)
 #         calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_1gR, data_val_sweat_1gR)                
 
-
+        self.data_atilde = data_atilde
+        self.data_kaptilde = data_kaptilde
         self.data_u = data_u
         self.data_cc = data_cc
         self.data_cs = data_cs
@@ -4362,7 +4403,9 @@ class Economy:
 
             np.save(dir_path_save + 'data_is_o', self.data_is_o[:, -100-1:])            
             np.save(dir_path_save + 'data_a', self.data_a[:, -100:])
+            np.save(dir_path_save + 'data_atilde', self.data_atilde[:, -100:])            
             np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:])
+            np.save(dir_path_save + 'data_kaptilde', self.data_kaptilde[:, -100:])            
             np.save(dir_path_save + 'data_kap0', self.data_kap0[:, -100:])            
             np.save(dir_path_save + 'data_i_s', self.data_i_s[:, -100:])
             np.save(dir_path_save + 'data_is_c', self.data_is_c[:, -100:])

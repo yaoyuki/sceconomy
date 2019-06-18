@@ -45,17 +45,26 @@ if __name__ == '__main__':
     split_shock(path_to_data_is_o, 100_000, num_core)
     del data_rand, data_is_o
 
-    #save and split shocks for is_old
-    prob_sales = np.array([[0.5, 0.5], [0.5, 0.5]]) #[[y -> y, y -> o], [o -> y, o ->o]]
-    np.random.seed(3)
-    data_rand = np.random.rand(num_pop, sim_time) #+1 is added since this matters in calculation
-    data_sales_shock = np.ones((num_pop, sim_time), dtype = int)
-    data_sales_shock[:, 0] = 0 #initial state. it does not matter if simulation is long enough.
-    calc_trans(data_sales_shock, data_rand, prob_sales)
+
+    #prob  of being 1 is 0.15
+    data_sales_shock = np.random.choice(2, (num_pop, sim_time), p = [0.85, 0.15])
     data_sales_shock = data_sales_shock[:, 2000:]
     np.save(path_to_data_sales_shock + '.npy' , data_sales_shock)
     split_shock(path_to_data_sales_shock, 100_000, num_core)
-    del data_rand, data_sales_shock
+    del data_sales_shock
+
+
+    # #save and split shocks for is_old
+    # prob_sales = np.array([[0.5, 0.5], [0.5, 0.5]]) #[[y -> y, y -> o], [o -> y, o ->o]]
+    # np.random.seed(3)
+    # data_rand = np.random.rand(num_pop, sim_time) #+1 is added since this matters in calculation
+    # data_sales_shock = np.ones((num_pop, sim_time), dtype = int)
+    # data_sales_shock[:, 0] = 0 #initial state. it does not matter if simulation is long enough.
+    # calc_trans(data_sales_shock, data_rand, prob_sales)
+    # data_sales_shock = data_sales_shock[:, 2000:]
+    # np.save(path_to_data_sales_shock + '.npy' , data_sales_shock)
+    # split_shock(path_to_data_sales_shock, 100_000, num_core)
+    # del data_rand, data_sales_shock
     
 
     # taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
@@ -76,11 +85,11 @@ if __name__ == '__main__':
     # additional info
     
     agrid2 = curvedspace(0., 200., 2., 40)
-    kapgrid2 = curvedspace(0., 2.0, 2., 30)
+    kapgrid2 = curvedspace(0., 3.0, 2., 30)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0    
     
 
-    p_, rc_, pkap_, kapbar_, ome_, varpi_ = 1.3, 0.05971182534103185, 0.05, 0.10, 0.46388548260346824, 0.6002410397243539
+    p_, rc_, pkap_, kapbar_, ome_, varpi_ = 1.3704997418378628, 0.05977496017560455, 0.010978932534249171, 0.10020386938487741, 0.46388548260346824, 0.6002410397243539
     
     ###end defining additional parameters#
 
@@ -131,10 +140,10 @@ if __name__ == '__main__':
     
     ###calculate other important variables###
     ##econ.calc_sweat_eq_value()
-    # econ.calc_age()
-    # econ.simulate_other_vars()
+    econ.calc_age()
+    econ.simulate_other_vars()
     econ.calc_moments()    
-    # econ.save_result()
+    econ.save_result()
 
 
     
