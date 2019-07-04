@@ -65,7 +65,7 @@ s_emp_share = 0.30 #target
 
 # taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
 # psib = np.array([0.007026139999999993, 0.02013013999999999, 0.03, 0.08398847999999996, 0.19024008000000006, 0.2648964800000001])
-# taup = 0.20
+taup = 0.20
 
 
 def target(prices):
@@ -89,7 +89,8 @@ def target(prices):
 
     econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
-                   scaling_n = 1.82, scaling_b = 1.82)
+                   scaling_n = 1.82, scaling_b = 1.82, taup = taup)                   
+#                   scaling_n = 1.82, scaling_b = 1.82, taub = taub, psib = psib, taup = taup)
     
     econ.set_prices(p = p_, rc = rc_, pkap = pkap_, kapbar = kapbar_)
     

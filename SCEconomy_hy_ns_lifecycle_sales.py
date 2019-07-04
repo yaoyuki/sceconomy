@@ -3010,7 +3010,7 @@ class Economy:
 
                 t = sim_time
 
-                kap = data_kap_[i, t-1]
+                kap = data_kap0_[i, t-1]
                 is_o = data_is_o_[i,t]
                 is_o_m1 = data_is_o_[i,t-1]
                 is_c_m1 = data_is_c_[i,t-1] 
@@ -3019,7 +3019,9 @@ class Economy:
                 #that is, if he was old in t-1 and S-guy, he is young in t.
                 if is_o_m1 and (not is_o) and (not is_c_m1):
                     kap = la_tilde * kap
-                    data_kap_[i, t-1] = kap
+
+                #save
+                data_kap_[i, t-1] = kap
 
             
         calc(data_a_elem, data_kap_elem, data_kap0_elem ,data_i_s_elem, data_is_o_elem,

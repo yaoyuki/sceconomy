@@ -47,6 +47,7 @@ if __name__ == '__main__':
 
 
     #prob  of being 1 is 0.15
+    # data_sales_shock = np.random.choice(2, (num_pop, sim_time), p = [0.50, 0.50])
     data_sales_shock = np.random.choice(2, (num_pop, sim_time), p = [0.85, 0.15])
     data_sales_shock = data_sales_shock[:, 2000:]
     np.save(path_to_data_sales_shock + '.npy' , data_sales_shock)
@@ -69,7 +70,7 @@ if __name__ == '__main__':
 
     # taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
     # psib = np.array([0.007026139999999993, 0.02013013999999999, 0.03, 0.08398847999999996, 0.19024008000000006, 0.2648964800000001])
-    # taup = 0.20
+    taup = 0.20
     
     
 
@@ -89,7 +90,8 @@ if __name__ == '__main__':
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0    
     
 
-    p_, rc_, pkap_, kapbar_, ome_, varpi_ = 1.3704997418378628, 0.05977496017560455, 0.010978932534249171, 0.10020386938487741, 0.46388548260346824, 0.6002410397243539
+    p_, rc_, pkap_, kapbar_, ome_, varpi_ = 1.6959895478680314, 0.0022859333983255795, 0.012559094599466355, 0.05827055544624726, 0.46388548260346824, 0.6002410397243539
+    # 1.6120266141599342, 0.004489583936630955, 0.00618750541475882, 0.07182001341947838, 0.46388548260346824, 0.6002410397243539
     
     ###end defining additional parameters#
 
@@ -99,7 +101,7 @@ if __name__ == '__main__':
 
     econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob,
                    ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
-                   scaling_n = 1.82, scaling_b = 1.82
+                   scaling_n = 1.82, scaling_b = 1.82, taup = taup
     )
     
     econ.set_prices(p = p_, rc = rc_, pkap = pkap_, kapbar = kapbar_)
