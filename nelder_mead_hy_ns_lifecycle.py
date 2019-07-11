@@ -13,15 +13,18 @@ p_init = float(args[1])
 rc_init = float(args[2])
 ome_init = float(args[3])
 varpi_init = float(args[4])
+theta_init = float(args[5])
 
 ome_ = ome_init
 varpi_ = varpi_init
 
-num_core = int(args[5])
+num_core = int(args[6])
 
 print('the code is running with ', num_core, 'cores...')
-# prices_init = [p_init, rc_init, ome_init, varpi_init]
-prices_init = [p_init, rc_init]
+
+# prices_init = [p_init, rc_init]
+prices_init = [p_init, rc_init, ome_init, varpi_init, theta_init]
+# prices_init = [p_init, rc_init,  theta_init]
 
 
 nd_log_file = './log/log.txt'
@@ -57,13 +60,19 @@ kapgrid2 = curvedspace(0., 2., 2., 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 prob = np.load('./DeBacker/prob_epsz.npy') #DeBacker
 
-pure_sweat_share = 0.10 #target
-s_emp_share = 0.30 #target
+pure_sweat_share = 0.093 # target
+s_emp_share = 0.30 # target
+xc_share = 0.134 # target
+#w*nc/GDP = 0.22
 
-taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
-psib = np.array([0.007026139999999993, 0.02013013999999999, 0.03, 0.08398847999999996, 0.19024008000000006, 0.2648964800000001])
+GDP_guess = 3.0
+
+# taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+# psib = np.array([0.007026139999999993, 0.02013013999999999, 0.03, 0.08398847999999996, 0.19024008000000006, 0.2648964800000001])
 # taup = 0.20
 
+# ome_ = ome_init
+# varpi_ =  varpi_init
 
 def target(prices):
     global dist_min
@@ -71,8 +80,9 @@ def target(prices):
     
     p_ = prices[0]
     rc_ = prices[1]
-    # ome_ = prices[2]
-    # varpi_ = prices[3]
+    ome_ = prices[2]
+    varpi_ = prices[3]
+    theta_ = prices[4]
     
     
     # print('computing for the case w = {:f}, p = {:f}, rc = {:f}'.format(w_, p_, rc_), end = ', ')
@@ -83,8 +93,11 @@ def target(prices):
     #econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.6, varpi = 0.1)
 
     econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob,
-                   ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
-                   scaling_n = 1.82, scaling_b = 1.82, taub = taub, psib = psib)
+                   ome = ome_, varpi = varpi_, theta = theta_,
+                   path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
+                   scaling_n = GDP_guess, scaling_b = GDP_guess, g = 0.133*GDP_guess, yn = 0.266*GDP_guess, xnb = 0.110*GDP_guess,
+                   delk = 0.041
+    )
                    
 
 
@@ -113,7 +126,8 @@ def target(prices):
     rc = econ.rc
     ome = econ.ome
     varpi = econ.varpi
-
+    theta = econ.theta
+    
     moms = econ.moms
 
             
@@ -125,26 +139,30 @@ def target(prices):
         # mom5 = comm.bcast(mom5) # (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
         # mom6 = comm.bcast(mom6) # nc
         # mom7 = comm.bcast(mom7) # 1. - EIc
+        # mom8 = comm.bcast(mom8) # xc/GDP        
         
     
 
-    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0) #mom3 should be missing.
+    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0) #mom3 should be missing.
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0) #mom3 should be missing.
+    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0 + (moms[8]/xc_share - 1.)**2.0 ) #mom3 should be missing.
+    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[8]/xc_share - 1.)**2.0 ) #mom3 should be missing.
     
-    if p != p_ or  rc != rc_ or ome != ome_ or varpi != varpi_:
+    if p != p_ or  rc != rc_ or ome != ome_ or varpi != varpi_ or theta != theta_ :
     #if p != p_ or  rc != rc_:
         print('err: input prices and output prices do not coincide.')
         print('p = ', p, ', p_ = ', p_)
         print('rc = ', rc, ', rc_ = ', rc_)
         print('ome = ', ome, ', ome_ = ', ome_)
         print('varpi = ', varpi, ', varpi_ = ', varpi_)
+        print('theta = ', theta, ', theta_ = ', theta_)        
 
 
         
     print('dist = {:f}'.format(dist))
 
     f = open(nd_log_file, 'a')
-    f.writelines(str(p) + ', ' + str(rc) + ', ' + str(ome) + ', ' + str(varpi) + ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[4]) + ', ' + str(moms[5]) + ', ' + str(moms[7]) +  '\n')
+    f.writelines(str(p) + ', ' + str(rc) + ', ' + str(ome) + ', ' + str(varpi)  + ', ' + str(theta) +  ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[4]) + ', ' + str(moms[5]) + ', ' + str(moms[7]) + ', ' + str(moms[8])  +  '\n')
     # f.writelines(str(p) + ', ' + str(rc) + ', ' + str(varpi) + ', ' + str(ome) + ', ' + str(theta) + ', ' +  str(dist) + ', ' +\
   
     f.close()
@@ -158,7 +176,7 @@ if __name__ == '__main__':
 
     f = open(nd_log_file, 'w')
     # f.writelines('w, p, rc, dist, mom0, mom1, mom2, mom3\n')
-    f.writelines('p, rc, ome, varpi, dist, mom0, mom1, mom2, mom4, mom5, mom7\n')        
+    f.writelines('p, rc, ome, varpi, dist, mom0, mom1, mom2, mom4, mom5, mom7, mom8\n')        
     f.close()
 
 

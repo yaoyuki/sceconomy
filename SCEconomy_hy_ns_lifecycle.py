@@ -3081,6 +3081,7 @@ class Economy:
         mom5 = None
         mom6 = None
         mom7 = None
+        mom8 = None
 
         if rank == 0:
             print('max of a in simulation = {}'.format(np.max(data_a)))
@@ -3222,6 +3223,8 @@ class Economy:
             print('Wage (w) = {}'.format(w))
             print('S-good price (p) = {}'.format(p))
             print('Interest rate (r_c) = {}'.format(rc))
+
+           
 
             #instead of imposing labor market clearing condition
             # mom0 = 1. - (1. - theta)*yc/(w*nc)
@@ -3413,14 +3416,12 @@ class Economy:
 
 
 
-            mom0 = 1. - Ecs/Eys
-            mom1 = 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
-            mom2 = 1. - (tax_rev - E_transfer - netb)/g            
             mom3 = 0.0
             mom4 = Ens/En
             mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
             mom6 = nc
             mom7 = 1. - EIc
+            mom8 = xc/GDP
             
         mom0 = comm.bcast(mom0) #1. - Ecs/Eys
         mom1 = comm.bcast(mom1) # 1. - (Ecc  + Ex+ (grate + delk)*(kc + Eks) + g + xnb - yn)/yc
@@ -3430,9 +3431,10 @@ class Economy:
         mom5 = comm.bcast(mom5) # (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
         mom6 = comm.bcast(mom6) # nc
         mom7 = comm.bcast(mom7) # 1. - EIc
+        mom8 = comm.bcast(mom8) # xc/GDP
         
 
-        self.moms = [mom0, mom1, mom2, mom3, mom4, mom5, mom6, mom7]
+        self.moms = [mom0, mom1, mom2, mom3, mom4, mom5, mom6, mom7, mom8]
 
         return
     
