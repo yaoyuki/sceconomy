@@ -16,8 +16,8 @@ if __name__ == '__main__':
     #generate shock sequene
     path_to_data_i_s = './tmp/data_i_s'
     path_to_data_is_o = './tmp/data_is_o'    
-    num_pop = 100_000
-    sim_time = 3_000
+    num_pop = 25_000
+    sim_time = 2_500
 
     #save and split shocks for istate
     # prob = np.load('./input_data/transition_matrix.npy')
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     calc_trans(data_i_s, data_rand, prob)
     data_i_s = data_i_s[:, 2000:]
     np.save(path_to_data_i_s + '.npy' , data_i_s)
-    split_shock(path_to_data_i_s, 100_000, num_core)
+    split_shock(path_to_data_i_s, num_pop, num_core)
     del data_rand, data_i_s    
 
     #save and split shocks for is_old
@@ -41,11 +41,11 @@ if __name__ == '__main__':
     calc_trans(data_is_o, data_rand, prob_yo)
     data_is_o = data_is_o[:, 2000:]
     np.save(path_to_data_is_o + '.npy' , data_is_o)
-    split_shock(path_to_data_is_o, 100_000, num_core)
+    split_shock(path_to_data_is_o, num_pop, num_core)
     del data_rand, data_is_o
 
-    taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
-    psib = np.array([0.007026139999999993, 0.02013013999999999, 0.03, 0.08398847999999996, 0.19024008000000006, 0.2648964800000001])
+    # taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+    # psib = np.array([0.007026139999999993, 0.02013013999999999, 0.03, 0.08398847999999996, 0.19024008000000006, 0.2648964800000001])
     # taup = 0.20
     
     
@@ -63,10 +63,13 @@ if __name__ == '__main__':
     
     agrid2 = curvedspace(0., 200., 2., 40)
     kapgrid2 = curvedspace(0., 2.0, 2., 30)
-    zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0    
+    zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
+
+    GDP_guess = 3.14
     
 
-    p_, rc_, ome_, varpi_ = 1.43615487485722, 0.05971182534103185, 0.46388548260346824, 0.6002410397243539
+    p_, rc_, ome_, varpi_, theta_  = 2.0409581799291763, 0.0620105633267497, 0.49174012379111887, 0.5928066432197389, 0.48614779647770473
+   
 
     # 1.5209092097405632, 0.053192497033077685, 0.46388548260346824, 0.6002410397243539
     
@@ -103,8 +106,10 @@ if __name__ == '__main__':
     
 
     econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob,
-                   ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
-                   scaling_n = 1.82, scaling_b = 1.82, taub = taub, psib = psib
+                   ome = ome_, varpi = varpi_, theta = theta_,
+                   path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
+                   scaling_n = GDP_guess, scaling_b = GDP_guess, g = 0.133*GDP_guess, yn = 0.266*GDP_guess, xnb = 0.110*GDP_guess,
+                   delk = 0.041, veps = 0.418, vthet = 1.0 - 0.418
     )
     
     econ.set_prices(p = p_, rc = rc_)
@@ -127,14 +132,19 @@ if __name__ == '__main__':
 
     p = econ.p
     rc = econ.rc
-    moms = econ.moms
+    ome = econ.ome
+    varpi = econ.varpi
+    theta = econ.theta
     
-    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0)
-    
-    if p != p_ or  rc != rc_:
+    if p != p_ or  rc != rc_ or ome != ome_ or varpi != varpi_ or theta != theta_ :
+    #if p != p_ or  rc != rc_:
         print('err: input prices and output prices do not coincide.')
         print('p = ', p, ', p_ = ', p_)
         print('rc = ', rc, ', rc_ = ', rc_)
+        print('ome = ', ome, ', ome_ = ', ome_)
+        print('varpi = ', varpi, ', varpi_ = ', varpi_)
+        print('theta = ', theta, ', theta_ = ', theta_)        
+    
 
     
     #calc main moments

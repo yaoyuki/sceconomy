@@ -42,8 +42,8 @@ from markov import calc_trans, Stationary
 #generate shock sequene
 path_to_data_i_s = './tmp/data_i_s'
 path_to_data_is_o = './tmp/data_is_o'    
-num_pop = 100_000
-sim_time = 3_000
+num_pop = 25_000
+sim_time = 2_500
 
 prob = np.load('./DeBacker/prob_epsz.npy')
 prob_yo = np.array([[44./45., 1./45.], [3./45., 42./45.]]) #[[y -> y, y -> o], [o -> y, o ->o]]
@@ -60,12 +60,12 @@ kapgrid2 = curvedspace(0., 2., 2., 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
 prob = np.load('./DeBacker/prob_epsz.npy') #DeBacker
 
-pure_sweat_share = 0.093 # target
+pure_sweat_share = 0.090 # target
 s_emp_share = 0.30 # target
 xc_share = 0.134 # target
 #w*nc/GDP = 0.22
 
-GDP_guess = 3.0
+GDP_guess = 3.14
 
 # taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
 # psib = np.array([0.007026139999999993, 0.02013013999999999, 0.03, 0.08398847999999996, 0.19024008000000006, 0.2648964800000001])
@@ -96,7 +96,10 @@ def target(prices):
                    ome = ome_, varpi = varpi_, theta = theta_,
                    path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
                    scaling_n = GDP_guess, scaling_b = GDP_guess, g = 0.133*GDP_guess, yn = 0.266*GDP_guess, xnb = 0.110*GDP_guess,
-                   delk = 0.041
+                   delk = 0.041, delkap = 0.041,  veps = 0.418, vthet = 1.0 - 0.418,
+                   tauc = 0.065, taud = 0.133, taup = 0.36
+                   
+                   
     )
                    
 
@@ -188,7 +191,7 @@ if __name__ == '__main__':
     calc_trans(data_i_s, data_rand, prob)
     data_i_s = data_i_s[:, 2000:]
     np.save(path_to_data_i_s + '.npy' , data_i_s)
-    split_shock(path_to_data_i_s, 100_000, num_core)
+    split_shock(path_to_data_i_s, 25_000, num_core)
     del data_rand
     
 
@@ -199,7 +202,7 @@ if __name__ == '__main__':
     calc_trans(data_is_o, data_rand, prob_yo)
     data_is_o = data_is_o[:, 2000:]
     np.save(path_to_data_is_o + '.npy' , data_is_o)
-    split_shock(path_to_data_is_o, 100_000, num_core)
+    split_shock(path_to_data_is_o, 25_000, num_core)
     del data_rand
 
     ### end generate shocks ###

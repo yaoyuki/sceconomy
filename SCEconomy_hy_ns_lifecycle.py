@@ -201,8 +201,8 @@ class Economy:
         self.xnb      = 0.185
         self.yn       = 0.451
         self.zeta     = 1.0
-        self.sim_time = 1000
-        self.num_total_pop = 100_000
+        self.sim_time = 500
+        self.num_total_pop = 25_000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
         self.upsilon  = 0.5
         self.varpi    = 0.5
@@ -2181,7 +2181,7 @@ class Economy:
         v_os_util = np.ones((num_a, num_kap, num_s))*100.0
         
 
-        max_iter = 50
+        max_iter = 20
         max_howard_iter = 50
         tol = 1.0e-5
         dist = 10000.0
@@ -3418,7 +3418,7 @@ class Economy:
 
             mom3 = 0.0
             mom4 = Ens/En
-            mom5 = (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
+            mom5 = (p*Eys - (rs+delk)*Eks - w*Ens - Ex)/(GDP- Ex)
             mom6 = nc
             mom7 = 1. - EIc
             mom8 = xc/GDP
@@ -3428,7 +3428,7 @@ class Economy:
         mom2 = comm.bcast(mom2) # 1. - (tax_rev - tran - netb)/g
         mom3 = comm.bcast(mom3) # 0.0
         mom4 = comm.bcast(mom4) # Ens/En
-        mom5 = comm.bcast(mom5) # (p*Eys - (rs+delk)*Eks - w*Ens)/GDP
+        mom5 = comm.bcast(mom5) # (p*Eys - (rs+delk)*Eks - w*Ens - Ex)/GDP
         mom6 = comm.bcast(mom6) # nc
         mom7 = comm.bcast(mom7) # 1. - EIc
         mom8 = comm.bcast(mom8) # xc/GDP
