@@ -27,8 +27,11 @@ prices_init = [p_init, rc_init, ome_init, varpi_init, theta_init]
 # prices_init = [p_init, rc_init,  theta_init]
 
 
-nd_log_file = './log/log.txt'
-detailed_output_file = './log/detail.txt'
+# nd_log_file = './log/log.txt'
+# detailed_output_file = './log/detail.txt'
+
+nd_log_file = '/cluster/shared/yaoxx366/log/log.txt'
+detailed_output_file = '/cluster/shared/yaoxx366/log/detail.txt'
 
 
 f = open(detailed_output_file, 'w')
@@ -58,7 +61,7 @@ def curvedspace(begin, end, curve, num=100):
 agrid2 = curvedspace(0., 200., 2., 40)
 kapgrid2 = curvedspace(0., 2., 2., 30)
 zgrid2 = np.load('./input_data/zgrid.npy') ** 2.
-epsgrid2 = (np.load('./input_data/epsgrid.npy') ** 1.75) * 0.8
+# epsgrid2 = (np.load('./input_data/epsgrid.npy') ** 1.75) * 0.8
 prob = np.load('./DeBacker/prob_epsz.npy') #DeBacker
 
 pure_sweat_share = 0.090 # target
@@ -66,7 +69,7 @@ s_emp_share = 0.33 # target
 xc_share = 0.134 # target
 #w*nc/GDP = 0.22
 
-GDP_guess = 3.14
+GDP_guess = 3.56
 
 # taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
 # psib = np.array([0.007026139999999993, 0.02013013999999999, 0.03, 0.08398847999999996, 0.19024008000000006, 0.2648964800000001])
@@ -99,7 +102,8 @@ def target(prices):
                    path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
                    scaling_n = GDP_guess, scaling_b = GDP_guess, g = 0.133*GDP_guess, yn = 0.266*GDP_guess, xnb = 0.110*GDP_guess,
                    delk = 0.041, delkap = 0.041,  veps = 0.418, vthet = 1.0 - 0.418,
-                   tauc = 0.065, taud = 0.133, taup = 0.36, epsgrid = epsgrid2
+                   tauc = 0.065, taud = 0.133, taup = 0.36
+                   #, epsgrid = epsgrid2
                    
                    
     )
