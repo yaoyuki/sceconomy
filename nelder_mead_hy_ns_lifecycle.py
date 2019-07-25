@@ -15,9 +15,6 @@ ome_init = float(args[3])
 varpi_init = float(args[4])
 theta_init = float(args[5])
 
-ome_ = ome_init
-varpi_ = varpi_init
-
 num_core = int(args[6])
 
 print('the code is running with ', num_core, 'cores...')
@@ -30,8 +27,8 @@ prices_init = [p_init, rc_init, ome_init, varpi_init, theta_init]
 # nd_log_file = './log/log.txt'
 # detailed_output_file = './log/detail.txt'
 
-nd_log_file = '/cluster/shared/yaoxx366/log/log.txt'
-detailed_output_file = '/cluster/shared/yaoxx366/log/detail.txt'
+nd_log_file = '/cluster/shared/yaoxx366/log2/log.txt'
+detailed_output_file = '/cluster/shared/yaoxx366/log2/detail.txt'
 
 
 f = open(detailed_output_file, 'w')
@@ -69,11 +66,12 @@ s_emp_share = 0.33 # target
 xc_share = 0.134 # target
 #w*nc/GDP = 0.22
 
-GDP_guess = 3.90
+GDP_guess = 3.70
 
-# taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) * 0.50 #large one
+# taup = 0.36*(1.0 - 0.278)
+# taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) *(1.0 -  0.506) #large one
 # psib = np.array([0.007026139999999993, 0.02013013999999999, 0.03, 0.08398847999999996, 0.19024008000000006, 0.2648964800000001])
-# taup = 0.20
+
 
 # ome_ = ome_init
 # varpi_ =  varpi_init
@@ -154,7 +152,7 @@ def target(prices):
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0) #mom3 should be missing.
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0) #mom3 should be missing.
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0 + (moms[8]/xc_share - 1.)**2.0 ) #mom3 should be missing.
-    dist = np.sqrt(10.*moms[0]**2.0 + 10.*moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0 + (moms[8]/xc_share - 1.)**2.0 ) #mom3 should be missing.
+    dist = np.sqrt(5.*moms[0]**2.0 + 5.*moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0 + (moms[8]/xc_share - 1.)**2.0 ) #mom3 should be missing.
    
     
     if p != p_ or  rc != rc_ or ome != ome_ or varpi != varpi_ or theta != theta_ :

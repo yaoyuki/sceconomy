@@ -65,11 +65,11 @@ if __name__ == '__main__':
     kapgrid2 = curvedspace(0., 2.0, 2., 30)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
-    GDP_guess = 3.14
+    GDP_guess = 3.90
     
 
-    p_, rc_, ome_, varpi_, theta_  = 2.0409581799291763, 0.0620105633267497, 0.49174012379111887, 0.5928066432197389, 0.48614779647770473
-   
+    p_, rc_, ome_, varpi_, theta_  = 2.2273274721534855, 0.06760084236490592, 0.4545559620360224, 0.560445554483451, 0.5070179601220124
+
 
     # 1.5209092097405632, 0.053192497033077685, 0.46388548260346824, 0.6002410397243539
     
@@ -109,7 +109,7 @@ if __name__ == '__main__':
                    ome = ome_, varpi = varpi_, theta = theta_,
                    path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
                    scaling_n = GDP_guess, scaling_b = GDP_guess, g = 0.133*GDP_guess, yn = 0.266*GDP_guess, xnb = 0.110*GDP_guess,
-                   delk = 0.041, veps = 0.418, vthet = 1.0 - 0.418
+                   delk = 0.041, delkap = 0.041, tauc = 0.065, taud = 0.133, veps = 0.418, vthet = 1.0 - 0.418, taup = 0.36
     )
     
     econ.set_prices(p = p_, rc = rc_)

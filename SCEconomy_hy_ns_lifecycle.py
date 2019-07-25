@@ -606,11 +606,12 @@ class Economy:
             n = -1.0
 
 
-            #here, I directly modify epsilon
             if is_o:
                 eps = tau_wo*eps #replace eps with tau_wo*eps
 
-
+            print('tau_wo = ', tau_wo)
+            print('trans_retire = ', trans_retire)
+                
             #is this unique?
             #repeat until n falls in bracket nuber i (i=0,1,2,..,I-1)
             i = 0
@@ -777,6 +778,7 @@ class Economy:
         
         util = self.generate_util()
 
+
         
         @nb.jit(nopython = True)
         def Hy(h, alp6):
@@ -805,7 +807,9 @@ class Economy:
             kap = s[2]
             kapn = s[3]
             z = s[4]
-            is_o = s[5]            
+            is_o = s[5]
+
+
             
             if is_o:
                 z = tau_bo*z #replace eps with tau_wo*eps

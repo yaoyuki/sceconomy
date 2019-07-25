@@ -79,6 +79,7 @@ class Economy:
                  num_total_pop = None,
                  A = None,
                  path_to_data_i_s = None,
+                 path_to_data_is_o = None,
 
                  taun = None,
                  psin = None,
@@ -135,7 +136,10 @@ class Economy:
         if sim_time is not None: self.sim_time = sim_time
         if num_total_pop is not None: self.num_total_pop = num_total_pop
         if A is not None: self.A = A
+
         if path_to_data_i_s is not None: self.path_to_data_i_s = path_to_data_i_s
+        if path_to_data_is_o is not None: self.path_to_data_is_o = path_to_data_is_o
+        
 
         if taun is not None: self.taun = taun
         if psin is not None: self.psin = psin
@@ -198,7 +202,10 @@ class Economy:
         self.sim_time = 1000
         self.num_total_pop = 100000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
-        self.path_to_data_i_s = './input_data/data_i_s'
+
+        self.path_to_data_i_s = './tmp/data_i_s'
+        self.path_to_data_is_o = './tmp/data_is_o'
+
 
         self.taub = np.array([.137, .185, .202, .238, .266, .280])
         self.bbracket = np.array([0.150, 0.319, 0.824, 2.085, 2.930])
@@ -225,7 +232,9 @@ class Economy:
         #s = (e,z)'
 
         #pi(t,t+1)
-        self.prob = np.load('./input_data/transition_matrix.npy')
+        self.prob = np.load('./DeBacker/prob_epsz.npy') #default transition is taken from DeBakcer
+        self.prob_yo = np.array([[44./45., 1./45.], [3./45., 42./45.]]) #[[y -> y, y -> o], [o -> y, o ->o]]
+        
     
 
         # ####do we need this one here?
@@ -235,6 +244,14 @@ class Economy:
 
         self.is_to_iz = np.load('./input_data/is_to_iz.npy')
         self.is_to_ieps = np.load('./input_data/is_to_ieps.npy')
+
+
+        self.s_age = None
+        self.c_age = None
+        self.sind_age = None
+        self.cind_age = None
+        self.y_age = None
+        self.o_age = None
         
 
     def __set_nltax_parameters__(self):
@@ -284,6 +301,9 @@ class Economy:
     
         if self.bh >= 1.0:
             print('Error: bh must be in (0, 1) but bh = ', self.bh)
+
+        self.prob_st = Stationary(self.prob)
+        self.prob_yo_st = Stationary(self.prob_yo)            
         
         
         
@@ -351,13 +371,36 @@ class Economy:
         print('zeta = ', self.zeta)
         print('A = ', self.A)
 
-        print('taub = ', self.taub)
-        print('psib = ', self.psib)
-        print('bbracket = ', self.bbracket)                
 
-        print('taun = ', self.taun)
-        print('psin = ', self.psin)
-        print('nbracket = ', self.nbracket)
+        print('')
+        print('nonlinear tax function')
+
+
+        for ib, tmp in enumerate(self.taub):
+            print(f'taub{ib} = {tmp}')
+        for ib, tmp in enumerate(self.psib):
+            print(f'psib{ib} = {tmp}')            
+        for ib, tmp in enumerate(self.bbracket):
+            print(f'bbracket{ib} = {tmp}')
+        for i, tmp in enumerate(self.taun):
+            print(f'taun{i} = {tmp}')
+        for i, tmp in enumerate(self.psin):
+            print(f'psin{i} = {tmp}')            
+        for i, tmp in enumerate(self.nbracket):
+            print(f'nbracket{i} = {tmp}')
+
+        print('')
+        print('Parameters specific to a lifecycle model')
+        print('iota = ', self.iota) #added
+        # print('la_tilde = ', self.la_tilde) #added
+        print('tau_wo = ', self.tau_wo) #added
+        print('tau_bo = ', self.tau_bo) #added
+        print('trans_retire = ', self.trans_retire)
+        
+        print(f'prob_yo =  {self.prob_yo[0,0]}, {self.prob_yo[0,1]}, {self.prob_yo[1,0]}, {self.prob_yo[1,1]}.') #added
+        print('statinary dist of prob_yo = ', self.prob_yo_st) #added
+        print('')
+            
 
         
         
@@ -403,138 +446,11 @@ class Economy:
         print('num_total_pop = ', self.num_total_pop)
             
         
-        # print('')
-        # print('Parameters')
-        # print('alpha = ', self.alpha)
-        # print('beta = ', self.beta)
-        # print('chi = ', self.chi)
-        # print('delk = ', self.delk)
-        # print('delkap = ', self.delkap)
-        # print('eta = ', self.eta)
-        # print('g (govt spending) = ', self.g)
-        # print('grate (growth rate of the economy) = ', self.grate)
-        # print('la = ', self.la)
-        # print('mu = ', self.mu)
-        # print('ome = ', self.ome)
-        # print('phi = ', self.phi)
-        # print('rho = ', self.rho)
-        # print('tauc = ', self.tauc)
-        # print('taud = ', self.taud)
-        # print('taup = ', self.taup)
-        # print('theta = ', self.theta)
-        # print('veps = ', self.veps)
-        # print('vthet = ', self.vthet)
-        # print('xnb = ', self.xnb)
-        # print('yn = ', self.yn)
-        # print('zeta = ', self.zeta)
-        # print('lbar = ', self.lbar)
-        # print('A = ', self.A)
-        
-        
-        
-        # if self.__is_price_set__:
-            
-        #     print('')
-        #     print('Prices')
-        #     print('w = ', self.w)
-        #     print('p = ', self.p)
-        #     print('rc = ', self.rc)
-        #     print('')
-        #     print('Implied prices')
-        #     print('rbar = ', self.rbar)
-        #     print('rs = ', self.rs)
-
-        #     print('')
-        #     print('Implied Parameters')
-        #     print('nu = ', self.nu)
-        #     print('bh (beta_tilde) = ', self.bh)
-        #     print('varrho = ', self.varrho)
-
-
-        #     print('')
-        #     print('xi1 = ', self.xi1)
-        #     print('xi2 = ', self.xi2)
-        #     print('xi3 = ', self.xi3)
-        #     print('xi4 = ', self.xi4)
-        #     print('xi5 = ', self.xi5)
-        #     print('xi6 = ', self.xi6)
-        #     print('xi7 = ', self.xi7)
-        #     print('xi8 = ', self.xi8)
-            
-        # else:
-        #     print('')
-        #     print('Prices not set')
-            
-        # print('')
-        # print('Computational Parameters')
-
-        # print('amin = ', self.amin)
-        # print('sim_time = ', self.sim_time)
-        # print('num_total_pop = ', self.num_total_pop)
-
-        
     def generate_util(self):
-        ###load vars###
-        alpha = self.alpha
-        beta = self.beta
 
-        chi = self.chi
-        delk = self.delk
-        delkap = self.delkap
-        eta = self.eta
-        g = self.g
-        grate = self.grate
-        la = self.la
-        mu = self.mu
-        ome = self.ome
-        phi = self.phi
-        rho = self.rho
-        tauc = self.tauc
-        taud = self.taud
-        taup = self.taup
-        theta = self.theta
-        veps = self.veps
-        vthet = self.vthet
-        xnb = self.xnb
-        yn = self.yn
-        zeta= self.zeta
-
-        agrid = self.agrid
-        epsgrid = self.epsgrid
-        zgrid = self.zgrid
-
-        prob = self.prob
-
-        is_to_iz = self.is_to_iz
-        is_to_ieps = self.is_to_ieps
-
-        amin = self.amin
-
-        num_a = self.num_a
-        num_eps = self.num_eps
-        num_z = self.num_z
-
-        nu = self.nu
         bh = self.bh
-        varrho = self.varrho
-
-        w = self.w
-        p = self.p
-        rc = self.rc
-
-        rbar = self.rbar
-        rs = self.rs
-
-        xi1 = self.xi1
-        xi2 = self.xi2
-        xi3 = self.xi3
-        xi4 = self.xi4
-        xi5 = self.xi5
-        xi6 = self.xi6
-        xi7 = self.xi7
-        xi8 = self.xi8
-
-        ###end loading vars###
+        eta = self.eta
+        mu = self.mu
         
         @nb.jit(nopython = True)
         def util(c, l):
@@ -550,65 +466,10 @@ class Economy:
         return util
     
     def generate_dc_util(self):
-        ###load vars###
-        alpha = self.alpha
-        beta = self.beta
-        chi = self.chi
-        delk = self.delk
-        delkap = self.delkap
-        eta = self.eta
-        g = self.g
-        grate = self.grate
-        la = self.la
-        mu = self.mu
-        ome = self.ome
-        phi = self.phi
-        rho = self.rho
-        tauc = self.tauc
-        taud = self.taud
-        taup = self.taup
-        theta = self.theta
-        veps = self.veps
-        vthet = self.vthet
-        xnb = self.xnb
-        yn = self.yn
-        zeta= self.zeta
 
-        agrid = self.agrid
-        epsgrid = self.epsgrid
-        zgrid = self.zgrid
-
-        prob = self.prob
-
-        is_to_iz = self.is_to_iz
-        is_to_ieps = self.is_to_ieps
-
-        amin = self.amin
-
-        num_a = self.num_a
-        num_eps = self.num_eps
-        num_z = self.num_z
-
-        nu = self.nu
         bh = self.bh
-        varrho = self.varrho
-
-        w = self.w
-        p = self.p
-        rc = self.rc
-
-        rbar = self.rbar
-        rs = self.rs
-
-        xi1 = self.xi1
-        xi2 = self.xi2
-        xi3 = self.xi3
-        xi4 = self.xi4
-        xi5 = self.xi5
-        xi6 = self.xi6
-        xi7 = self.xi7
-        xi8 = self.xi8
-        ###end loading vars###
+        eta = self.eta
+        mu = self.mu
         
         #this is in the original form
         @nb.jit(nopython = True)
@@ -623,7 +484,7 @@ class Economy:
             
         return dc_util
 
-    import math
+     # import math
 
     def generate_cstatic(self):
 
@@ -642,7 +503,6 @@ class Economy:
         ome = self.ome
         phi = self.phi
         rho = self.rho
-        # varpi = self.varpi
         tauc = self.tauc
         taud = self.taud
         taup = self.taup
@@ -658,7 +518,6 @@ class Economy:
         nbracket = self.nbracket
 
         agrid = self.agrid
-        # kapgrid = self.kapgrid
         epsgrid = self.epsgrid
         zgrid = self.zgrid
 
@@ -670,7 +529,6 @@ class Economy:
         amin = self.amin
 
         num_a = self.num_a
-        # num_kap = self.num_kap
         num_eps = self.num_eps
         num_z = self.num_z
 
@@ -700,6 +558,7 @@ class Economy:
             a = s[0]
             an = s[1]
             eps = s[2]
+            is_o = s[3]
 
             u = -np.inf
             cc = -1.0
@@ -707,8 +566,10 @@ class Economy:
             cagg = -1.0
 
             l = -1.0
-
             n = -1.0
+
+            if is_o:
+                eps = tau_wo*eps #replace eps with tau_wo*eps
 
             #is this unique?
             #repeat until n falls in bracket nuber i (i=0,1,2,..,I-1)
@@ -717,9 +578,8 @@ class Economy:
             num_taun = len(taun)
             wepsn = 0.0
             for i in range(num_taun):
-                n = (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*psin[i])/(w*eps*(1.-taun[i])*(xi3 + xi7))
+                n = (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*(psin[i] + is_o*trans_retire))/(w*eps*(1.-taun[i])*(xi3 + xi7))                
                 wepsn = w*eps*n #wageincome
-
                 j = locate(wepsn, nbracket)
 
                 if i == j:
@@ -786,7 +646,7 @@ class Economy:
                 cagg = xi2*cc
                 u = util(cagg, 1. - n)
 
-            #used to be u, cc, cs, cagg, l ,n
+
             return u, cc, cs, cagg, l ,n, -1.0e23, -1.0e23, i, taun[i], psin[i]
 
     
