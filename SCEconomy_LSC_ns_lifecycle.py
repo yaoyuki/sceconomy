@@ -511,7 +511,9 @@ class Economy:
         vthet = self.vthet
         xnb = self.xnb
         yn = self.yn
-        zeta= self.zeta
+        zeta = self.zeta
+
+        tau_wo = self.tau_wo
 
         taun = self.taun
         psin = self.psin

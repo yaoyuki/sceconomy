@@ -19,8 +19,8 @@ num_core = int(args[6])
 
 print('the code is running with ', num_core, 'cores...')
 
-# prices_init = [p_init, rc_init]
-prices_init = [p_init, rc_init, ome_init, varpi_init, theta_init]
+prices_init = [p_init, rc_init]
+# prices_init = [p_init, rc_init, ome_init, varpi_init, theta_init]
 # prices_init = [p_init, rc_init,  theta_init]
 
 
@@ -68,14 +68,14 @@ xc_share = 0.134 # target
 
 GDP_guess = 3.70
 
-# taup = 0.36*(1.0 - 0.278)
-# taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) *(1.0 -  0.506) #large one
-# psib = np.array([0.007026139999999993, 0.02013013999999999, 0.03, 0.08398847999999996, 0.19024008000000006, 0.2648964800000001])
+taup = 0.36*(1.0 - 0.278)
+taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) *(1.0 -  0.506) #large one
+psib = np.array([-0.016705100000000014, 0.00993489999999998, 0.03, 0.13975679999999993, 0.35576280000000016, 0.5075368000000003])
 
 
-# ome_ = ome_init
-# varpi_ =  varpi_init
-# theta_ =  theta_init
+ome_ = ome_init
+varpi_ =  varpi_init
+theta_ =  theta_init
 
 def target(prices):
     global dist_min
@@ -83,9 +83,9 @@ def target(prices):
     
     p_ = prices[0]
     rc_ = prices[1]
-    ome_ = prices[2]
-    varpi_ = prices[3]
-    theta_ = prices[4]
+    # ome_ = prices[2]
+    # varpi_ = prices[3]
+    # theta_ = prices[4]
     
     
     # print('computing for the case w = {:f}, p = {:f}, rc = {:f}'.format(w_, p_, rc_), end = ', ')
@@ -100,13 +100,10 @@ def target(prices):
                    path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
                    scaling_n = GDP_guess, scaling_b = GDP_guess, g = 0.133*GDP_guess, yn = 0.266*GDP_guess, xnb = 0.110*GDP_guess,
                    delk = 0.041, delkap = 0.041,  veps = 0.418, vthet = 1.0 - 0.418,
-                   tauc = 0.065, taud = 0.133, taup = 0.36
+                   tauc = 0.065, taud = 0.133,
+                   taup = taup, taub = taub, psib = psib
                    #, epsgrid = epsgrid2
-                   
-                   
     )
-                   
-
 
     econ.set_prices(p = p_, rc = rc_)
     
@@ -149,10 +146,10 @@ def target(prices):
         
     
 
-    # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0) #mom3 should be missing.
+    dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0) #mom3 should be missing.
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0) #mom3 should be missing.
     # dist = np.sqrt(moms[0]**2.0 + moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0 + (moms[8]/xc_share - 1.)**2.0 ) #mom3 should be missing.
-    dist = np.sqrt(5.*moms[0]**2.0 + 5.*moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0 + (moms[8]/xc_share - 1.)**2.0 ) #mom3 should be missing.
+    # dist = np.sqrt(5.*moms[0]**2.0 + 5.*moms[1]**2.0 + (moms[4]/s_emp_share - 1.)**2.0 +  (moms[5]/pure_sweat_share - 1.)**2.0 + (moms[8]/xc_share - 1.)**2.0 ) #mom3 should be missing.
    
     
     if p != p_ or  rc != rc_ or ome != ome_ or varpi != varpi_ or theta != theta_ :

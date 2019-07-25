@@ -609,8 +609,8 @@ class Economy:
             if is_o:
                 eps = tau_wo*eps #replace eps with tau_wo*eps
 
-            print('tau_wo = ', tau_wo)
-            print('trans_retire = ', trans_retire)
+            # print('tau_wo = ', tau_wo)
+            # print('trans_retire = ', trans_retire)
                 
             #is this unique?
             #repeat until n falls in bracket nuber i (i=0,1,2,..,I-1)
@@ -724,6 +724,9 @@ class Economy:
         xnb = self.xnb
         yn = self.yn
         zeta= self.zeta
+
+        tau_bo = self.tau_bo
+        trans_retire = self.trans_retire
 
         taub = self.taub
         psib = self.psib
