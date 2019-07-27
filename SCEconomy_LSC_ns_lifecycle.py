@@ -188,7 +188,7 @@ class Economy:
         self.taum     = 0.20
         self.taun     = 0.40
         self.taup     = 0.30
-        self.theta    = 0.41
+        self.theta    = 0.41 
         self.veps     = 0.4
         self.vthet    = 0.4
         self.xnb      = 0.185
@@ -514,6 +514,7 @@ class Economy:
         zeta = self.zeta
 
         tau_wo = self.tau_wo
+        trans_retire = self.trans_retire
 
         taun = self.taun
         psin = self.psin
@@ -598,8 +599,8 @@ class Economy:
 
                 for i, wepsn in enumerate(nbracket[1:-1]): #remove -inf, inf
                     n = wepsn/w/eps
-                    obj_i = n - ( (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*psin[i])/(w*eps*(1.-taun[i])*(xi3 + xi7)))
-                    obj_i1 = n - ( (xi3*w*eps*(1.-taun[i+1]) - xi4*a + xi5*an - xi6 - xi7*psin[i+1])/(w*eps*(1.-taun[i+1])*(xi3 + xi7)))
+                    obj_i = n - ( (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*(psin[i]+is_o*trans_retire))/(w*eps*(1.-taun[i])*(xi3 + xi7)))
+                    obj_i1 = n - ( (xi3*w*eps*(1.-taun[i+1]) - xi4*a + xi5*an - xi6 - xi7*(psin[i]+is_o*trans_retire))/(w*eps*(1.-taun[i+1])*(xi3 + xi7)))
 
                     if obj_i * obj_i1 < 0:
                         flag = True
@@ -643,13 +644,13 @@ class Economy:
                 l = 1. - n
 
                 #cc from FOC  is wrong at the corner.
-                cc = xi4*a - xi5*an + xi6 + xi7*((1.-taun[i])*w*eps*n + psin[i])
+                cc = xi4*a - xi5*an + xi6 + xi7*((1.-taun[i])*w*eps*n + psin[i] + is_o*trans_retire)
                 cs = xi1*cc
                 cagg = xi2*cc
                 u = util(cagg, 1. - n)
 
 
-            return u, cc, cs, cagg, l ,n, -1.0e23, -1.0e23, i, taun[i], psin[i]
+            return u, cc, cs, cagg, l ,n, -1.0e23, -1.0e23, i, taun[i], psin[i] + is_o*trans_retire
 
     
         return get_cstatic
@@ -682,6 +683,9 @@ class Economy:
         zeta= self.zeta
         lbar = self.lbar
 
+        tau_bo = self.tau_bo
+        trans_retire = self.trans_retire
+        
         taub = self.taub
         psib = self.psib
         bbracket = self.bbracket
@@ -726,16 +730,17 @@ class Economy:
         
         util = self.generate_util()
 
-
-        
-
         @nb.jit(nopython = True)
         def get_sstatic(s):
 
             a = s[0]
             an = s[1]
             z = s[2]
+            is_o = s[3]
 
+            if is_o:
+                z = tau_bo*z #replace eps with tau_wo*eps
+            
             # ks = (z*p*alpha/(rs+delk))**(1./(1. - alpha))
             
             ks = z**(1./(1. - alpha - nu))*xi8 #should be the same as above
@@ -765,7 +770,7 @@ class Economy:
 
             
             # cc = xi4*a - xi5*an + xi6 + xi11*(p*ys - (rs+delk)*ks)
-            cc = xi4*a - xi5*an + (1.- taub[ibracket])/denom*bizinc + (psib[ibracket] + yn - xnb)/denom
+            cc = xi4*a - xi5*an + (1.- taub[ibracket])/denom*bizinc + (psib[ibracket] + is_o*trans_retire + yn - xnb)/denom
             # cc = xi4*a - xi5*an + (1.- taub[ibracket])*xi7*bizinc + (psib[ibracket])*xi7 + xi6
             cs = xi1*cc
             cagg = xi2 * cc
@@ -779,12 +784,13 @@ class Economy:
 
             # lbar is a given constant
             #mx, my, x are set to np.nan.
-            return u, cc, cs, cagg, lbar, -1.0e20, ks, ys, ibracket, taub[ibracket], psib[ibracket], ns
+            return u, cc, cs, cagg, lbar, -1.0e20, ks, ys, ibracket, taub[ibracket], psib[ibracket] + is_o*trans_retire, ns
         
         return get_sstatic
     
     def get_policy(self):
-        for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())        
+        # I found this magic is very dangerous.
+        # for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())        
 
         Econ = self
         num_total_state = num_a* num_s
@@ -820,32 +826,41 @@ class Economy:
 
         get_cstatic = Econ.generate_cstatic()
 
-        #to solve C-optimization problem, we need the max feasible set for an [amin, sup_an]
-        c_supan = np.ones((num_a, num_eps)) * (-2.)
+
+        c_supan = np.ones((num_a, num_eps, 2)) * (-2.)
+
+        
+        #for young c-corp workers
         for ia, a in enumerate(agrid):
-            for ieps, eps in enumerate(epsgrid):
+                for ieps, eps in enumerate(epsgrid):
 
-                #first tax bracket is picked for no reason
-                c_supan[ia, ieps] = ((1. + rbar)*a + (1. - taun[0])*w*eps + psin[0])/(1. + grate)
+                    c_supan[ia, ieps, 0] = ((1. + rbar)*a + (1. - taun[0])*w*eps + psin[0] + yn - xnb)/(1. + grate)
+                    
+        #for old c-corp workers
+        for ia, a in enumerate(agrid):
+                for ieps, eps in enumerate(epsgrid):
 
+                    c_supan[ia, ieps, 1] = ((1. + rbar)*a + (1. - taun[0])*tau_wo*w*eps + psin[0] + trans_retire + yn - xnb)/(1. + grate)
+        
 
         get_sstatic = Econ.generate_sstatic()                    
         #to solve S-optimization problem, we need the max feasible set for an [amin, sup_an]                    
-        s_supan = np.ones((num_a, num_z)) * (-2.)
+
+        s_supan = np.ones((num_a, num_z, 2)) * (-2.)
         
         ### ks = xi8  ##this is wrong
 
         for iz, z in enumerate(zgrid):
             for ia, a in enumerate(agrid):
-
+                for i_old in range(2):
             
-                ks = z**(1./(1. - alpha - nu))*xi8 #should be the same as above
-                ns = xi13*ks            
-                ys = z*(ks**alpha)*(ns**nu)
+                    ks = z**(1./(1. - alpha - nu))*xi8 #should be the same as above
+                    ns = xi13*ks            
+                    ys = z*(ks**alpha)*(ns**nu)
                 
 
-                #first tax bracket is picked. I don't have a clear reqson for it.
-                s_supan[ia, iz] = ((1. + rbar)*a + (1. - taub[0])*(p*ys - (rs + delk)*ks - w*ns) + psib[0] + yn - xnb)/(1. + grate)
+                    #first tax bracket is picked. I don't have a clear reqson for it.
+                    s_supan[ia, iz, is_old] = ((1. + rbar)*a + (1. - taub[0])*(p*ys - (rs + delk)*ks - w*ns) + psib[0] + i_old*trans_retire + yn - xnb)/(1. + grate)
 
         del ks, ys, ns
                     
@@ -853,24 +868,28 @@ class Economy:
         @nb.jit(nopython = True)    
         def _obj_loop_(*args):
             _an_ = args[0]
-            _EV_ = args[1]
+            _EV_ = args[1] 
             _ia_ = args[2]
             _istate_ = args[3]
             _is_c_ = args[4]
+            _is_old_ = args[5] # 0 (young) or 1 (old)
 
             u = 0.0
 
             if _is_c_:
-                u = get_cstatic(np.array([agrid[_ia_], _an_, epsgrid[is_to_ieps[_istate_]]]))[0]
+                u = get_cstatic(np.array([agrid[_ia_], _an_, epsgrid[is_to_ieps[_istate_]]], _is_old_))[0]
             else:
-                u = get_sstatic(np.array([agrid[_ia_], _an_, zgrid[is_to_iz[_istate_]]]))[0]
+                u = get_sstatic(np.array([agrid[_ia_], _an_, zgrid[is_to_iz[_istate_]]]), _is_old_)[0]
 
-            return -(u + bh*fem_peval(_an_, agrid,  _EV_[0, :, _istate_])**(1. - mu))**(1./(1. - mu)) 
-            # return -(u + fem_peval(_an_, agrid,  _EV_[0, :, _istate_] ))**(1./(1. - mu)) 
+            # isn't it wrong?
+            # return -(u + bh*fem_peval(_an_, agrid,  _EV_[0, :, _istate_])**(1. - mu))**(1./(1. - mu))
+
+            # usually _EV_ is already discounted            
+            return -(u + fem_peval(_an_, agrid,  _EV_[0, :, _istate_] ))**(1./(1. - mu)) 
             
         #epsilon = np.finfo(float).eps
         @nb.jit(nopython = True)
-        def _optimize_given_state_(_an_min_, _an_sup_, _EV_, _ia_ ,_istate_, _is_c_):        
+        def _optimize_given_state_(_an_min_, _an_sup_, _EV_, _ia_ ,_istate_, _is_c_, _is_old_):        
 
             #arguments
             ax = _an_min_
@@ -897,7 +916,7 @@ class Economy:
 
 #            print('is_c = ',_is_c_)
 
-            fx= _obj_loop_(x,  _EV_, _ia_ ,_istate_, _is_c_) 
+            fx= _obj_loop_(x,  _EV_, _ia_ ,_istate_, _is_c_, _is_old_) 
             fv=fx
             fw=fx
 
@@ -967,7 +986,7 @@ class Economy:
                 else:
                     u = x+abs(tol1)*np.sign(d)
 
-                fu = _obj_loop_(u, _EV_, _ia_ ,_istate_, _is_c_)
+                fu = _obj_loop_(u, _EV_, _ia_ ,_istate_, _is_c_, _is_old_)
 
                 if (fu <= fx):
                     if (u >= x):
@@ -1009,7 +1028,7 @@ class Economy:
             return ans
 
         @nb.jit(nopython = True)
-        def _inner_loop_for_assigned_(assigned_indexes, _EV_, _vc_an_, _vcn_, _vc_util_, _is_c_):
+        def _inner_loop_for_assigned_(assigned_indexes, _EV_, _vc_an_, _vcn_, _vc_util_, _is_c_, _is_o_, _is_o_):
 
 
             ibegin = assigned_indexes[0]
@@ -1034,42 +1053,42 @@ class Economy:
                     #ks = (z**(1./(1.-alpha)))*xi8
                     #an_min = chi*ks #chi*ks
 
-                ans =  _optimize_given_state_(an_min, an_sup, _EV_, ia, istate, _is_c_)
+                ans =  _optimize_given_state_(an_min, an_sup, _EV_, ia, istate, _is_c_, _is_o_)
                 
 
                 _vc_an_[ind] = ans
-                _vcn_[ind] = -_obj_loop_(ans, _EV_, ia, istate, _is_c_)
+                _vcn_[ind] = -_obj_loop_(ans, _EV_, ia, istate, _is_c_, _is_o_)
 
                 if _is_c_:
-                    _vc_util_[ind] = get_cstatic(np.array([agrid[ia], ans, epsgrid[is_to_ieps[istate]]]))[0]
+                    _vc_util_[ind] = get_cstatic(np.array([agrid[ia], ans, epsgrid[is_to_ieps[istate]]], _is_o_))[0]
                 else:
-                    _vc_util_[ind] = get_sstatic(np.array([agrid[ia], ans, zgrid[is_to_iz[istate]]]))[0]
+                    _vc_util_[ind] = get_sstatic(np.array([agrid[ia], ans, zgrid[is_to_iz[istate]]]), _is_o_)[0]
                     
                 ind = ind + 1
 
-        # howard interation is commented out for now.
 
-        @nb.jit(nopython = True)
-        def _howard_iteration_(_vmax_, _vcn_, _vsn_, _vc_an_, _vc_util_, _vs_an_, _vs_util_, howard_iter):
-            __EV__ = np.zeros((1, num_a,  num_s))
-            if howard_iter > 0:
+         
+        # @nb.jit(nopython = True)
+        # def _howard_iteration_(_vmax_, _vcn_, _vsn_, _vc_an_, _vc_util_, _vs_an_, _vs_util_, howard_iter):
+        #     __EV__ = np.zeros((1, num_a,  num_s))
+        #     if howard_iter > 0:
 
-                for it_ho in range(howard_iter):
+        #         for it_ho in range(howard_iter):
 
-                    _vmax_[:] = np.fmax(_vcn_, _vsn_)
+        #             _vmax_[:] = np.fmax(_vcn_, _vsn_)
 
-                    for ia in range(num_a):
-                        __EV__[0, ia, :] = bh*((_vmax_[ia, :]**(1. - mu))@(prob.T)).reshape((1, 1, num_s)) 
+        #             for ia in range(num_a):
+        #                 __EV__[0, ia, :] = bh*((_vmax_[ia, :]**(1. - mu))@(prob.T)).reshape((1, 1, num_s)) 
 
-                    for istate in range(num_s):
-                        iz = is_to_iz[istate]
-                        z = zgrid[iz]
+        #             for istate in range(num_s):
+        #                 iz = is_to_iz[istate]
+        #                 z = zgrid[iz]
 
-                        for ia in range(num_a):
+        #                 for ia in range(num_a):
 
-                            _vcn_[ia, istate] = (_vc_util_[ia, istate] + fem_peval(_vc_an_[ia, istate], agrid, __EV__[0, :, istate]) )**(1./(1. - mu))
+        #                     _vcn_[ia, istate] = (_vc_util_[ia, istate] + fem_peval(_vc_an_[ia, istate], agrid, __EV__[0, :, istate]) )**(1./(1. - mu))
 
-                            _vsn_[ia, istate] = (_vs_util_[ia, istate] + fem_peval(_vs_an_[ia, istate], agrid, __EV__[0, :, istate]) )**(1./(1. - mu))
+        #                     _vsn_[ia, istate] = (_vs_util_[ia, istate] + fem_peval(_vs_an_[ia, istate], agrid, __EV__[0, :, istate]) )**(1./(1. - mu))
         
 
 
@@ -1081,54 +1100,111 @@ class Economy:
                 
                 istate, ia = unravel_ip(i)
                 v[ia, istate] = val[i]
-                
 
 
         #initialize variables for VFI            
-        vc_an_tmp = np.ones((num_assigned))
-        vcn_tmp = np.ones((num_assigned))
-        vc_util_tmp = np.ones((num_assigned))
+        v_yc_an_tmp = np.ones((num_assigned))
+        vn_yc_tmp = np.ones((num_assigned))
+        v_yc_util_tmp = np.ones((num_assigned))
 
-        vs_an_tmp = np.ones((num_assigned))
-        vsn_tmp = np.ones((num_assigned))
-        vs_util_tmp = np.ones((num_assigned))
+        v_oc_an_tmp = np.ones((num_assigned))
+        vn_oc_tmp = np.ones((num_assigned))
+        v_oc_util_tmp = np.ones((num_assigned))
+        
+        v_ys_an_tmp = np.ones((num_assigned))
+        v_ys_kapn_tmp = np.ones((num_assigned))
+        vn_ys_tmp = np.ones((num_assigned))
+        v_ys_util_tmp = np.ones((num_assigned))
 
-        vc_an_full = None
-        vcn_full = None
-        vc_util_full = None
+        v_os_an_tmp = np.ones((num_assigned))
+        v_os_kapn_tmp = np.ones((num_assigned))
+        vn_os_tmp = np.ones((num_assigned))
+        v_os_util_tmp = np.ones((num_assigned))
+        
+
+
+        v_yc_an_full = None
+        vn_yc_full = None
+        v_yc_util_full = None
 
         if rank == 0:
-            vc_an_full = np.ones((num_total_state))
-            vcn_full = np.ones((num_total_state))*(-2.)
-            vc_util_full = np.ones((num_total_state))
+            v_yc_an_full = np.ones((num_total_state))
+            vn_yc_full = np.ones((num_total_state))*(-2.)
+            v_yc_util_full = np.ones((num_total_state))
 
-        vs_an_full = None
-        vsn_full = None
-        vs_util_full = None
+        v_oc_an_full = None
+        vn_oc_full = None
+        v_oc_util_full = None
 
         if rank == 0:
-            vs_an_full = np.ones((num_total_state))
-            vsn_full = np.ones((num_total_state))*(-2.)
-            vs_util_full = np.ones((num_total_state))
+            v_oc_an_full = np.ones((num_total_state))
+            vn_oc_full = np.ones((num_total_state))*(-2.)
+            v_oc_util_full = np.ones((num_total_state))
+            
 
 
-        #all the dimensions are d
-        vmax = np.ones((num_a, num_s))
-        vmaxn = np.ones(vmax.shape)*100.0
-        vmaxm1 = np.ones(vmax.shape)
-        EV = np.ones((1,) + vmax.shape)
+        v_ys_an_full = None
+        v_ys_kapn_full = None
+        vn_ys_full = None
+        v_ys_util_full = None
+
+        if rank == 0:
+            v_ys_an_full = np.ones((num_total_state))
+            v_ys_kapn_full = np.ones((num_total_state))
+            vn_ys_full = np.ones((num_total_state))*(-2.)
+            v_ys_util_full = np.ones((num_total_state))
 
 
-        vc_an = np.zeros(vmax.shape)
-        vcn = np.ones(vmax.shape)*100.0
-        vc_util = np.ones(vmax.shape)*100.0
+        v_os_an_full = None
+        v_os_kapn_full = None
+        vn_os_full = None
+        v_os_util_full = None
+
+        if rank == 0:
+            v_os_an_full = np.ones((num_total_state))
+            v_os_kapn_full = np.ones((num_total_state))
+            vn_os_full = np.ones((num_total_state))*(-2.)
+            v_os_util_full = np.ones((num_total_state))
 
 
-        vs_an = np.zeros(vmax.shape)
-        vsn = np.ones(vmax.shape)*100.0
-        vs_util = np.ones(vmax.shape)*100.0
+        v_y_max = np.ones((num_a, num_s))
+        v_y_maxn = np.ones((num_a, num_s))*100.0
+        v_y_maxm1 = np.ones(v_y_max.shape)
 
-        max_iter = 50
+        v_o_max = np.ones((num_a, num_s))
+        v_o_maxn = np.ones((num_a, num_s))*100.0
+        v_o_maxm1 = np.ones(v_o_max.shape)
+
+        
+        bEV_yc = np.ones((1, num_a, num_s))
+        bEV_oc = np.ones((1, num_a, num_s))
+        bEV_ys = np.ones((1, num_a, num_s))
+        bEV_os = np.ones((1, num_a, num_s))        
+
+        v_yc_an = np.zeros((num_a, num_s))
+        vn_yc = np.ones((num_a, num_s))*100.0
+        v_yc_util = np.ones((num_a, num_s))*100.0
+
+        v_oc_an = np.zeros((num_a, num_s))
+        vn_oc = np.ones((num_a, num_s))*100.0
+        v_oc_util = np.ones((num_a, num_s))*100.0
+        
+
+        v_ys_an = np.zeros((num_a, num_s))
+        v_ys_kapn = np.zeros((num_a, num_s))
+        vn_ys = np.ones((num_a, num_s))*100.0
+        v_ys_util = np.ones((num_a, num_s))*100.0
+
+        v_os_an = np.zeros((num_a, num_s))
+        #v_os_kapn does not take into account succession.
+        #In the sumulatin part, kap will be replaced by la_tilde kap if it is succeeded
+        v_os_kapn = np.zeros((num_a, num_s)) 
+        vn_os = np.ones((num_a, num_s))*100.0
+        v_os_util = np.ones((num_a, num_s))*100.0
+                
+
+
+        max_iter = 20
         max_howard_iter = 100 
         tol = 1.0e-8 #was 1.0e-6
         dist = 10000.0
@@ -1136,7 +1212,8 @@ class Economy:
         it = 0
 
         ###record some time###
-        t1, t2, t3, t4,tc1, tc2, ts1, ts2 = 0., 0., 0., 0., 0., 0., 0., 0.,
+        t1, t2, t3, t4,tyc1, tyc2, tys1, tys2, toc1, toc2, tos1, tos2 = 0., 0., 0., 0., 0., 0., 0., 0.,0., 0., 0., 0.        
+        # t1, t2, t3, t4,tc1, tc2, ts1, ts2 = 0., 0., 0., 0., 0., 0., 0., 0.,
         if rank == 0:
             t1 = time.time()
 
@@ -1148,38 +1225,89 @@ class Economy:
             ### calculate EV and Bcast ###
             if rank == 0:
                 it = it + 1
-                # EV[:] = bh*((vmax**(1. - mu))@(prob.T)).reshape((1,) + vmax.shape)
-                EV[:] = ((vmax)@(prob.T)).reshape((1,) + vmax.shape)                
 
-            comm.Bcast([EV, MPI.DOUBLE])
+                bEV_yc[:] = prob_yo[0,0]*bh*((v_y_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s)) +\
+                            prob_yo[0,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s))
+                bEV_oc[:] = prob_yo[1,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s)) +\
+                            prob_yo[1,0]*iota*bh*((v_y_max**(1. - mu))@(prob_st)).reshape((1, num_a, 1))
+
+                #under the current structure, the following is true. If not, it should be calculated separetely
+                bEV_ys[:] = bEV_yc[:]
+                bEV_os[:] = bEV_oc[:]                
+                # EV[:] = bh*((vmax**(1. - mu))@(prob.T)).reshape((1,) + vmax.shape)
+                # EV[:] = ((vmax)@(prob.T)).reshape((1,) + vmax.shape)                
+
+            comm.Bcast([bEV_yc, MPI.DOUBLE])
+            comm.Bcast([bEV_oc, MPI.DOUBLE])
+            comm.Bcast([bEV_ys, MPI.DOUBLE])                        
+            comm.Bcast([bEV_os, MPI.DOUBLE])            
+                
+            # comm.Bcast([EV, MPI.DOUBLE])
             ### end calculate EV and Bcast ###            
 
 
+            ###yc-loop begins####            
             if rank == 0:
-                tc1 = time.time()
-            ###c-loop begins####
-            _inner_loop_for_assigned_(assigned_state_range, EV, vc_an_tmp, vcn_tmp, vc_util_tmp,  True)
-            ###c-loop ends####
+                tyc1 = time.time()
+            _inner_loop_for_assigned_(assigned_state_range, bEV_yc, v_yc_an_tmp, vn_yc_tmp, v_yc_util_tmp, 0)
 
+            if rank == 0:
+                tyc2 = time.time()
+                print('time for yc = {:f}'.format(tyc2 - tyc1), end = ', ')
+            ###yc-loop ends####
+
+            ###oc-loop begins####            
+            if rank == 0:
+                toc1 = time.time()
+            _inner_loop_for_assigned_(assigned_state_range, bEV_oc, v_oc_an_tmp, vn_oc_tmp, v_oc_util_tmp, 1)
+
+            if rank == 0:
+                toc2 = time.time()
+                print('time for oc = {:f}'.format(toc2 - toc1), end = ', ')
+            ###oc-loop ends####
+
+            ###ys-loop begins####            
+            if rank == 0:
+                tys1 = time.time()
+            _inner_loop_for_assigned_(assigned_state_range, bEV_ys, v_ys_an_tmp, vn_ys_tmp, v_ys_util_tmp, 0)
+
+            if rank == 0:
+                tys2 = time.time()
+                print('time for ys = {:f}'.format(tys2 - tys1), end = ', ')
+            ###ys-loop ends####
+
+            ###os-loop begins####            
+            if rank == 0:
+                tos1 = time.time()
+            _inner_loop_for_assigned_(assigned_state_range, bEV_os, v_os_an_tmp, vn_os_tmp, v_os_util_tmp, 1)
+
+            if rank == 0:
+                tos2 = time.time()
+                print('time for os = {:f}'.format(tos2 - tos1), end = ', ')
+            ###os-loop ends####
+
+
+            ####policy function iteration starts#####
+
+            comm.Gatherv(vn_yc_tmp,[vn_yc_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
+            comm.Gatherv(vn_oc_tmp,[vn_oc_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])            
+
+            comm.Gatherv(vn_ys_tmp,[vn_ys_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
+            comm.Gatherv(vn_os_tmp,[vn_os_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
             
-            if rank == 0:
-                tc2 = time.time()
-                print('time for c = {:f}'.format(tc2 - tc1), end = ', ')
+            comm.Gatherv(v_yc_an_tmp,[v_yc_an_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
+            comm.Gatherv(v_oc_an_tmp,[v_oc_an_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
+            
+            comm.Gatherv(v_ys_an_tmp,[v_ys_an_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
+            comm.Gatherv(v_os_an_tmp,[v_os_an_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])            
+            
+            comm.Gatherv(v_yc_util_tmp,[v_yc_util_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
+            comm.Gatherv(v_oc_util_tmp,[v_oc_util_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])            
 
-
-            if rank == 0:
-                ts1 = time.time()
-                
-            ###s-loop begins####
-            _inner_loop_for_assigned_(assigned_state_range, EV, vs_an_tmp, vsn_tmp, vs_util_tmp, False)
-            ###s-loop ends####
-
-            if rank == 0:
-                ts2 = time.time()
-                print('time for s = {:f}'.format(ts2 - ts1), end = ', ')
-
-
-                
+            comm.Gatherv(v_ys_util_tmp,[v_ys_util_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
+            comm.Gatherv(v_os_util_tmp,[v_os_util_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])            
+            
+            
 
             comm.Gatherv(vcn_tmp,[vcn_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
             comm.Gatherv(vsn_tmp,[vsn_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
@@ -1189,19 +1317,39 @@ class Economy:
             comm.Gatherv(vs_util_tmp,[vs_util_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
 
             if rank == 0:
-                reshape_to_mat(vc_an, vc_an_full)
-                reshape_to_mat(vs_an, vs_an_full)
-                reshape_to_mat(vc_util, vc_util_full)
-                reshape_to_mat(vs_util, vs_util_full)
-                reshape_to_mat(vcn, vcn_full)
-                reshape_to_mat(vsn, vsn_full)
+
+                reshape_to_mat(v_yc_an, v_yc_an_full)
+                reshape_to_mat(v_oc_an, v_oc_an_full)
+                
+                reshape_to_mat(v_ys_an, v_ys_an_full)
+                reshape_to_mat(v_os_an, v_os_an_full)
+                
+                reshape_to_mat(v_yc_util, v_yc_util_full)
+                reshape_to_mat(v_oc_util, v_oc_util_full)                
+                
+                reshape_to_mat(v_ys_util, v_ys_util_full)
+                reshape_to_mat(v_os_util, v_os_util_full)
+                
+                reshape_to_mat(vn_yc, vn_yc_full)
+                reshape_to_mat(vn_oc, vn_oc_full)
+                
+                reshape_to_mat(vn_ys, vn_ys_full)
+                reshape_to_mat(vn_os, vn_os_full)                
 
                 ####policy function iteration starts#####
                 if max_howard_iter > 0:
                     #print('Starting Howard Iteration...')
                     t3 = time.time()
-                    _howard_iteration_(vmaxn, vcn, vsn, vc_an, vc_util, vs_an, vs_util, max_howard_iter)
-                    # _howard_iteration_(vmaxn, vcn, vsn, vc_an, vc_util, vs_an, vs_kapn, vs_util ,max_howard_iter)
+
+                    # _howard_iteration_(v_y_maxn, v_o_maxn, bEV_yc, bEV_oc, bEV_ys, bEV_os, #these vars are just data containers
+                    #                    vn_yc, vn_oc, vn_ys, vn_os, #these value functions will be updated 
+                    #                    v_yc_util, v_oc_util, v_ys_util, v_os_util,
+                    #                    v_yc_an, v_oc_an, v_ys_an, v_os_an,                               
+                    #                    # v_ys_kapn, v_os_kapn,
+                    #                    max_howard_iter)
+                    
+                    # _howard_iteration_(vmaxn, vcn, vsn, vc_an, vc_util, vs_an, vs_util, max_howard_iter)
+
 
                 if max_howard_iter > 0:
                     t4 = time.time()
@@ -1213,18 +1361,34 @@ class Economy:
             #### post_calc ####
             if rank == 0:
 
+                pol_y = vn_yc > vn_ys
+                v_y_maxn[:] = np.fmax(vn_yc, vn_ys)
+                pol_o = vn_oc > vn_os
+                v_o_maxn[:] = np.fmax(vn_oc, vn_os)
 
-                pol_c = vcn > vsn
-                vmaxn[:] = np.fmax(vcn, vsn)
-                dist_sub = np.max(np.abs(vmaxn - vmax))
-                dist = np.max(np.abs(vmaxn - vmax) / (1. + np.abs(vmaxn))) 
-                print('{}th loop. dist = {:f}, dist_sub = {:f}.'.format(it, dist, dist_sub))
-                vmaxm1[:] = vmax[:]
-                vmax[:] = vmaxn[:]
+                dist_y_sub = np.max(np.abs(v_y_maxn - v_y_max))
+                dist_o_sub = np.max(np.abs(v_o_maxn - v_o_max))
+                dist_sub = max(dist_y_sub, dist_o_sub)
+                
+                dist_y = np.max(np.abs(v_y_maxn - v_y_max) / (1. + np.abs(v_y_maxn)))
+                dist_o = np.max(np.abs(v_o_maxn - v_o_max) / (1. + np.abs(v_o_maxn)))
+                dist = max(dist_y, dist_o)
+                print('')
+                print('{}th loop. dist = {:f}, dist_sub = {:f}.'.format(it, dist, dist_sub), end = ',')
+                v_y_maxm1[:] = v_y_max[:]
+                v_o_maxm1[:] = v_o_max[:]
+                v_y_max[:] = v_y_maxn[:]
+                v_o_max[:] = v_o_maxn[:]                
+                
 
             it = comm.bcast(it)
             dist = comm.bcast(dist)
             dist_sub = comm.bcast(dist_sub)
+
+            if rank ==0:
+                print(f' time = {time.time() - t2}.')
+                t2 = time.time()
+            
         ###end main VFI###
 
         ###post-calc###
@@ -1234,54 +1398,192 @@ class Economy:
             print('Elapsed time: {:f} sec'.format(t2 - t1)) 
 
 
-
-
         #return value and policy functions
 
         ###Bcast the result###
-        comm.Bcast([vc_an, MPI.DOUBLE])
-        comm.Bcast([vs_an, MPI.DOUBLE])
-        comm.Bcast([vcn, MPI.DOUBLE])
-        comm.Bcast([vsn, MPI.DOUBLE])
+
+        comm.Bcast([v_yc_an, MPI.DOUBLE])
+        comm.Bcast([v_oc_an, MPI.DOUBLE])
+        comm.Bcast([v_ys_an, MPI.DOUBLE])
+        comm.Bcast([v_os_an, MPI.DOUBLE])
+
+        comm.Bcast([vn_ys, MPI.DOUBLE])
+        comm.Bcast([vn_os, MPI.DOUBLE])        
+        comm.Bcast([vn_yc, MPI.DOUBLE])
+        comm.Bcast([vn_oc, MPI.DOUBLE])        
 
 
         #return policy function
-        self.vc_an = vc_an
-        self.vs_an = vs_an
-        self.vcn = vcn
-        self.vsn = vsn
+        self.v_yc_an = v_yc_an
+        self.v_oc_an = v_oc_an        
+        self.v_ys_an = v_ys_an
+        self.v_os_an = v_os_an        
+        self.vn_yc = vn_yc
+        self.vn_oc = vn_oc        
+        self.vn_ys = vn_ys
+        self.vn_os = vn_os        
+
+        self.bEV_yc = bEV_yc
+        self.bEV_oc = bEV_oc
+        self.bEV_ys = bEV_ys 
+        self.bEV_os = bEV_os 
+
+
+#     def generate_shocks(self):
+
+#         """
+#         return:
+#         data_is_o
+#         data_i_s
+#         """
+
+#         prob = self.prob
+#         prob_yo = self.prob_yo
+#         prob_st = self.prob_st
+#         num_s = self.num_s
+
+#         #simulation parameters
+#         sim_time = self.sim_time
+#         num_total_pop = self.num_total_pop
+        
+        
+        
+#         ###codes to generate shocks###
+#         @nb.jit(nopython = True)
+#         def transit(i, r, _prob_):
+#             num_s = _prob_.shape[0]
+
+#             if r <= _prob_[i,0]:
+#                 return 0
+
+#             for j in range(1, num_s):
+
+#                 #print(np.sum(_prob_[i,0:j]))
+#                 if r <= np.sum(_prob_[i,0:j]):
+#                     return j - 1
+
+#             if r > np.sum(_prob_[i,0:-1]) and r <= 1.:
+#                 return num_s - 1
+
+#             print('error')
+
+#             return -1
+
+#         @nb.jit(nopython = True)
+#         def draw(r, _prob_st_):
+#             num_s = len(_prob_st_)
+
+#             if r <= _prob_st_[0]:
+#                 return 0
+
+#             for j in range(1, num_s):
+
+#                 #print(np.sum(_prob_st_[0:j]))
+#                 if r <= np.sum(_prob_st_[0:j]):
+#                     return j - 1
+
+#             if r > np.sum(_prob_st_[0:-1]) and r <= 1.:
+#                 return num_s - 1
+
+#             print('error')
+
+#             return -1    
+        
+
+#         np.random.seed(1) #fix the seed
+#         data_rnd_s = np.random.rand(num_total_pop, 2*sim_time+1) 
+#         data_rnd_yo = np.random.rand(num_total_pop,2*sim_time+1)
+        
+#         @nb.jit(nopython = True, parallel = True)
+#         #@nb.jit(nopython = True)        
+#         def calc_trans(_data_, _rnd_, _prob_):
+#             num_entity, num_time = _rnd_.shape
+
+# #            for i in range(num_entity):
+#             for i in nb.prange(num_entity):                
+#                 for t in range(1, num_time):                    
+                    
+#                     _data_[i, t] = transit(_data_[i, t-1], _rnd_[i, t], _prob_)
+
+#         print('generating is_o...')
+#         data_is_o = np.zeros((num_total_pop, 2*sim_time+1), dtype = int) #we can't set dtype = bool
+#         calc_trans(data_is_o, data_rnd_yo, prob_yo)
+#         print('done')
+
+#         #transition of s = (eps, z) depends on young-old transition.
+#         @nb.jit(nopython = True, parallel = True)
+# #        @nb.jit(nopython = True)        
+#         def calc_trans_shock(_data_, _data_is_o_, _rnd_s_, _prob_s_, _prob_s_st_):
+#             num_entity, num_time = _rnd_s_.shape
+
+#             for i in nb.prange(num_entity):
+# #            for i in range(num_entity):
+#                 for t in range(1, num_time):
+#                     is_o = _data_is_o_[i,t]
+#                     is_o_m1 = _data_is_o_[i,t-1]
+
+#                     if is_o_m1 and not (is_o): #if s/he dies and reborns, prod. shocks are drawn from the stationary dist
+#                         _data_[i, t] = draw(_rnd_s_[i, t], _prob_s_st_)
+                        
+#                     else:
+#                         _data_[i, t] = transit(_data_[i, t-1], _rnd_s_[i, t], _prob_s_)
+#         print('generating i_s...')
+#         data_i_s = np.ones((num_total_pop, 2*sim_time+1), dtype = int) * (num_s // 2)
+#         calc_trans_shock(data_i_s, data_is_o, data_rnd_s, prob, prob_st)
+#         print('done')
+        
+#         return data_i_s[:, sim_time:2*sim_time], data_is_o[:, sim_time:2*sim_time+1]
+        
 
         
     #def get_obj(w, p, rc, vc_an, vs_an, vs_kapn, vcn, vsn):
     def simulate_model(self):
         for variable in self.__dict__ : exec(variable+'= self.'+variable)                         
                          
-        Econ = self
+        prob = self.prob
+        prob_yo = self.prob_yo
         
         #load the value functions
-        vc_an = Econ.vc_an
-        vs_an = Econ.vs_an
-        vcn = Econ.vcn
-        vsn = Econ.vsn    
+        #vc_an = Econ.vc_an
+        vs_an = self.vs_an
+        vcn = self.vcn
+        vsn = self.vsn    
 
+        v_yc_an = self.v_yc_an
+        v_oc_an = self.v_oc_an        
+        v_ys_an = self.v_ys_an
+        v_os_an = self.v_os_an        
+        v_ys_kapn = self.v_ys_kapn
+        v_os_kapn = self.v_os_kapn
+        
+        vn_yc = self.vn_yc
+        vn_oc = self.vn_oc        
+        vn_ys = self.vn_ys
+        vn_os = self.vn_os
 
-        #obtain the value function and the discounted expected value function
-        vn = np.fmax(vcn, vsn) #the value function
-        # EV = bh*((vn**(1. - mu))@(prob.T)) # the discounted expected value function
+        vn_y = np.fmax(vn_yc, vn_ys)
+        vn_o = np.fmax(vn_oc, vn_os)
 
-        # ((vmax)@(prob.T)).reshape((1,) + vmax.shape)                
-        EV = vn@(prob.T)
+        bEV_yc = prob_yo[0,0]*bh*((v_y_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s)) +\
+                 prob_yo[0,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s))
+        bEV_oc = prob_yo[1,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s)) +\
+                 prob_yo[1,0]*iota*bh*((v_y_max**(1. - mu))@(prob_st)).reshape((1, num_a, 1))
 
+        #under the current structure, the following is true. If not, it should be calculated separetely
+        bEV_ys = bEV_yc.copy()
+        bEV_os = bEV_oc.copy()            
+        
+        
 
         @nb.jit(nopython = True)
         def unravel_ip(i_aggregated_state):
 
             istate, ia = unravel_index_nb(i_aggregated_state, num_s, num_a)
             #ia, ikap, istate = unravel_index_nb(i_aggregated_state, num_a, num_kap, num_s)
-            return istate, ia, ikap
+            return istate, ia
 
-        get_cstatic = Econ.generate_cstatic()
-        get_sstatic = Econ.generate_sstatic()
+        get_cstatic = self.generate_cstatic()
+        get_sstatic = self.generate_sstatic()
 
 
         ### start parameters for MPI ###
@@ -1304,11 +1606,14 @@ class Economy:
             all_num_pop_assigned += (int(all_assigned_pop_range[irank,1] - all_assigned_pop_range[irank,0]),) 
         ### end parameters for MPI ###    
 
+
         #data container for each node
         data_a_elem = np.ones((num_pop_assigned, sim_time))*4.0
         data_i_s_elem = np.ones((num_pop_assigned, sim_time), dtype = int)*7
         data_is_c_elem = np.zeros((num_pop_assigned, sim_time), dtype = bool) 
         data_is_c_elem[0:int(num_pop_assigned*0.7), 0] = True
+        data_is_o_elem = np.zeros((num_pop_assigned, sim_time+1), dtype = bool)
+        
 
 
         
@@ -1317,11 +1622,13 @@ class Economy:
         data_a = None
         data_i_s = None
         data_is_c = None
+        data_is_o = None        
 
         if rank == 0:
-            data_a = np.ones((num_total_pop, sim_time)) #start from the feasible minimum value
+            data_a = np.zeros((num_total_pop, sim_time))
             data_i_s = np.zeros((num_total_pop, sim_time), dtype = int)
-            data_is_c = np.zeros((num_total_pop, sim_time), dtype = bool) 
+            data_is_c = np.zeros((num_total_pop, sim_time), dtype = bool)
+            data_is_o = np.zeros((num_total_pop, sim_time+1), dtype = bool) 
 
     #     ###codes to generate shocks###
     #     @nb.jit(nopython = True)
@@ -1360,37 +1667,47 @@ class Economy:
         # data_i_s_import = np.load('./input_data/data_i_s.npy')
         # data_i_s_elem[:] = data_i_s_import[assigned_pop_range[0]:assigned_pop_range[1],0:sim_time]
 
-        data_i_s_elem[:] = np.load(Econ.path_to_data_i_s + '_' + str(rank) + '.npy')
 
+        ###load productivity shock data###
+
+        data_i_s_elem[:] = np.load(self.path_to_data_i_s + '_' + str(rank) + '.npy')
+        data_is_o_elem[:] = np.load(self.path_to_data_is_o + '_' + str(rank) + '.npy')
         
+
        
         # del data_i_s_import
 
         @nb.jit(nopython = True)
-        def calc(data_a_, data_i_s_, data_is_c_):
+        def calc(data_a_, data_i_s_, data_is_c_, data_is_o_):
 
             for t in range(1, sim_time):
                 for i in range(num_pop_assigned):
 
                     a = data_a_[i, t-1]
 
+                    is_o = data_is_o_[i,t]                    
                     istate = data_i_s_[i, t]
+                    
                     eps = epsgrid[is_to_ieps[istate]]
                     z = zgrid[is_to_iz[istate]]
 
 
-                    #print('period = ', t)
+                    if not is_o: #if young
 
-                    an_c = femeval(a, agrid, vc_an[:,istate])
-                    an_s = femeval(a, agrid, vs_an[:,istate])
+                        an_c = femeval(a, agrid, v_yc_an[:,istate])
+                        an_s = femeval(a, agrid, v_ys_an[:,istate])
 
-                    # val_c = (get_cstatic([a, an_c, eps])[0]  + fem2d_peval(an_c, kapn_c, agrid, kapgrid, EV[:,:,istate])) **(1./(1.- mu))
-                    # val_s = (get_sstatic([a, an_s, z])[0]    + fem2d_peval(an_s, kapn_s, agrid, kapgrid, EV[:,:,istate])) **(1./(1.- mu))
+                        val_c = (get_cstatic([a, an_c, eps, is_o])[0] + fem_peval(an_c, agrid, bEV_yc[0, :, istate]))**(1./(1.- mu))
+                        val_s = (get_sstatic([a, an_s, z  , is_o])[0] + fem_peval(an_s, agrid, bEV_ys[0, :, istate]))**(1./(1.- mu))
 
+                    else:
 
-                    val_c = (get_cstatic([a, an_c, eps])[0]  + bh*fem_peval(an_c, agrid, EV[:,istate])**(1.-mu) ) **(1./(1.- mu))
-                    val_s = (get_sstatic([a, an_s, z  ])[0]  + bh*fem_peval(an_s, agrid, EV[:,istate])**(1.-mu) ) **(1./(1.- mu))
+                        an_c = femeval(a, agrid, v_oc_an[:,istate])
+                        an_s = femeval(a, agrid, v_os_an[:,istate])
 
+                        val_c = (get_cstatic([a, an_c, eps, is_o])[0] + fem_peval(an_c, agrid, bEV_oc[0, :, istate]))**(1./(1.- mu))
+                        val_s = (get_sstatic([a, an_s, z  , is_o])[0] + fem_peval(an_s, agrid, bEV_os[0, :, istate]))**(1./(1.- mu))
+                    
                     if (val_c == val_s):
                         print('error: val_c == val_s')
 
@@ -1408,12 +1725,13 @@ class Economy:
                     data_a_[i, t] = an
                     data_is_c_[i, t] = i_c
 
-        calc(data_a_elem, data_i_s_elem, data_is_c_elem)
+        calc(data_a_elem, data_i_s_elem, data_is_c_elem, data_is_o_elem)
 
         comm.Gatherv(data_a_elem, [data_a, all_num_pop_assigned, all_istart_pop_assigned,  MPI.DOUBLE.Create_contiguous(sim_time).Commit() ])
 
         comm.Gatherv(data_i_s_elem, [data_i_s, all_num_pop_assigned, all_istart_pop_assigned,  MPI.LONG.Create_contiguous(sim_time).Commit() ])   
         comm.Gatherv(data_is_c_elem, [data_is_c, all_num_pop_assigned, all_istart_pop_assigned,  MPI.BOOL.Create_contiguous(sim_time).Commit() ])
+        comm.Gatherv(data_is_o_elem, [data_is_o, all_num_pop_assigned, all_istart_pop_assigned,  MPI.BOOL.Create_contiguous(sim_time).Commit() ])
 
 
         #calculate other variables
@@ -1422,7 +1740,7 @@ class Economy:
 
         if rank == 0:
 
-            data_ss = np.ones((num_total_pop, 17)) * (-2.0)
+            data_ss = np.ones((num_total_pop, 18)) * (-2.0)
 
             t = -1
             for i in range(num_total_pop):
@@ -1433,6 +1751,7 @@ class Economy:
                     a = data_a[i, t-1]
                     an = data_a[i, t]
                     eps = epsgrid[is_to_ieps[data_i_s[i, t]]]
+                    is_o = data_is_o[i, t]
 
                     data_ss[i,0] = 1.
                     data_ss[i,1] = a
@@ -1441,8 +1760,9 @@ class Economy:
                     data_ss[i,4] = np.nan
                     data_ss[i,5] = eps
                     data_ss[i,6:16] = get_cstatic([a, an, eps])[1:]
+                    data_ss[i,17] = is_o
 
-                    #return u, cc, cs, cagg, l ,n, np.nan, np.nan,   ibracket, taun, psin
+                    #return u, cc, cs, cagg, l ,n, np.nan, np.nan,   ibracket, taun, psin + transfer, is_o
 
                 else:
 
@@ -1459,14 +1779,16 @@ class Economy:
 
                     
                     data_ss[i,6:17] = get_sstatic([a, an, z])[1:]
+                    data_ss[i,17] = is_o                    
 
-                    #return u, cc, cs, cagg, lbar, -1.0e20, ks, ys, ibracket, taub[ibracket], psib[ibracket], ns
+                    #return u, cc, cs, cagg, lbar, -1.0e20, ks, ys, ibracket, taub[ibracket], psib[ibracket]+transfer, ns, is_o
 
 
 
         self.data_a = data_a
         self.data_i_s = data_i_s
         self.data_is_c = data_is_c
+        self.data_is_o = data_is_o        
         self.data_ss = data_ss
 
 
@@ -1483,49 +1805,126 @@ class Economy:
         num_total_pop = self.num_total_pop
 
         #load main simlation result
-        data_a = self.data_a
-        data_i_s = self.data_i_s
         data_is_c = self.data_is_c
-        data_ss = self.data_ss
-
-
         data_is_s = ~data_is_c
+
+        data_is_o = self.data_is_o
+        data_is_y = ~data_is_o
+
+        data_is_born = np.zeros((num_total_pop, sim_time+1), dtype = bool)
+        data_is_born[:,1:] = (~data_is_o[:,1:])*(data_is_o[:,:-1])
+
+        self.data_is_born = data_is_born
         
         s_age = np.ones(num_total_pop, dtype = int) * -1
         c_age = np.ones(num_total_pop, dtype = int) * -1
 
-        for i in range(num_total_pop):
-            if data_is_c[i,-1]:
-                s_age[i] = -1
-            else:
-                t = 0
-                while t < sim_time:
-                    if data_is_s[i, -t - 1]:
-                        s_age[i] = t
-                    else:
-                        break
-                    t = t + 1
-
-
-        for i in range(num_total_pop):
-            if data_is_s[i,-1]:
-                c_age[i] = -1
-            else:
-                t = 0
-                while t < sim_time:
-                    
-                    if data_is_c[i, -t - 1]:
-                        c_age[i] = t
+        sind_age = np.ones(num_total_pop, dtype = int) * -1
+        cind_age = np.ones(num_total_pop, dtype = int) * -1
         
-                    else:
+        o_age = np.ones(num_total_pop, dtype = int) * -1
+        y_age = np.ones(num_total_pop, dtype = int) * -1
+
+        ind_age = np.ones(num_total_pop, dtype = int) * -1
+        
+
+        @nb.jit(nopython = True, parallel = True)
+        def _calc_age_(_data_is_, _age_):
+            for i in nb.prange(num_total_pop):
+                if not _data_is_[i,-1]:
+                    _age_[i] = -1
+                else:
+                    t = 0
+                    while t < sim_time:
+                        if _data_is_[i, -t - 1]:
+                            _age_[i] = t
+                        else:
+                            break
+                        t = t + 1
+
+
+        @nb.jit(nopython = True, parallel = True)
+#        @nb.jit(nopython = True)
+        def _calc_ind_age_(_data_is_born_, _age_):
+            for i in nb.prange(num_total_pop):
+                t = 0
+
+                while t < sim_time:
+                    if _data_is_born_[i, -t - 1]:
+                        _age_[i] = t
                         break
-                    t = t + 1
+                    else:
+                        t = t+1
+
+        @nb.jit(nopython = True, parallel = True)
+        def _calc_age_adjust_born_(_data_is_, _data_is_born_, _age_):
+            for i in nb.prange(num_total_pop):
+                if not _data_is_[i,-1]:
+                    _age_[i] = -1
+                else:
+                    t = 0
+                    while t < sim_time:
+                        if _data_is_[i, -t-1] and not _data_is_born_[i, -t-1]: #as long as they stay the same occupation and NOT age 0
+                            _age_[i] = t
+                            
+                        elif _data_is_[i, -t-1] and _data_is_born_[i, -t-1]:
+                            _age_[i] = t
+                            break
+                    
+                        else:
+                            break
+
+                        t = t + 1
+                        
+                        
+
+        _calc_age_(data_is_c, c_age)                
+        _calc_age_(data_is_s, s_age)                                        
+        _calc_age_(data_is_y[:,0:-1], y_age)
+        _calc_age_(data_is_o[:,0:-1], o_age)
+        _calc_age_adjust_born_(data_is_c, data_is_born[:,0:-1], cind_age)
+        _calc_age_adjust_born_(data_is_s, data_is_born[:,0:-1], sind_age)        
+        _calc_ind_age_(data_is_born[:,0:-1], ind_age)
+
+        
+        # for i in range(num_total_pop):
+        #     if data_is_c[i,-1]:
+        #         s_age[i] = -1
+        #     else:
+        #         t = 0
+        #         while t < sim_time:
+        #             if data_is_s[i, -t - 1]:
+        #                 s_age[i] = t
+        #             else:
+        #                 break
+        #             t = t + 1
+
+
+        # for i in range(num_total_pop):
+        #     if data_is_s[i,-1]:
+        #         c_age[i] = -1
+        #     else:
+        #         t = 0
+        #         while t < sim_time:
+                    
+        #             if data_is_c[i, -t - 1]:
+        #                 c_age[i] = t
+        
+        #             else:
+        #                 break
+        #             t = t + 1
         
 
         self.s_age = s_age
         self.c_age = c_age
-
+        self.sind_age = sind_age
+        self.cind_age = cind_age
+        self.y_age = y_age
+        self.o_age = o_age
+        self.ind_age = ind_age        
+        
         return
+        
 
     def calc_moments(self):
 
@@ -1552,6 +1951,15 @@ class Economy:
         mom7 = None
 
         if rank == 0:
+
+            print('max of a in simulation = {}'.format(np.max(data_a)))
+            print('min of a in simulation = {}'.format(np.min(data_a)))
+
+            print('')
+            print(f'min of agrid = {agrid[0]}')
+            print(f'max of agrid = {agrid[-1]}')            
+            print('')
+            
             print('amax = {}'.format(np.max(data_a)))
             print('amin = {}'.format(np.min(data_a)))
             # print('kapmax = {}'.format(np.max(data_kap)))
@@ -1575,7 +1983,9 @@ class Economy:
             # 12: NAN or ys
             # 13: i_bracket
             # 14: taun[] or taub[]
-            # 15: psin[] or psib[]
+            # 15: psin[] or psib[] + trans_retire
+            # 16: ns
+            # 17: is_o
 
             
             EIc = np.mean(data_ss[:,0])
@@ -1585,6 +1995,7 @@ class Economy:
             Ecs = np.mean(data_ss[:,7])
             El = np.mean(data_ss[:,9])
             En = np.mean(data_ss[:,5]* data_ss[:,10] * (data_ss[:,0])) #efficient labor
+            
             
 
             Eks = np.mean(data_ss[:,11] * (1. - data_ss[:,0]))
@@ -1614,7 +2025,8 @@ class Economy:
             bizinc_i = (p*data_ss[:,12] - (rs + delk)*data_ss[:,11] - w*data_ss[:,16])*(1.-data_ss[:,0])
             ETm = np.mean((data_ss[:,14]*bizinc_i - data_ss[:,15])*(1.-data_ss[:,0])) #transfer subtracted
 
-            E_transfer = np.mean(data_ss[:,15])
+            E_transfer = np.mean(data_ss[:,15]) #includes
+            ETr = np.mean(trans_retire*data_ss[:,20])            
 
 
             nc = En - Ens
@@ -1784,12 +2196,39 @@ class Economy:
                 print(' N is ', t, ', with = {:f}'.format((np.mean(np.all(data_is_c[:,-(t+2):-1] == False, axis = 1)) - np.mean(np.all(data_is_c[:,-(t+3):-1] == False, axis = 1)) )/ np.mean(1. - data_ss[:,0]))) 
 
 
+
+            t = -1
+            
             print('')
             print('Labor Market')
             print('  Labor Supply(En)   = {}'.format(En))
             print('  Labor Demand of C(nc) = {}'.format(nc))
             print('  Labor Demand of S(Ens) = {}'.format(Ens))
             print('')
+
+            print('')
+            print('Additional Moments for the Lifecycle version model')
+            print('  Frac of Old         = {}'.format(np.mean(data_ss[:,20])))
+            print('  Frac of Old (check) = {}'.format(np.mean(data_is_o[:,t-1])))
+            #add double check
+            print('  Frac of Young who was Young, Old = {}, {} '.format(np.mean( (1.-data_is_o[:,t])*(1.-data_is_o[:,t-1])),
+                                                                        np.mean( (1.-data_is_o[:,t])*data_is_o[:,t-1])))
+            print('  Frac of Old   who was Young, Old = {}, {} '.format(np.mean( (data_is_o[:,t])*(1.-data_is_o[:,t-1])),
+                                                                        np.mean( (data_is_o[:,t])*data_is_o[:,t-1])))
+            print('  Frac of Young who is  C  ,   S   = {}, {} '.format(np.mean( (1.-data_is_o[:,t])*(data_is_c[:,t])),
+                                                                        np.mean( (1.-data_is_o[:,t])*(1.-data_is_c[:,t]))))
+            print('  Frac of Old   who is  C  ,   S   = {}, {} '.format(np.mean( (data_is_o[:,t])*(data_is_c[:,t])),
+                                                                        np.mean( (data_is_o[:,t])*(1.-data_is_c[:,t]))))
+
+            print('')
+            print('')
+            # print('  Deterioraton of kapn due to succeession = {}'.format(np.mean(data_kap0[:,t]) - np.mean(data_kap[:,t])))
+            # print('  Deterioraton of kap  due to succeession = {}'.format(np.mean(data_kap0[:,t-1]) - np.mean(data_kap[:,t-1])))
+
+            print('  Transfer                = {}'.format(E_transfer))
+            print('    Transfer (Non-retire) = {}'.format(E_transfer - ETr))
+            print('    Transfer (retire)     = {}'.format(ETr))
+            
 
             print('')
             print('Additional Moments')
@@ -1839,89 +2278,84 @@ class Economy:
         
         
     def simulate_other_vars(self):
-        Econ = self
-
-        """
-
-
-        """
 
         #load variables
-        alpha = Econ.alpha
-        beta = Econ.beta
-        chi = Econ.chi
-        delk = Econ.delk
-        delkap = Econ.delkap
-        eta = Econ.eta
-        g = Econ.g
-        grate = Econ.grate
-        la = Econ.la
-        mu = Econ.mu
-        ome = Econ.ome
-        phi = Econ.phi
-        rho = Econ.rho
-        tauc = Econ.tauc
-        taud = Econ.taud
-        taup = Econ.taup
-        theta = Econ.theta
-        veps = Econ.veps
-        vthet = Econ.vthet
-        xnb = Econ.xnb
-        yn = Econ.yn
-        zeta = Econ.zeta
-        lbar = Econ.lbar
+        alpha = self.alpha
+        beta = self.beta
+        chi = self.chi
+        delk = self.delk
+        delkap = self.delkap
+        eta = self.eta
+        g = self.g
+        grate = self.grate
+        la = self.la
+        mu = self.mu
+        ome = self.ome
+        phi = self.phi
+        rho = self.rho
+        tauc = self.tauc
+        taud = self.taud
+        taup = self.taup
+        theta = self.theta
+        veps = self.veps
+        vthet = self.vthet
+        xnb = self.xnb
+        yn = self.yn
+        zeta = self.zeta
+        lbar = self.lbar
 
-        agrid = Econ.agrid
-        epsgrid = Econ.epsgrid
-        zgrid = Econ.zgrid
+        agrid = self.agrid
+        epsgrid = self.epsgrid
+        zgrid = self.zgrid
 
-        prob = Econ.prob
+        prob = self.prob
 
-        is_to_iz = Econ.is_to_iz
-        is_to_ieps = Econ.is_to_ieps
+        is_to_iz = self.is_to_iz
+        is_to_ieps = self.is_to_ieps
 
-        amin = Econ.amin
+        amin = self.amin
 
-        num_a = Econ.num_a
-        num_eps = Econ.num_eps
-        num_z = Econ.num_z
-        num_s = Econ.num_s
+        num_a = self.num_a
+        num_eps = self.num_eps
+        num_z = self.num_z
+        num_s = self.num_s
 
-        nu = Econ.nu
-        bh = Econ.bh
-        varrho = Econ.varrho
+        nu = self.nu
+        bh = self.bh
+        varrho = self.varrho
 
-        w = Econ.w
-        p = Econ.p
-        rc = Econ.rc
+        w = self.w
+        p = self.p
+        rc = self.rc
 
-        rbar = Econ.rbar
-        rs = Econ.rs
+        rbar = self.rbar
+        rs = self.rs
 
-        xi1 = Econ.xi1
-        xi2 = Econ.xi2
-        xi3 = Econ.xi3
-        xi4 = Econ.xi4
-        xi5 = Econ.xi5
-        xi6 = Econ.xi6
-        xi7 = Econ.xi7
-        xi8 = Econ.xi8
+        xi1 = self.xi1
+        xi2 = self.xi2
+        xi3 = self.xi3
+        xi4 = self.xi4
+        xi5 = self.xi5
+        xi6 = self.xi6
+        xi7 = self.xi7
+        xi8 = self.xi8
 
 
-        data_a = Econ.data_a
-        data_i_s = Econ.data_i_s
-        data_is_c = Econ.data_is_c
+        data_a = self.data_a
+        data_i_s = self.data_i_s
+        data_is_c = self.data_is_c
+        data_is_o = self.data_is_o                
 
         #simulation parameters
-        sim_time = Econ.sim_time
-        num_total_pop = Econ.num_total_pop
+        sim_time = self.sim_time
+        num_total_pop = self.num_total_pop
 
-        get_cstatic = Econ.generate_cstatic()
-        get_sstatic = Econ.generate_sstatic()
+        get_cstatic = self.generate_cstatic()
+        get_sstatic = self.generate_sstatic()
 
 
         @nb.jit(nopython = True, parallel = True)
-        def calc_all(data_a_, data_i_s_, data_is_c_,
+        def calc_all(data_a_, data_i_s_, data_is_c_, data_is_o_
                      data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_,  data_ks_, data_ys_,
                      data_i_tax_bracket_, data_tau_, data_psi_, data_ns_):
 
@@ -1955,8 +2389,8 @@ class Economy:
                     # kapn = data_kap_[i, t]
 
                     is_c = data_is_c_[i, t]
+                    is_o = data_is_o_[i, t]                    
                     
-
                     # data_ss
                     # 0: is_c
                     # 1: a
@@ -1974,12 +2408,14 @@ class Economy:
                     # 13: i_bracket
                     # 14: taun[] or taub[]
                     # 15: psin[] or psib[]
+                    # 16: ns
+                    # 17: 
 
 
                     if is_c:
-                        u, cc, cs, cagg, l , n, tmp1, tmp2, ibra, tau, psi = get_cstatic([a, an, eps])
+                        u, cc, cs, cagg, l , n, tmp1, tmp2, ibra, tau, psi = get_cstatic([a, an, eps, is_o])
                     else:
-                        u, cc, cs, cagg, l, tmp1, ks, ys, ibra, tau, psi, ns = get_sstatic([a, an, z])
+                        u, cc, cs, cagg, l, tmp1, ks, ys, ibra, tau, psi, ns = get_sstatic([a, an, z, is_o])
 
                     data_u_[i, t] = u
                     data_cc_[i, t] = cc
@@ -1995,7 +2431,7 @@ class Economy:
                     data_i_tax_bracket_[i, t] = ibra
 
                     data_tau_[i, t] = tau
-                    data_psi_[i, t] = psi
+                    data_psi_[i, t] = psi #includes trans_
                     data_ns_[i, t] = ns                    
                     
         data_u = np.zeros(data_a.shape)
@@ -2018,7 +2454,7 @@ class Economy:
         data_ns = np.zeros(data_a.shape)                                 
                          
         #note that this does not store some impolied values,,,, say div or value of sweat equity
-        calc_all(data_a, data_i_s, data_is_c, ##input
+        calc_all(data_a, data_i_s, data_is_c, data_is_o,  ##input
                  data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_ks, data_ys, ##output
                  data_i_tax_bracket, data_tau, data_psi, data_ns)           
 
@@ -2079,14 +2515,16 @@ class Economy:
             np.save(dir_path_save + 'data_psi', self.data_psi[:, -100:])                                                  
             np.save(dir_path_save + 'data_ss', self.data_ss)
 
-            np.save(dir_path_save + 'vc_an', self.vc_an)
-            np.save(dir_path_save + 'vs_an', self.vs_an)
-            # np.save(dir_path_save + 'vs_kapn', self.vs_kapn)
-            np.save(dir_path_save + 'vcn', self.vcn)
-            np.save(dir_path_save + 'vsn', self.vsn)
 
+            np.save(dir_path_save + 'v_yc_an', self.v_yc_an)
+            np.save(dir_path_save + 'v_oc_an', self.v_oc_an)            
+            np.save(dir_path_save + 'v_ys_an', self.v_ys_an)
+            np.save(dir_path_save + 'v_os_an', self.v_os_an)
+            np.save(dir_path_save + 'vn_yc', self.vn_yc)
+            np.save(dir_path_save + 'vn_oc', self.vn_oc)            
+            np.save(dir_path_save + 'vn_ys', self.vn_ys)
+            np.save(dir_path_save + 'vn_os', self.vn_os)            
 
-          
 
             # np.save(dir_path_save + 'sweat_div', self.sweat_div)
             # np.save(dir_path_save + 'sweat_val', self.sweat_val)
@@ -2097,10 +2535,16 @@ class Economy:
             # np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
             # np.save(dir_path_save + 'data_val_sweat', self.data_val_sweat[:, -100:])
             # np.save(dir_path_save + 'data_val_sweat_bh', self.data_val_sweat_bh[:, -100:])
-            # np.save(dir_path_save + 'data_val_sweat_1gR', self.data_val_sweat_1gR[:, -100:])                        
+            # np.save(dir_path_save + 'data_val_sweat_1gR', self.data_val_sweat_1gR[:, -100:])
 
+            np.save(dir_path_save + 'sind_age', self.sind_age)
+            np.save(dir_path_save + 'cind_age', self.cind_age)
             np.save(dir_path_save + 's_age', self.s_age)
             np.save(dir_path_save + 'c_age', self.c_age)
+            np.save(dir_path_save + 'y_age', self.y_age)
+            np.save(dir_path_save + 'o_age', self.o_age)
+            np.save(dir_path_save + 'ind_age', self.ind_age)                        
+            
 
             """
             np.save(dir_path_save + 'data_a', self.data_a)

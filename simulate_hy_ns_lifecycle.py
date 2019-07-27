@@ -65,11 +65,17 @@ if __name__ == '__main__':
     kapgrid2 = curvedspace(0., 2.0, 2., 30)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
-    GDP_guess = 3.90
+    GDP_guess = 3.70
+
+    taup = 0.36#*(1.0 - 0.278)
+    taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28])# *(1.0 -  0.506) #large one
+    psib = np.array([-0.016705100000000014, 0.00993489999999998, 0.03, 0.13975679999999993, 0.35576280000000016, 0.5075368000000003])
+    
     
 
-    p_, rc_, ome_, varpi_, theta_  = 2.2273274721534855, 0.06760084236490592, 0.4545559620360224, 0.560445554483451, 0.5070179601220124
+    p_, rc_, ome_, varpi_, theta_  = 2.227850003330831, 0.06778242404549263, 0.4561128052733918, 0.559952019068588, 0.5071181286751945
 
+ 
 
     # 1.5209092097405632, 0.053192497033077685, 0.46388548260346824, 0.6002410397243539
     
@@ -97,20 +103,17 @@ if __name__ == '__main__':
     # psib = np.array([0.12543758, 0.13944768, 0.15,       0.20772159, 0.3213201,  0.40113872])
     # GDP_implied = (1.-alpha + s_emp_share/(1. - s_emp_share)*(1.-theta))/((1.-alpha)*(1. - ynb_p_gdp) - pure_sweat_share)*yc_init
 
-    # econ = Economy(alpha = alpha, theta = theta, yn = ynb_p_gdp*GDP_implied, xnb = xnb_p_gdp*GDP_implied, g = g_p_gdp*GDP_implied,
-    #                scaling_n = GDP_implied, scaling_b = GDP_implied,
-    #                agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2,  rho = 0.01, upsilon = 0.50, prob = prob, la = 0.7,
-    #                taub = taub, psib = psib, taup = 0.2,
-    #                ome = ome_, varpi = varpi_, path_to_data_i_s = path_to_shock)
-
-    
-
     econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob,
                    ome = ome_, varpi = varpi_, theta = theta_,
                    path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
                    scaling_n = GDP_guess, scaling_b = GDP_guess, g = 0.133*GDP_guess, yn = 0.266*GDP_guess, xnb = 0.110*GDP_guess,
-                   delk = 0.041, delkap = 0.041, tauc = 0.065, taud = 0.133, veps = 0.418, vthet = 1.0 - 0.418, taup = 0.36
+                   delk = 0.041, delkap = 0.041,  veps = 0.418, vthet = 1.0 - 0.418,
+                   tauc = 0.065, taud = 0.133,
+                   taup = taup, taub = taub, psib = psib
+                   #, epsgrid = epsgrid2
     )
+    
+
     
     econ.set_prices(p = p_, rc = rc_)
     

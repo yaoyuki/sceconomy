@@ -1334,8 +1334,6 @@ class Economy:
 
         get_sstatic = Econ.generate_sstatic()
 
-
-
         ## construct subagrid and subkapgrid
 
         ## subagrid
@@ -2699,13 +2697,9 @@ class Economy:
     #     calc_trans(data_i_s_elem)
     #     ###end codes to generate shocks###
 
-
     
         ###load productivity shock data###
 
-        path_to_data_i_s = './input_data/data_i_s'
-        path_to_data_is_o = './input_data/data_is_o_lifecycle'
-        
         data_i_s_elem[:] = np.load(self.path_to_data_i_s + '_' + str(rank) + '.npy')
         data_is_o_elem[:] = np.load(self.path_to_data_is_o + '_' + str(rank) + '.npy')
         
@@ -2933,7 +2927,6 @@ class Economy:
     #     return
     
         
-    #this calculate age of S-corp. 
     def calc_age(self):
 
         #import data from Econ
