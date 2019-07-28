@@ -46,6 +46,7 @@ class Economy:
                  alpha = None,
                  nu = None,
                  beta = None,
+                 iota = None,
                  chi = None,
                  delk = None,
                  delkap = None,
@@ -53,6 +54,10 @@ class Economy:
                  g = None,
                  grate = None,
                  la = None,
+
+                 tau_wo = None,
+                 tau_bo = None,
+                 
                  mu = None,
                  ome = None,
                  phi = None,
@@ -61,7 +66,7 @@ class Economy:
                  taud = None,
                  taup = None,
                  theta = None,
-
+                 trans_retire = None,
                  veps = None,
                  vthet = None,
                  xnb = None,
@@ -72,6 +77,8 @@ class Economy:
                  epsgrid = None,
                  zgrid = None,
                  prob = None,
+                 prob_yo = None,
+                 
                  is_to_iz = None,
                  is_to_ieps = None,
                  amin = None,
@@ -103,6 +110,7 @@ class Economy:
         if alpha is not None: self.alpha = alpha
         if nu is not None: self.nu = nu
         if beta is not None: self.beta = beta
+        if iota is not None: self.iota = iota
         if chi is not None: self.chi = chi
         if delk is not None: self.delk = delk    
         if delkap is not None: self.delkap = delkap
@@ -110,6 +118,10 @@ class Economy:
         if g is not None: self.g = g
         if grate is not None: self.grate = grate 
         if la is not None: self.la = la
+
+        if tau_wo is not None: self.tau_wo = tau_wo
+        if tau_bo is not None: self.tau_bo = tau_bo
+        
         if mu is not None: self.mu = mu 
         if ome is not None: self.ome = ome 
         if phi is not None: self.phi = phi
@@ -120,6 +132,7 @@ class Economy:
 #         if taun is not None: self.taun = taun
         if taup is not None: self.taup = taup
         if theta is not None: self.theta = theta
+        if trans_retire is not None: self.trans_retire = trans_retire #added        
         if veps is not None: self.veps = veps
         if vthet is not None: self.vthet = vthet
         if xnb is not None: self.xnb = xnb
@@ -130,6 +143,7 @@ class Economy:
         if epsgrid is not None: self.epsgrid = epsgrid
         if zgrid is not None: self.zgrid = zgrid
         if prob is not None: self.prob = prob
+        if prob_yo is not None: self.prob_yo = prob_yo        
         if is_to_iz is not None: self.is_to_iz = is_to_iz
         if is_to_ieps is not None: self.is_to_ieps = is_to_ieps
         if amin is not None: self.amin = amin
@@ -172,13 +186,16 @@ class Economy:
         self.alpha    = 0.3
         self.nu       = 0.55
         self.beta     = 0.98
+        self.iota     = 1.0
         self.chi      = 0.0 #param for borrowing constarint
         self.delk     = 0.05
         self.delkap   = 0.05 
         self.eta      = 0.42
         self.g        = 0.234 #govt spending
         self.grate    = 0.02 #gamma, growth rate for detrending
-        self.la       = 0.5 #lambda
+        self.la       = np.inf #lambda
+        self.tau_wo   = 0.5 #added
+        self.tau_bo   = 0.5 #added
         self.mu       = 1.5 
         self.ome      = 0.6 #omega
         self.phi      = np.nan
@@ -188,7 +205,8 @@ class Economy:
         self.taum     = 0.20
         self.taun     = 0.40
         self.taup     = 0.30
-        self.theta    = 0.41 
+        self.theta    = 0.41
+        self.trans_retire = 0.48        
         self.veps     = 0.4
         self.vthet    = 0.4
         self.xnb      = 0.185
@@ -199,8 +217,8 @@ class Economy:
         #borrowing constraint for C - guys. they just can't borrow in
         self.amin      = 0.0
         
-        self.sim_time = 1000
-        self.num_total_pop = 100000
+        self.sim_time = 1_000
+        self.num_total_pop = 100_000
         self.A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
 
         self.path_to_data_i_s = './tmp/data_i_s'
@@ -210,14 +228,14 @@ class Economy:
         self.taub = np.array([.137, .185, .202, .238, .266, .280])
         self.bbracket = np.array([0.150, 0.319, 0.824, 2.085, 2.930])
         self.scaling_b = 1.0
-        self.psib_fixed = 0.15
+        self.psib_fixed = 0.03
         self.bbracket_fixed = 2
         self.psib = None
 
         self.taun = np.array([.2930, .3170, .3240, .3430, .3900, .4050, .4080, .4190])
         self.nbracket = np.array([.1760, .2196, .2710, .4432, 0.6001, 1.4566, 2.7825])
         self.scaling_n = 1.0
-        self.psin_fixed = 0.15
+        self.psin_fixed = 0.03
         self.nbracket_fixed = 5
         self.psin = None         
 
@@ -581,7 +599,9 @@ class Economy:
             num_taun = len(taun)
             wepsn = 0.0
             for i in range(num_taun):
-                n = (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*(psin[i] + is_o*trans_retire))/(w*eps*(1.-taun[i])*(xi3 + xi7))                
+                n = (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*(psin[i] + is_o*trans_retire))/(w*eps*(1.-taun[i])*(xi3 + xi7))
+                # n = (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*(psin[i] + is_o*trans_retire))/(w*eps*(1.-taun[i])*(xi3 + xi7))
+                
                 wepsn = w*eps*n #wageincome
                 j = locate(wepsn, nbracket)
 
@@ -593,14 +613,19 @@ class Economy:
             #when solution is at a kink
             flag = True
             flag2 = False
+            
             if i == len(taun) - 1 and i != j:
                 flag = False
                 flag2 = True
 
                 for i, wepsn in enumerate(nbracket[1:-1]): #remove -inf, inf
                     n = wepsn/w/eps
+
                     obj_i = n - ( (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*(psin[i]+is_o*trans_retire))/(w*eps*(1.-taun[i])*(xi3 + xi7)))
-                    obj_i1 = n - ( (xi3*w*eps*(1.-taun[i+1]) - xi4*a + xi5*an - xi6 - xi7*(psin[i]+is_o*trans_retire))/(w*eps*(1.-taun[i+1])*(xi3 + xi7)))
+                    obj_i1 = n - ( (xi3*w*eps*(1.-taun[i+1]) - xi4*a + xi5*an - xi6 - xi7*(psin[i+1]+is_o*trans_retire))/(w*eps*(1.-taun[i+1])*(xi3 + xi7)))                    
+                    
+                    # obj_i = n - ( (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*(psin[i] - is_o*trans_retire))/(w*eps*(1.-taun[i])*(xi3 + xi7)))
+                    # obj_i1 = n - ( (xi3*w*eps*(1.-taun[i+1]) - xi4*a + xi5*an - xi6 - xi7*(psin[i+1] - is_o*trans_retire))/(w*eps*(1.-taun[i+1])*(xi3 + xi7)))
 
                     if obj_i * obj_i1 < 0:
                         flag = True
@@ -626,9 +651,12 @@ class Economy:
                 print('a = ', a)
                 print('an = ', an)
                 print('eps = ', eps)
+                print('is_o = ', is_o)
+                print('trans_retire = ', trans_retire)
                 print('i = ', i)
                 print('j = ', j)
                 print('n = ', n)
+                print('w = ', w)
                 print('wepsn = ', wepsn)
                 print('')
                                         
@@ -787,10 +815,12 @@ class Economy:
             return u, cc, cs, cagg, lbar, -1.0e20, ks, ys, ibracket, taub[ibracket], psib[ibracket] + is_o*trans_retire, ns
         
         return get_sstatic
-    
-    def get_policy(self):
+
+
+        
+    def get_policy(self, max_iter = 20, max_howard_iter = 100):
         # I found this magic is very dangerous.
-        # for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())        
+        for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())        
 
         Econ = self
         num_total_state = num_a* num_s
@@ -852,7 +882,7 @@ class Economy:
 
         for iz, z in enumerate(zgrid):
             for ia, a in enumerate(agrid):
-                for i_old in range(2):
+                for is_old in range(2):
             
                     ks = z**(1./(1. - alpha - nu))*xi8 #should be the same as above
                     ns = xi13*ks            
@@ -860,7 +890,7 @@ class Economy:
                 
 
                     #first tax bracket is picked. I don't have a clear reqson for it.
-                    s_supan[ia, iz, is_old] = ((1. + rbar)*a + (1. - taub[0])*(p*ys - (rs + delk)*ks - w*ns) + psib[0] + i_old*trans_retire + yn - xnb)/(1. + grate)
+                    s_supan[ia, iz, is_old] = ((1. + rbar)*a + (1. - taub[0])*(p*ys - (rs + delk)*ks - w*ns) + psib[0] + is_old*trans_retire + yn - xnb)/(1. + grate)
 
         del ks, ys, ns
                     
@@ -877,9 +907,9 @@ class Economy:
             u = 0.0
 
             if _is_c_:
-                u = get_cstatic(np.array([agrid[_ia_], _an_, epsgrid[is_to_ieps[_istate_]]], _is_old_))[0]
+                u = get_cstatic(np.array([agrid[_ia_], _an_, epsgrid[is_to_ieps[_istate_]], _is_old_]))[0]
             else:
-                u = get_sstatic(np.array([agrid[_ia_], _an_, zgrid[is_to_iz[_istate_]]]), _is_old_)[0]
+                u = get_sstatic(np.array([agrid[_ia_], _an_, zgrid[is_to_iz[_istate_]], _is_old_]))[0]
 
             # isn't it wrong?
             # return -(u + bh*fem_peval(_an_, agrid,  _EV_[0, :, _istate_])**(1. - mu))**(1./(1. - mu))
@@ -1028,7 +1058,7 @@ class Economy:
             return ans
 
         @nb.jit(nopython = True)
-        def _inner_loop_for_assigned_(assigned_indexes, _EV_, _vc_an_, _vcn_, _vc_util_, _is_c_, _is_o_, _is_o_):
+        def _inner_loop_for_assigned_(assigned_indexes, _EV_, _vc_an_, _vcn_, _vc_util_, _is_c_, _is_o_):
 
 
             ibegin = assigned_indexes[0]
@@ -1041,14 +1071,10 @@ class Economy:
                 istate, ia = unravel_ip(ipar_loop)
 
                 if _is_c_:
-                    an_sup = min(c_supan[ia, is_to_ieps[istate]] - 1.e-6, agrid[-1]) #no extrapolation for aprime
+                    an_sup = min(c_supan[ia, is_to_ieps[istate], _is_o_] - 1.e-6, agrid[-1]) #no extrapolation for aprime
                     an_min = amin
                 else:#if S
-                    iz = is_to_iz[istate]
-                    z = zgrid[iz]
-                    
-                    an_sup = min(s_supan[ia, iz] - 1.e-6, agrid[-1]) #no extrapolation for aprime
-                    
+                    an_sup = min(s_supan[ia, iz, _is_o_] - 1.e-6, agrid[-1]) #no extrapolation for aprime
                     an_min = amin
                     #ks = (z**(1./(1.-alpha)))*xi8
                     #an_min = chi*ks #chi*ks
@@ -1060,36 +1086,57 @@ class Economy:
                 _vcn_[ind] = -_obj_loop_(ans, _EV_, ia, istate, _is_c_, _is_o_)
 
                 if _is_c_:
-                    _vc_util_[ind] = get_cstatic(np.array([agrid[ia], ans, epsgrid[is_to_ieps[istate]]], _is_o_))[0]
+                    _vc_util_[ind] = get_cstatic(np.array([agrid[ia], ans, epsgrid[is_to_ieps[istate]], _is_o_]))[0]
                 else:
-                    _vc_util_[ind] = get_sstatic(np.array([agrid[ia], ans, zgrid[is_to_iz[istate]]]), _is_o_)[0]
+                    _vc_util_[ind] = get_sstatic(np.array([agrid[ia], ans, zgrid[is_to_iz[istate]], _is_o_]))[0]
                     
                 ind = ind + 1
 
+        @nb.jit(nopython = True)
+        def _howard_iteration_(_vmax_y_, _vmax_o_, _bEV_yc_, _bEV_oc_, _bEV_ys_, _bEV_os_, #these vars are just data containers
+                               _vn_yc_, _vn_oc_, _vn_ys_, _vn_os_, #these value functions will be updated
+                               _v_yc_util_, _v_oc_util_, _v_ys_util_, _v_os_util_,
+                               _v_yc_an_, _v_oc_an_, _v_ys_an_, _v_os_an_,               
+                               _howard_iter_):
 
-         
-        # @nb.jit(nopython = True)
-        # def _howard_iteration_(_vmax_, _vcn_, _vsn_, _vc_an_, _vc_util_, _vs_an_, _vs_util_, howard_iter):
-        #     __EV__ = np.zeros((1, num_a,  num_s))
-        #     if howard_iter > 0:
+            for it_ho in range(_howard_iter_):
+                _vmax_y_[:] = np.fmax(_vn_yc_, _vn_ys_)
+                _vmax_o_[:] = np.fmax(_vn_oc_, _vn_os_)                
 
-        #         for it_ho in range(howard_iter):
 
-        #             _vmax_[:] = np.fmax(_vcn_, _vsn_)
+                # bEV_yc[:] = prob_yo[0,0]*bh*((v_y_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s)) +\
+                #             prob_yo[0,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s))
+                # bEV_oc[:] = prob_yo[1,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s)) +\
+                #             prob_yo[1,0]*iota*bh*((v_y_max**(1. - mu))@(prob_st)).reshape((1, num_a, 1))
+                
 
-        #             for ia in range(num_a):
-        #                 __EV__[0, ia, :] = bh*((_vmax_[ia, :]**(1. - mu))@(prob.T)).reshape((1, 1, num_s)) 
+                #numba does not support matmul for 3D or higher matrice
+                for ia in range(num_a):                
+                    _bEV_yc_[0,ia,:] = prob_yo[0,0]*bh*((_vmax_y_[ia,:]**(1. - mu))@(prob.T)).reshape((1, 1, num_s)) +\
+                                       prob_yo[0,1]*bh*((_vmax_o_[ia,:]**(1. - mu))@(prob.T)).reshape((1, 1, num_s))
 
-        #             for istate in range(num_s):
-        #                 iz = is_to_iz[istate]
-        #                 z = zgrid[iz]
+                for ia in range(num_a):
+                    _bEV_oc_[0,ia,:] = prob_yo[1,1]*bh*((_vmax_o_[ia,:]**(1. - mu))@(prob.T)).reshape((1, 1, num_s)) +\
+                                       prob_yo[1,0]*iota*bh*((_vmax_y_[ia,:]**(1. - mu))@(prob_st))# .reshape((1, 1, 1))
+                #does this reshape work?
 
-        #                 for ia in range(num_a):
+                _bEV_ys_[:] = _bEV_yc_[:]
+                _bEV_os_[:] = _bEV_oc_[:]                
+                
 
-        #                     _vcn_[ia, istate] = (_vc_util_[ia, istate] + fem_peval(_vc_an_[ia, istate], agrid, __EV__[0, :, istate]) )**(1./(1. - mu))
+                for istate in range(num_s):
 
-        #                     _vsn_[ia, istate] = (_vs_util_[ia, istate] + fem_peval(_vs_an_[ia, istate], agrid, __EV__[0, :, istate]) )**(1./(1. - mu))
-        
+                    for ia in range(num_a):
+                        _vn_yc_[ia, istate] = (_v_yc_util_[ia, istate] +
+                                               fem_peval(_v_yc_an_[ia, istate], agrid, _bEV_yc_[0,:,istate]) )**(1./(1. - mu))
+                        _vn_oc_[ia, istate] = (_v_oc_util_[ia, istate] +
+                                               fem_peval(_v_oc_an_[ia, istate], agrid, _bEV_oc_[0,:,istate]) )**(1./(1. - mu))
+                        _vn_ys_[ia, istate] = (_v_ys_util_[ia, istate] +
+                                               fem_peval(_v_ys_an_[ia, istate], agrid, _bEV_ys_[0,:,istate]) )**(1./(1. - mu))
+                        _vn_os_[ia, istate] = (_v_os_util_[ia, istate] +
+                                               fem_peval(_v_os_an_[ia, istate], agrid, _bEV_os_[0,:,istate]) )**(1./(1. - mu))
+            
+                        
 
 
         @nb.jit(nopython = True)
@@ -1204,8 +1251,6 @@ class Economy:
                 
 
 
-        max_iter = 20
-        max_howard_iter = 100 
         tol = 1.0e-8 #was 1.0e-6
         dist = 10000.0
         dist_sub = 10000.0
@@ -1249,7 +1294,7 @@ class Economy:
             ###yc-loop begins####            
             if rank == 0:
                 tyc1 = time.time()
-            _inner_loop_for_assigned_(assigned_state_range, bEV_yc, v_yc_an_tmp, vn_yc_tmp, v_yc_util_tmp, 0)
+            _inner_loop_for_assigned_(assigned_state_range, bEV_yc, v_yc_an_tmp, vn_yc_tmp, v_yc_util_tmp, 1, 0)
 
             if rank == 0:
                 tyc2 = time.time()
@@ -1259,7 +1304,7 @@ class Economy:
             ###oc-loop begins####            
             if rank == 0:
                 toc1 = time.time()
-            _inner_loop_for_assigned_(assigned_state_range, bEV_oc, v_oc_an_tmp, vn_oc_tmp, v_oc_util_tmp, 1)
+            _inner_loop_for_assigned_(assigned_state_range, bEV_oc, v_oc_an_tmp, vn_oc_tmp, v_oc_util_tmp, 1, 1)
 
             if rank == 0:
                 toc2 = time.time()
@@ -1269,7 +1314,7 @@ class Economy:
             ###ys-loop begins####            
             if rank == 0:
                 tys1 = time.time()
-            _inner_loop_for_assigned_(assigned_state_range, bEV_ys, v_ys_an_tmp, vn_ys_tmp, v_ys_util_tmp, 0)
+            _inner_loop_for_assigned_(assigned_state_range, bEV_ys, v_ys_an_tmp, vn_ys_tmp, v_ys_util_tmp, 0, 0)
 
             if rank == 0:
                 tys2 = time.time()
@@ -1279,7 +1324,7 @@ class Economy:
             ###os-loop begins####            
             if rank == 0:
                 tos1 = time.time()
-            _inner_loop_for_assigned_(assigned_state_range, bEV_os, v_os_an_tmp, vn_os_tmp, v_os_util_tmp, 1)
+            _inner_loop_for_assigned_(assigned_state_range, bEV_os, v_os_an_tmp, vn_os_tmp, v_os_util_tmp, 0, 1)
 
             if rank == 0:
                 tos2 = time.time()
@@ -1308,14 +1353,6 @@ class Economy:
             comm.Gatherv(v_os_util_tmp,[v_os_util_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])            
             
             
-
-            comm.Gatherv(vcn_tmp,[vcn_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
-            comm.Gatherv(vsn_tmp,[vsn_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
-            comm.Gatherv(vc_an_tmp,[vc_an_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
-            comm.Gatherv(vs_an_tmp,[vs_an_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
-            comm.Gatherv(vc_util_tmp,[vc_util_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
-            comm.Gatherv(vs_util_tmp,[vs_util_full, all_num_assigned, all_istart_assigned ,MPI.DOUBLE])
-
             if rank == 0:
 
                 reshape_to_mat(v_yc_an, v_yc_an_full)
@@ -1341,12 +1378,12 @@ class Economy:
                     #print('Starting Howard Iteration...')
                     t3 = time.time()
 
-                    # _howard_iteration_(v_y_maxn, v_o_maxn, bEV_yc, bEV_oc, bEV_ys, bEV_os, #these vars are just data containers
-                    #                    vn_yc, vn_oc, vn_ys, vn_os, #these value functions will be updated 
-                    #                    v_yc_util, v_oc_util, v_ys_util, v_os_util,
-                    #                    v_yc_an, v_oc_an, v_ys_an, v_os_an,                               
-                    #                    # v_ys_kapn, v_os_kapn,
-                    #                    max_howard_iter)
+                    _howard_iteration_(v_y_maxn, v_o_maxn, bEV_yc, bEV_oc, bEV_ys, bEV_os, #these vars are just data containers
+                                       vn_yc, vn_oc, vn_ys, vn_os, #these value functions will be updated 
+                                       v_yc_util, v_oc_util, v_ys_util, v_os_util,
+                                       v_yc_an, v_oc_an, v_ys_an, v_os_an,                               
+                                       # v_ys_kapn, v_os_kapn,
+                                       max_howard_iter)
                     
                     # _howard_iteration_(vmaxn, vcn, vsn, vc_an, vc_util, vs_an, vs_util, max_howard_iter)
 
@@ -1385,9 +1422,6 @@ class Economy:
             dist = comm.bcast(dist)
             dist_sub = comm.bcast(dist_sub)
 
-            if rank ==0:
-                print(f' time = {time.time() - t2}.')
-                t2 = time.time()
             
         ###end main VFI###
 
@@ -1543,18 +1577,12 @@ class Economy:
         prob = self.prob
         prob_yo = self.prob_yo
         
-        #load the value functions
-        #vc_an = Econ.vc_an
-        vs_an = self.vs_an
-        vcn = self.vcn
-        vsn = self.vsn    
+        #load the value and policy functions
 
         v_yc_an = self.v_yc_an
         v_oc_an = self.v_oc_an        
         v_ys_an = self.v_ys_an
         v_os_an = self.v_os_an        
-        v_ys_kapn = self.v_ys_kapn
-        v_os_kapn = self.v_os_kapn
         
         vn_yc = self.vn_yc
         vn_oc = self.vn_oc        
@@ -1564,10 +1592,10 @@ class Economy:
         vn_y = np.fmax(vn_yc, vn_ys)
         vn_o = np.fmax(vn_oc, vn_os)
 
-        bEV_yc = prob_yo[0,0]*bh*((v_y_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s)) +\
-                 prob_yo[0,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s))
-        bEV_oc = prob_yo[1,1]*bh*((v_o_max**(1. - mu))@(prob.T)).reshape((1, num_a, num_s)) +\
-                 prob_yo[1,0]*iota*bh*((v_y_max**(1. - mu))@(prob_st)).reshape((1, num_a, 1))
+        bEV_yc = prob_yo[0,0]*bh*((vn_y**(1. - mu))@(prob.T)).reshape((1, num_a, num_s)) +\
+                 prob_yo[0,1]*bh*((vn_o**(1. - mu))@(prob.T)).reshape((1, num_a, num_s))
+        bEV_oc = prob_yo[1,1]*bh*((vn_o**(1. - mu))@(prob.T)).reshape((1, num_a, num_s)) +\
+                 prob_yo[1,0]*iota*bh*((vn_y**(1. - mu))@(prob_st)).reshape((1, num_a, 1))
 
         #under the current structure, the following is true. If not, it should be calculated separetely
         bEV_ys = bEV_yc.copy()
@@ -1731,7 +1759,7 @@ class Economy:
 
         comm.Gatherv(data_i_s_elem, [data_i_s, all_num_pop_assigned, all_istart_pop_assigned,  MPI.LONG.Create_contiguous(sim_time).Commit() ])   
         comm.Gatherv(data_is_c_elem, [data_is_c, all_num_pop_assigned, all_istart_pop_assigned,  MPI.BOOL.Create_contiguous(sim_time).Commit() ])
-        comm.Gatherv(data_is_o_elem, [data_is_o, all_num_pop_assigned, all_istart_pop_assigned,  MPI.BOOL.Create_contiguous(sim_time).Commit() ])
+        comm.Gatherv(data_is_o_elem, [data_is_o, all_num_pop_assigned, all_istart_pop_assigned,  MPI.BOOL.Create_contiguous(sim_time+1).Commit() ])
 
 
         #calculate other variables
@@ -1759,7 +1787,7 @@ class Economy:
                     data_ss[i,3] = an
                     data_ss[i,4] = np.nan
                     data_ss[i,5] = eps
-                    data_ss[i,6:16] = get_cstatic([a, an, eps])[1:]
+                    data_ss[i,6:16] = get_cstatic(np.array([a, an, eps, is_o]))[1:]
                     data_ss[i,17] = is_o
 
                     #return u, cc, cs, cagg, l ,n, np.nan, np.nan,   ibracket, taun, psin + transfer, is_o
@@ -1769,6 +1797,7 @@ class Economy:
                     a = data_a[i, t-1]
                     an = data_a[i, t]
                     z = zgrid[is_to_iz[data_i_s[i, t]]]
+                    is_o = data_is_o[i, t]                    
 
                     data_ss[i,0] = 0.
                     data_ss[i,1] = a
@@ -1778,7 +1807,7 @@ class Economy:
                     data_ss[i,5] = z
 
                     
-                    data_ss[i,6:17] = get_sstatic([a, an, z])[1:]
+                    data_ss[i,6:17] = get_sstatic(np.array([a, an, z, is_o]))[1:]
                     data_ss[i,17] = is_o                    
 
                     #return u, cc, cs, cagg, lbar, -1.0e20, ks, ys, ibracket, taub[ibracket], psib[ibracket]+transfer, ns, is_o
@@ -2026,7 +2055,7 @@ class Economy:
             ETm = np.mean((data_ss[:,14]*bizinc_i - data_ss[:,15])*(1.-data_ss[:,0])) #transfer subtracted
 
             E_transfer = np.mean(data_ss[:,15]) #includes
-            ETr = np.mean(trans_retire*data_ss[:,20])            
+            ETr = np.mean(trans_retire*data_ss[:,17])            
 
 
             nc = En - Ens
@@ -2208,8 +2237,8 @@ class Economy:
 
             print('')
             print('Additional Moments for the Lifecycle version model')
-            print('  Frac of Old         = {}'.format(np.mean(data_ss[:,20])))
-            print('  Frac of Old (check) = {}'.format(np.mean(data_is_o[:,t-1])))
+            print('  Frac of Old         = {}'.format(np.mean(data_ss[:,17])))
+            print('  Frac of Old (check) = {}'.format(np.mean(data_is_o[:,t])))
             #add double check
             print('  Frac of Young who was Young, Old = {}, {} '.format(np.mean( (1.-data_is_o[:,t])*(1.-data_is_o[:,t-1])),
                                                                         np.mean( (1.-data_is_o[:,t])*data_is_o[:,t-1])))
@@ -2355,7 +2384,7 @@ class Economy:
 
 
         @nb.jit(nopython = True, parallel = True)
-        def calc_all(data_a_, data_i_s_, data_is_c_, data_is_o_
+        def calc_all(data_a_, data_i_s_, data_is_c_, data_is_o_,
                      data_u_, data_cc_, data_cs_, data_cagg_, data_l_, data_n_,  data_ks_, data_ys_,
                      data_i_tax_bracket_, data_tau_, data_psi_, data_ns_):
 
@@ -2493,7 +2522,21 @@ class Economy:
             # np.save(dir_path_save + 'kapgrid', self.kapgrid)
             np.save(dir_path_save + 'zgrid', self.zgrid)
             np.save(dir_path_save + 'epsgrid', self.epsgrid)                         
-            
+
+
+            np.save(dir_path_save + 'prob', self.prob)
+            np.save(dir_path_save + 'prob_yo', self.prob_yo)            
+            np.save(dir_path_save + 'is_to_iz', self.is_to_iz)
+            np.save(dir_path_save + 'is_to_ieps', self.is_to_ieps)
+            np.save(dir_path_save + 'data_is_o', self.data_is_o[:, -100-1:])
+
+
+            np.save(dir_path_save + 'taub', self.taub)
+            np.save(dir_path_save + 'psib', self.psib)
+            np.save(dir_path_save + 'bbracket', self.bbracket)                                                             
+            np.save(dir_path_save + 'taun', self.taun)
+            np.save(dir_path_save + 'psin', self.psin)
+            np.save(dir_path_save + 'nbracket', self.nbracket)                                       
             np.save(dir_path_save + 'data_a', self.data_a[:, -100:])
             # np.save(dir_path_save + 'data_kap', self.data_kap[:, -100:])
             np.save(dir_path_save + 'data_i_s', self.data_i_s[:, -100:])

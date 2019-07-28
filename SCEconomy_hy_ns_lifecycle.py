@@ -543,6 +543,7 @@ class Economy:
         xnb = self.xnb
         yn = self.yn
         zeta= self.zeta
+        trans_retire = self.trans_retire        
 
         agrid = self.agrid
         kapgrid = self.kapgrid
@@ -621,7 +622,6 @@ class Economy:
             for i in range(num_taun):
                 n = (xi3*w*eps*(1.-taun[i]) - xi4*a + xi5*an - xi6 - xi7*(psin[i] + is_o*trans_retire))/(w*eps*(1.-taun[i])*(xi3 + xi7))
                 wepsn = w*eps*n #wageincome
-
                 j = locate(wepsn, nbracket)
 
                 if i == j:
@@ -629,8 +629,6 @@ class Economy:
 
             obj_i = 0.
             obj_i1 = 0.
-
-            
             #when solution is at a kink
             flag = True
             flag2 = False
@@ -2186,7 +2184,7 @@ class Economy:
         v_os_util = np.ones((num_a, num_kap, num_s))*100.0
         
 
-        max_iter = 20
+        max_iter = 1
         max_howard_iter = 50
         tol = 1.0e-5
         dist = 10000.0
@@ -2257,7 +2255,7 @@ class Economy:
             if rank == 0:
                 tyc1 = time.time()
 
-            #_is_o_ = 0
+            #_is_o_ = 0_
             _inner_loop_c_with_range_(assigned_state_range, bEV_yc, v_yc_an_tmp, vn_yc_tmp, v_yc_util_tmp, 0)
                     
 

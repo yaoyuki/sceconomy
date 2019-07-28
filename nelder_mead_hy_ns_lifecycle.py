@@ -95,7 +95,7 @@ def target(prices):
     ### alpha = 0.4 as default, and nu = 1. - phi - alpha
     #econ = Economy(agrid = agrid2, zgrid = zgrid2, path_to_data_i_s = path_to_data_i_s, rho = 0.01, ome = 0.6, varpi = 0.1)
 
-    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob,
+    econ = Economy(agrid = agrid2, kapgrid = kapgrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob, prob_yo = prob_yo,
                    ome = ome_, varpi = varpi_, theta = theta_,
                    path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
                    scaling_n = GDP_guess, scaling_b = GDP_guess, g = 0.133*GDP_guess, yn = 0.266*GDP_guess, xnb = 0.110*GDP_guess,
