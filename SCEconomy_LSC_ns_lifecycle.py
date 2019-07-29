@@ -1714,7 +1714,7 @@ class Economy:
                     a = data_a_[i, t-1]
 
                     is_o = data_is_o_[i,t]                    
-                    istate = data_i_s_[i, t]
+                    istate = data_i_s_[i,t]
                     
                     eps = epsgrid[is_to_ieps[istate]]
                     z = zgrid[is_to_iz[istate]]
@@ -1786,7 +1786,7 @@ class Economy:
                     data_ss[i,2] = np.nan
                     data_ss[i,3] = an
                     data_ss[i,4] = np.nan
-                    data_ss[i,5] = eps
+                    data_ss[i,5] = eps*(1.-is_o) + tau_wo*eps*is_o
                     data_ss[i,6:16] = get_cstatic(np.array([a, an, eps, is_o]))[1:]
                     data_ss[i,17] = is_o
 
@@ -1804,7 +1804,7 @@ class Economy:
                     data_ss[i,2] = np.nan
                     data_ss[i,3] = an
                     data_ss[i,4] = np.nan
-                    data_ss[i,5] = z
+                    data_ss[i,5] = z*(1. - is_o) + tau_bo*z*is_o
 
                     
                     data_ss[i,6:17] = get_sstatic(np.array([a, an, z, is_o]))[1:]
@@ -2080,7 +2080,7 @@ class Economy:
             b = Ea - (1. - taud)*kc - Eks
     #         netb = (grate + delk)*b ##typo
             netb = (rbar - grate)*b
-            tax_rev = Tc + ETn + ETm + Td + Tp + E_transfer #only tau*() part,
+            tax_rev = Tc + ETn + ETm + Td + Tp + E_transfer 
 
             GDP = yc + yn + p*Eys
             C = Ecc + p*Ecs

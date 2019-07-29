@@ -2184,7 +2184,7 @@ class Economy:
         v_os_util = np.ones((num_a, num_kap, num_s))*100.0
         
 
-        max_iter = 1
+        max_iter = 20
         max_howard_iter = 50
         tol = 1.0e-5
         dist = 10000.0
@@ -3437,411 +3437,423 @@ class Economy:
         return
     
 
-#     #to be updated. not yet.
-#     def calc_sweat_eq_value(self):
-#         Econ = self
 
-#         """
-#         This method solve the value function
+    def calc_sweat_eq_value(self):
 
-#         V(a, \kappa, s) = d(a, \kappa, s) + \hat{beta}E[u'_c/u_c * V(a', \kappa' ,s')]
+        """
+        This method solve the value function
 
-#         where d = dividend from sweat equity
+        V(a, \kappa, s) = d(a, \kappa, s) + \hat{beta}E[u'_c/u_c * V(a', \kappa' ,s')]
 
-#         return d, val
+        where d = dividend from sweat equity
 
-#         """
+        return d, val
 
-#         #load variables
-#         alpha = Econ.alpha
-#         beta = Econ.beta
-#         chi = Econ.chi
-#         delk = Econ.delk
-#         delkap = Econ.delkap
-#         eta = Econ.eta
-#         g = Econ.g
-#         grate = Econ.grate
-#         la = Econ.la
-#         la_tilde = Econ.la_tilde        
-#         mu = Econ.mu
-#         ome = Econ.ome
-#         phi = Econ.phi
-#         rho = Econ.rho
-#         tauc = Econ.tauc
-#         taud = Econ.taud
-#         taum = Econ.taum
-#         taun = Econ.taun
-#         taup = Econ.taup
-#         theta = Econ.theta
-#         tran = Econ.tran
-#         veps = Econ.veps 
-#         vthet = Econ.vthet
-#         xnb = Econ.xnb
-#         yn = Econ.yn
-#         zeta= Econ.zeta
+        """
 
-#         agrid = Econ.agrid
-#         kapgrid = Econ.kapgrid
-#         epsgrid = Econ.epsgrid
-#         zgrid = Econ.zgrid
+        #load variables
+        alpha = self.alpha
+        beta = self.beta
+        chi = self.chi
+        delk = self.delk
+        delkap = self.delkap
+        eta = self.eta
+        g = self.g
+        grate = self.grate
+        la = self.la
+        la_tilde = self.la_tilde        
+        mu = self.mu
+        ome = self.ome
+        phi = self.phi
+        rho = self.rho
+        tauc = self.tauc
+        taud = self.taud
+        taun = self.taun
+        taup = self.taup
+        theta = self.theta
 
-#         prob = Econ.prob
-#         prob_st = Econ.prob_st
-#         prob_yo = Econ.prob_yo                
+        veps = self.veps 
+        vthet = self.vthet
+        xnb = self.xnb
+        yn = self.yn
+        zeta= self.zeta
 
-#         is_to_iz = Econ.is_to_iz
-#         is_to_ieps = Econ.is_to_ieps
+        agrid = self.agrid
+        kapgrid = self.kapgrid
+        epsgrid = self.epsgrid
+        zgrid = self.zgrid
 
-#         amin = Econ.amin
-#         num_suba_inner = Econ.num_suba_inner
-#         num_subkap_inner = Econ.num_subkap_inner
+        prob = self.prob
+        prob_st = self.prob_st
+        prob_yo = self.prob_yo                
 
-#         num_a = Econ.num_a
-#         num_kap = Econ.num_kap
-#         num_eps = Econ.num_eps
-#         num_z = Econ.num_z
-#         num_s = Econ.num_s
+        is_to_iz = self.is_to_iz
+        is_to_ieps = self.is_to_ieps
 
-#         nu = Econ.nu
-#         bh = Econ.bh
-#         varrho = Econ.varrho
+        num_a = self.num_a
+        num_kap = self.num_kap
+        num_eps = self.num_eps
+        num_z = self.num_z
+        num_s = self.num_s
 
-#         w = Econ.w
-#         p = Econ.p
-#         rc = Econ.rc
+        nu = self.nu
+        bh = self.bh
+        varrho = self.varrho
 
-#         rbar = Econ.rbar
-#         rs = Econ.rs
+        w = self.w
+        p = self.p
+        rc = self.rc
 
-#         iota = Econ.iota
+        rbar = self.rbar
+        rs = self.rs
 
-#         #load the value functions
-#         v_yc_an = Econ.v_yc_an
-#         v_oc_an = Econ.v_oc_an        
-#         v_ys_an = Econ.v_ys_an
-#         v_os_an = Econ.v_os_an        
-#         v_ys_kapn = Econ.v_ys_kapn
-#         v_os_kapn = Econ.v_os_kapn        
-#         vn_yc = Econ.vn_yc
-#         vn_oc = Econ.vn_oc        
-#         vn_ys = Econ.vn_ys
-#         vn_os = Econ.vn_os        
+        iota = self.iota
 
-#         #we may need to change the dimension
-#         bEV_yc = Econ.bEV_yc[0,0,:,:,:]
-#         bEV_oc = Econ.bEV_oc[0,0,:,:,:]
-#         bEV_ys = Econ.bEV_ys[0,0,:,:,:]
-#         bEV_os = Econ.bEV_os[0,0,:,:,:] 
+        #load the value functions
+        v_yc_an = self.v_yc_an
+        v_oc_an = self.v_oc_an        
+        v_ys_an = self.v_ys_an
+        v_os_an = self.v_os_an        
+        v_ys_kapn = self.v_ys_kapn
+        v_os_kapn = self.v_os_kapn        
+        vn_yc = self.vn_yc
+        vn_oc = self.vn_oc        
+        vn_ys = self.vn_ys
+        vn_os = self.vn_os        
+
+        #we may need to change the dimension
+        bEV_yc = self.bEV_yc[0,0,:,:,:]
+        bEV_oc = self.bEV_oc[0,0,:,:,:]
+        bEV_ys = self.bEV_ys[0,0,:,:,:]
+        bEV_os = self.bEV_os[0,0,:,:,:] 
         
 
-#         get_cstatic = Econ.generate_cstatic()
-#         get_sstatic = Econ.generate_sstatic()
-#         dc_util = Econ.generate_dc_util()
+        get_cstatic = self.generate_cstatic()
+        get_sstatic = self.generate_sstatic()
+        dc_util = self.generate_dc_util()
 
 
 
 
-#         ###obtain dividends and the stochastic discount factor###
-#         d = np.ones((num_a, num_kap, num_s, 2)) * (-100.0)
-#     #     d_after_tax = np.ones((num_a, num_kap, num_s)) * (-2.0)
+        ###obtain dividends and the stochastic discount factor###
+        d = np.ones((num_a, num_kap, num_s, 2)) * (-100.0)
+    #     d_after_tax = np.ones((num_a, num_kap, num_s)) * (-2.0)
 
-#         dc_u = np.zeros((num_a, num_kap, num_s, 2))
-#         dc_up = np.zeros((num_a, num_kap, num_s, 2, num_s, 2))
+        dc_u = np.zeros((num_a, num_kap, num_s, 2))
+        dc_up = np.zeros((num_a, num_kap, num_s, 2, num_s, 2))
 
         
-#         data_an = np.zeros((num_a, num_kap, num_s, 2))
-#         data_kapn0 = np.zeros((num_a, num_kap, num_s, 2))
+        data_an = np.zeros((num_a, num_kap, num_s, 2))
+        data_kapn0 = np.zeros((num_a, num_kap, num_s, 2))
 
-# #        an2 = np.zeros((num_a, num_kap, num_s, 2,  num_s, 2))
-# #        kapn2 = np.zeros((num_a, num_kap, num_s, 2, num_s, 2))
+#        an2 = np.zeros((num_a, num_kap, num_s, 2,  num_s, 2))
+#        kapn2 = np.zeros((num_a, num_kap, num_s, 2, num_s, 2))
 
-#         be_s = np.zeros((num_a, num_kap, num_s, 2), dtype = bool)
+        be_s = np.zeros((num_a, num_kap, num_s, 2), dtype = bool)
 
-#         #to be parallelized but nb.prange does not work here.
-#         @nb.jit(nopython = True)
-#         def _pre_calc_(d, dc_u, dc_up, data_an, data_kapn0, be_s):
-#             for ia , a in enumerate(agrid):
-#             # for ia in nb.prange(num_a):
-#             #     a = agrid[ia]
+        #to be parallelized but nb.prange does not work here.
+        @nb.jit(nopython = True)
+        def _pre_calc_(d, dc_u, dc_up, data_an, data_kapn0, be_s):
+            for ia , a in enumerate(agrid):
+            # for ia in nb.prange(num_a):
+            #     a = agrid[ia]
                 
-#                 for ikap, kap in enumerate(kapgrid):
-#                     for istate in range(num_s):
-#                         z = zgrid[is_to_iz[istate]]
-#                         eps = epsgrid[is_to_ieps[istate]]
+                for ikap, kap in enumerate(kapgrid):
+                    for istate in range(num_s):
+                        z = zgrid[is_to_iz[istate]]
+                        eps = epsgrid[is_to_ieps[istate]]
 
-#                         #if young
+                        #if young
 
-#                         an = None
-#                         kapn0 = None
+                        an = None
+                        kapn0 = None
 
-#                         for is_o in range(2):
+                        for is_o in range(2):
 
-#                             #if young
-#                             if is_o == 0:
+                            #if young
+                            if is_o == 0:
 
-#                                 an_s = v_ys_an[ia, ikap, istate]
-#                                 kapn_s = v_ys_kapn[ia, ikap, istate]
-
-
-#                                 an_c = v_yc_an[ia, ikap, istate]
-#                                 kapn_c = la * kap
+                                an_s = v_ys_an[ia, ikap, istate]
+                                kapn_s = v_ys_kapn[ia, ikap, istate]
 
 
-#                                 val_s = (get_sstatic(np.array([a, an_s, kap, kapn_s, z, is_o]))[0]  +  fem2d_peval(an_s, kapn_s, agrid, kapgrid, bEV_ys[:,:,istate])) **(1./(1.- mu))
-#                                 val_c = (get_cstatic(np.array([a, an_c, eps, is_o]))[0]  +  fem2d_peval(an_c, kapn_c, agrid, kapgrid, bEV_yc[:,:,istate])) **(1./(1.- mu))
-
-#                             #else if old
-#                             elif is_o == 1:
-
-#                                 an_s = v_os_an[ia, ikap, istate]
-#                                 kapn_s = v_os_kapn[ia, ikap, istate]
+                                an_c = v_yc_an[ia, ikap, istate]
+                                kapn_c = la * kap
 
 
-#                                 an_c = v_oc_an[ia, ikap, istate]
-#                                 kapn_c = la * kap
+                                val_s = (get_sstatic(np.array([a, an_s, kap, kapn_s, z, is_o]))[0]  +  fem2d_peval(an_s, kapn_s, agrid, kapgrid, bEV_ys[:,:,istate])) **(1./(1.- mu))
+                                val_c = (get_cstatic(np.array([a, an_c, eps, is_o]))[0]  +  fem2d_peval(an_c, kapn_c, agrid, kapgrid, bEV_yc[:,:,istate])) **(1./(1.- mu))
+
+                            #else if old
+                            elif is_o == 1:
+
+                                an_s = v_os_an[ia, ikap, istate]
+                                kapn_s = v_os_kapn[ia, ikap, istate]
 
 
-#                                 val_s = (get_sstatic(np.array([a, an_s, kap, kapn_s, z, is_o]))[0]  +  fem2d_peval(an_s, kapn_s, agrid, kapgrid, bEV_os[:,:,istate])) **(1./(1.- mu))
-#                                 val_c = (get_cstatic(np.array([a, an_c, eps, is_o]))[0]  +  fem2d_peval(an_c, kapn_c, agrid, kapgrid, bEV_oc[:,:,istate])) **(1./(1.- mu))
+                                an_c = v_oc_an[ia, ikap, istate]
+                                kapn_c = la * kap
 
-#                             else:
-#                                 print('error')
+
+                                val_s = (get_sstatic(np.array([a, an_s, kap, kapn_s, z, is_o]))[0]  +  fem2d_peval(an_s, kapn_s, agrid, kapgrid, bEV_os[:,:,istate])) **(1./(1.- mu))
+                                val_c = (get_cstatic(np.array([a, an_c, eps, is_o]))[0]  +  fem2d_peval(an_c, kapn_c, agrid, kapgrid, bEV_oc[:,:,istate])) **(1./(1.- mu))
+
+                            else:
+                                print('error')
 
                                 
-#                             is_s = None
-#                             if val_s >= val_c:
-#                                 if val_s == val_c:
-#                                     print('error: val_s == val_c')
+                            is_s = None
+                            if val_s >= val_c:
+                                if val_s == val_c:
+                                    print('error: val_s == val_c')
 
-#                                 is_s = True    
-#                                 be_s[ia, ikap, istate, is_o] = True
+                                is_s = True    
+                                be_s[ia, ikap, istate, is_o] = True
 
-#                                 an = an_s
-#                                 kapn0 = kapn_s
-                                
-#                                 u, cc, cs, cagg, l, mx, my, x, ks, ys = get_sstatic([a, an, kap, kapn0, z, is_o])
+                                an = an_s
+                                kapn0 = kapn_s
+
+                                u, cc, cs, cagg, l, hy, hkap, h ,x, ks, ys, ns, ib, taubb, psibb = get_sstatic([a, an, kap, kapn0, z, is_o])
+                                # u, cc, cs, cagg, l, mx, my, x, ks, ys = get_sstatic([a, an, kap, kapn0, z, is_o])
                             
-#                                 dc_u[ia, ikap, istate, is_o] = dc_util(cagg, l)
+                                dc_u[ia, ikap, istate, is_o] = dc_util(cagg, l)
 
 
-#                                 #profit = p*ys - (rs + delk)*ks - x #this can be nagative
-#                                 #tax = taum * max(profit, 0.)
+                                #profit = p*ys - (rs + delk)*ks - x #this can be nagative
+                                #tax = taum * max(profit, 0.)
 
-#                                 div = phi * p * ys - x #div related to sweat equity
+                                div = phi * p * ys - x #div related to sweat equity
 
-#                                 #div_after_tax = div - tax
+                                #div_after_tax = div - tax
 
-#                                 d[ia, ikap, istate, is_o] = div
+                                d[ia, ikap, istate, is_o] = div
 
-#                             else:
-#                                 is_s = False
-#                                 be_s[ia, ikap, istate, is_o] = False
+                            else:
+                                is_s = False
+                                be_s[ia, ikap, istate, is_o] = False
 
-#                                 an = an_c
-#                                 kapn0 = kapn_c
+                                an = an_c
+                                kapn0 = kapn_c
 
-#                                 u, cc, cs, cagg, l ,n = get_cstatic([a, an, eps, is_o])
-#                                 dc_u[ia, ikap, istate, is_o] = dc_util(cagg, l)
+                                u, cc, cs, cagg, l ,n, i, taunn, psinn = get_cstatic([a, an, eps, is_o])
+
+                                # u, cc, cs, cagg, l ,n = get_cstatic([a, an, eps, is_o])
+                                dc_u[ia, ikap, istate, is_o] = dc_util(cagg, l)
 
                                 
 
-#                                 d[ia, ikap, istate, is_o] = 0.
+                                d[ia, ikap, istate, is_o] = 0.
 
                         
-#                             data_an[ia, ikap, istate, is_o] = an
-#                             data_kapn0[ia, ikap, istate, is_o] = kapn0
+                            data_an[ia, ikap, istate, is_o] = an
+                            data_kapn0[ia, ikap, istate, is_o] = kapn0
 
-#                             for istate_n in range(num_s):
+                            for istate_n in range(num_s):
                                 
                                 
-#                                 anp = None
-#                                 kapnp0 = None
+                                anp = None
+                                kapnp0 = None
 
-#                                 zp = zgrid[is_to_iz[istate_n]]
-#                                 epsp = epsgrid[is_to_ieps[istate_n]]
+                                zp = zgrid[is_to_iz[istate_n]]
+                                epsp = epsgrid[is_to_ieps[istate_n]]
                                 
 
-#                                 for is_o_n in range(2):
+                                for is_o_n in range(2):
 
-#                                     #if young
-#                                     if is_o_n == 0:
+                                    #if young
+                                    if is_o_n == 0:
 
-#                                         kapn = kapn0
+                                        kapn = kapn0
                                         
-#                                         #if kappa is succeeded from a S guy, kapn must be depreciate
-#                                         if is_s and is_o: #and not is_o_n 
-#                                             kapn = la_tilde*kapn0
+                                        #if kappa is succeeded from a S guy, kapn must be depreciate
+                                        if is_s and is_o: #and not is_o_n 
+                                            kapn = la_tilde*kapn0
 
-#                                         anp_s = fem2d_peval(an, kapn, agrid, kapgrid, v_ys_an[:, :, istate_n])
-#                                         kapnp_s = fem2d_peval(an, kapn, agrid, kapgrid, v_ys_kapn[:, :, istate_n])
+                                        anp_s = fem2d_peval(an, kapn, agrid, kapgrid, v_ys_an[:, :, istate_n])
+                                        kapnp_s = fem2d_peval(an, kapn, agrid, kapgrid, v_ys_kapn[:, :, istate_n])
 
-#                                         anp_c = fem2d_peval(an, kapn, agrid, kapgrid, v_yc_an[:, :, istate_n])
-#                                         kapnp_c = la*kapn
-                                        
-
-#                                         val_n_s = (get_sstatic([an, anp_s, kapn, kapnp_s, zp, is_o_n])[0]  +  fem2d_peval(anp_s, kapnp_s, agrid, kapgrid, bEV_ys[:,:,istate_n])) **(1./(1.- mu))
-#                                         val_n_c = (get_cstatic([an, anp_c, epsp, is_o_n])[0]  +  fem2d_peval(anp_c, kapnp_c, agrid, kapgrid, bEV_yc[:,:,istate_n])) **(1./(1.- mu))
-
-#                                     #else if old
-#                                     elif is_o_n == 1:
-#                                         anp_s = fem2d_peval(an, kapn0, agrid, kapgrid, v_os_an[:, :, istate_n])
-#                                         kapnp_s = fem2d_peval(an, kapn0, agrid, kapgrid, v_os_kapn[:, :, istate_n])
-
-#                                         anp_c = fem2d_peval(an, kapn, agrid, kapgrid, v_oc_an[:, :, istate_n])
-#                                         kapnp_c = la*kapn
+                                        anp_c = fem2d_peval(an, kapn, agrid, kapgrid, v_yc_an[:, :, istate_n])
+                                        kapnp_c = la*kapn
                                         
 
-#                                         val_n_s = (get_sstatic([an, anp_s, kapn0, kapnp_s, zp, is_o_n])[0]  +  fem2d_peval(anp_s, kapnp_s, agrid, kapgrid, bEV_os[:,:,istate_n])) **(1./(1.- mu))
-#                                         val_n_c = (get_cstatic([an, anp_c, epsp, is_o_n])[0]  +  fem2d_peval(anp_c, kapnp_c, agrid, kapgrid, bEV_oc[:,:,istate_n])) **(1./(1.- mu))
+                                        val_n_s = (get_sstatic([an, anp_s, kapn, kapnp_s, zp, is_o_n])[0]  +  fem2d_peval(anp_s, kapnp_s, agrid, kapgrid, bEV_ys[:,:,istate_n])) **(1./(1.- mu))
+                                        val_n_c = (get_cstatic([an, anp_c, epsp, is_o_n])[0]  +  fem2d_peval(anp_c, kapnp_c, agrid, kapgrid, bEV_yc[:,:,istate_n])) **(1./(1.- mu))
+
+                                    #else if old
+                                    elif is_o_n == 1:
+                                        anp_s = fem2d_peval(an, kapn0, agrid, kapgrid, v_os_an[:, :, istate_n])
+                                        kapnp_s = fem2d_peval(an, kapn0, agrid, kapgrid, v_os_kapn[:, :, istate_n])
+
+                                        anp_c = fem2d_peval(an, kapn, agrid, kapgrid, v_oc_an[:, :, istate_n])
+                                        kapnp_c = la*kapn
+                                        
+
+                                        val_n_s = (get_sstatic([an, anp_s, kapn0, kapnp_s, zp, is_o_n])[0]  +  fem2d_peval(anp_s, kapnp_s, agrid, kapgrid, bEV_os[:,:,istate_n])) **(1./(1.- mu))
+                                        val_n_c = (get_cstatic([an, anp_c, epsp, is_o_n])[0]  +  fem2d_peval(anp_c, kapnp_c, agrid, kapgrid, bEV_oc[:,:,istate_n])) **(1./(1.- mu))
 
                                         
 
-#                                     else:
-#                                         print('error')
+                                    else:
+                                        print('error')
 
                                      
-#                                     if val_n_s >= val_n_c:
-#                                         if val_n_s == val_n_c:
-#                                             print('error')
+                                    if val_n_s >= val_n_c:
+                                        if val_n_s == val_n_c:
+                                            print('error')
                                             
-#                                         anp = anp_s
-#                                         kapnp0 = kapnp_s
+                                        anp = anp_s
+                                        kapnp0 = kapnp_s
 
-#                                         kapn = kapn0
+                                        kapn = kapn0
                                         
-#                                         #if kappa is succeeded from a S guy, kapn must be depreciate
-#                                         if is_s and is_o and not is_o_n:
-#                                             kapn = la_tilde*kapn0
+                                        #if kappa is succeeded from a S guy, kapn must be depreciate
+                                        if is_s and is_o and not is_o_n:
+                                            kapn = la_tilde*kapn0
                                         
+                                        u, cc, cs, cagg, l, hy, hkap, h ,x, ks, ys, ns, ib, taubb, psibb = get_sstatic([an, anp, kapn, kapnp0, zp, is_o_n]) 
 
-#                                         u, cc, cs, cagg, l, mx, my, x, ks, ys = get_sstatic([an, anp, kapn, kapnp0, zp, is_o_n])
+                                        # u, cc, cs, cagg, l, mx, my, x, ks, ys = get_sstatic([an, anp, kapn, kapnp0, zp, is_o_n])                                        
 
-#                                     else:
-#                                         anp = anp_c
-#                                         kapnp0 = kapnp_c
+                                    else:
+                                        anp = anp_c
+                                        kapnp0 = kapnp_c
 
-#                                         u, cc, cs, cagg, l ,n = get_cstatic([an, anp, epsp, is_o_n])
+                                        u, cc, cs, cagg, l ,n, i, taunn, psinn = get_cstatic([an, anp, epsp, is_o_n])
 
-#                                     dc_up[ia, ikap, istate, is_o, istate_n, is_o_n] = dc_util(cagg, l)
 
-#                                     # if np.isnan(dc_up[ia, ikap, istate, is_o, istate_n, is_o_n]):
+                                    dc_up[ia, ikap, istate, is_o, istate_n, is_o_n] = dc_util(cagg, l)
 
-#                                     #     if val_n_s >= val_n_c:
-#                                     #         print('is s')
-#                                     #     else:
-#                                     #         print('is c')
+                                    # if np.isnan(dc_up[ia, ikap, istate, is_o, istate_n, is_o_n]):
+
+                                    #     if val_n_s >= val_n_c:
+                                    #         print('is s')
+                                    #     else:
+                                    #         print('is c')
                                         
-#                                     #     print('an = ', an)
-#                                     #     print('kapn0 = ', kapn0)                                    
+                                    #     print('an = ', an)
+                                    #     print('kapn0 = ', kapn0)                                    
                                     
 
 
-#             ###end obtain dividends and the stochastic discount factor###
+            ###end obtain dividends and the stochastic discount factor###
 
 
-#         _pre_calc_(d, dc_u, dc_up, data_an, data_kapn0, be_s)                                                                            
+        _pre_calc_(d, dc_u, dc_up, data_an, data_kapn0, be_s)                                                                            
 
         
-#         @nb.jit(nopython = True, parallel = True)
-#         def _inner_get_sweat_equity_value_pp_(_val_,#output
-#                                               _d_, _an_, _kapn0_,  _dc_u_, _dc_up_, _be_s_, is_dynasty = True ):
-#             #valb = np.full((num_a, num_kap, num_s, 2), -1000.)
+        @nb.jit(nopython = True, parallel = True)
+        def _inner_get_sweat_equity_value_pp_(_val_,#output
+                                              _d_, _an_, _kapn0_,  _dc_u_, _dc_up_, _be_s_, is_dynasty = True, discount = None):
+            #valb = np.full((num_a, num_kap, num_s, 2), -1000.)
 
-#             val_tmp = _val_.copy()
-#             bEval = np.zeros(_val_.shape)
+            val_tmp = _val_.copy()
+            bEval = np.zeros(_val_.shape)
 
-#             tol = 1.0e-8
-#             dist = 1.0e100
-#             maxit = 1000
-#             it = 0
+            tol = 1.0e-8
+            dist = 1.0e100
+            maxit = 1000
+            it = 0
 
-#             while it < maxit and dist > tol:
-#                 it = it+1
-#                 bEval[:] = 0.0 #initialize
-
-
-#                 ###for-s###
-#                 for ia in nb.prange(num_a):
-#                     a = agrid[ia]
-#                     for ikap in range(num_kap):
-#                         kap = kapgrid[ikap]
-#                         for istate in range(num_s):
-#                             for is_o in range(2):
-#                                 dc_u = _dc_u_[ia, ikap, istate, is_o]
-
-#                                 for istate_n in range(num_s):
-#                                     for is_o_n in range(2):
+            while it < maxit and dist > tol:
+                it = it+1
+                bEval[:] = 0.0 #initialize
 
 
-#                                         an = _an_[ia, ikap, istate, is_o]
-#                                         kapn = _kapn0_[ia, ikap, istate, is_o]
+                ###for-s###
+                for ia in nb.prange(num_a):
+                    a = agrid[ia]
+                    for ikap in range(num_kap):
+                        kap = kapgrid[ikap]
+                        for istate in range(num_s):
+                            for is_o in range(2):
+                                dc_u = _dc_u_[ia, ikap, istate, is_o]
 
-#                                         #if kappa_n is succeeded from old S guy, kapn must be depreciated.
-#                                         #this adjustment is necessary to calc val_p
+                                for istate_n in range(num_s):
+                                    for is_o_n in range(2):
 
-#                                         if is_o and _be_s_[ia, ikap, istate, is_o] and not is_o_n:
-#                                             kapn = la_tilde * kapn
+
+                                        an = _an_[ia, ikap, istate, is_o]
+                                        kapn = _kapn0_[ia, ikap, istate, is_o]
+
+                                        #if kappa_n is succeeded from old S guy, kapn must be depreciated.
+                                        #this adjustment is necessary to calc val_p
+
+                                        if is_o and _be_s_[ia, ikap, istate, is_o] and not is_o_n:
+                                            kapn = la_tilde * kapn
                                         
 
-#                                         dc_un = _dc_up_[ia, ikap, istate, is_o, istate_n, is_o_n]
-#                                         val_p = fem2d_peval(an, kapn, agrid, kapgrid, _val_[:, :, istate_n, is_o_n])
+                                        dc_un = _dc_up_[ia, ikap, istate, is_o, istate_n, is_o_n]
+                                        val_p = fem2d_peval(an, kapn, agrid, kapgrid, _val_[:, :, istate_n, is_o_n])
 
 
-#                                         #if o -> y, s is drawn from unconditional dist
-#                                         #else, use the transition matrix
-#                                         if is_o and not is_o_n:
-#                                             if is_dynasty:
-#                                                 bEval[ia, ikap, istate, is_o] += bh*iota*prob_yo[is_o, is_o_n]*prob_st[istate_n] * dc_un * val_p / dc_u
-#                                             else:
-#                                                 pass #if the evaluation is not dynastic, there is no future value
+                                        if discount is None:
+                                            #if o -> y, s is drawn from unconditional dist
+                                            #else, use the transition matrix
+                                            if is_o and not is_o_n:
+                                                if is_dynasty:
+                                                    bEval[ia, ikap, istate, is_o] += bh*iota*prob_yo[is_o, is_o_n]*prob_st[istate_n] * dc_un * val_p / dc_u
+                                                else:
+                                                    pass #if the evaluation is not dynastic, there is no future value
                                                 
-#                                         else:
-#                                             bEval[ia, ikap, istate, is_o] += bh*prob_yo[is_o, is_o_n]*prob[istate, istate_n] * dc_un * val_p / dc_u
+                                            else:
+                                                bEval[ia, ikap, istate, is_o] += bh*prob_yo[is_o, is_o_n]*prob[istate, istate_n] * dc_un * val_p / dc_u
+                                        else: #use a given discount factor
+
+                                            if is_o and not is_o_n:
+                                                if is_dynasty:
+                                                    bEval[ia, ikap, istate, is_o] += discount*iota*prob_yo[is_o, is_o_n]*prob_st[istate_n] *val_p 
+                                                else:
+                                                    pass #if the evaluation is not dynastic, there is no future value
+                                                
+                                            else:
+                                                bEval[ia, ikap, istate, is_o] += discount*prob_yo[is_o, is_o_n]*prob[istate, istate_n] * val_p
+                                            
 
 
-#                 ###end for-s###
+                ###end for-s###
 
 
-#                 #update the results
-#                 val_tmp[:] = _val_[:]
+                #update the results
+                val_tmp[:] = _val_[:]
 
-#                 _val_[:] = _d_ + bEval
+                _val_[:] = _d_ + bEval
 
-#                 dist = np.max(np.abs(_val_ - val_tmp))
+                dist = np.max(np.abs(_val_ - val_tmp))
 
 
 
-#             #after calc evaluation
-#             if it >= maxit:
-#                 print('iteration terminated at maxit')
+            #after calc evaluation
+            if it >= maxit:
+                print('iteration terminated at maxit')
 
-#             ###debug code###
+            ###debug code###
 
-#             print('converged at it = ', it)
-#             print('dist = ', dist)
+            print('converged at it = ', it)
+            print('dist = ', dist)
 
-#             ###end debug code###                
+            ###end debug code###                
                 
                 
 
         
-#         #main loop to calculate values
-#         val_dyna = d / (rbar - grate) #initial value
+        #main loop to calculate values
+        val_dyna_sdf = d / (rbar - grate) #initial value
+        _inner_get_sweat_equity_value_pp_(val_dyna_sdf, d, data_an, data_kapn0, dc_u, dc_up, be_s, True)
 
-#         _inner_get_sweat_equity_value_pp_(val_dyna, d, data_an, data_kapn0, dc_u, dc_up, be_s, True)
+        val_dyna_fix = d / (rbar - grate) #initial value
+        _inner_get_sweat_equity_value_pp_(val_dyna_fix, d, data_an, data_kapn0, dc_u, dc_up, be_s, True, (1. + grate)/(1. + rs))
+        
+
+        # val_life = d / (rbar - grate)
+        # _inner_get_sweat_equity_value_pp_(val_life, d, data_an, data_kapn0, dc_u, dc_up, be_s, False)        
 
 
-#         val_life = d / (rbar - grate)
-#         _inner_get_sweat_equity_value_pp_(val_life, d, data_an, data_kapn0, dc_u, dc_up, be_s, False)        
-
-
-#         self.sweat_div = d
-#         self.sweat_val_dyna = val_dyna
-#         self.sweat_val_life = val_life
+        self.sweat_div = d
+        self.sweat_val_dyna_sdf = val_dyna_sdf
+        self.sweat_val_dyna_fix = val_dyna_fix        
 
     def simulate_other_vars(self):
 
-        
         for variable in self.__dict__ : exec(variable+'= self.'+variable, locals(), globals())
         Econ = self
 
@@ -3961,53 +3973,36 @@ class Economy:
                  data_u, data_cc, data_cs, data_cagg, data_l, data_n, data_hy, data_hkap, data_h, data_x, data_ks, data_ys, data_ns, data_i_tax_bracket ##output
             )
 
+        #value of dividends are calc'd here
+        @nb.jit(nopython = True, parallel = True)        
+        def calc_val_seq( _data_val_, #output
+                         _data_a_, _data_kap_,  _data_i_s_, _data_is_o_, _data_sweat_val_):
 
-#         #to be updated
-#         @nb.jit(nopython = True, parallel = True)        
-#         def calc_val_seq( _data_val_, #output
-#                          _data_a_, _data_kap_,  _data_i_s_, _data_is_o_, _data_sweat_val_):
-
-#             # data_kap or data_kap0
-            
-
-#             for i in nb.prange(num_total_pop):
-#                 for t in range(1, sim_time):
+            for i in nb.prange(num_total_pop):
+                for t in range(1, sim_time):
                     
-#                     istate = _data_i_s_[i,t]
-#                     is_o = int(_data_is_o_[i,t])
-# #                    eps = epsgrid[is_to_ieps[istate]]
-# #                    z = zgrid[is_to_iz[istate]]
+                    istate = _data_i_s_[i,t]
+                    is_o = int(_data_is_o_[i,t])
+#                    eps = epsgrid[is_to_ieps[istate]]
+#                    z = zgrid[is_to_iz[istate]]
                                     
-#                     a = _data_a_[i, t-1]
-#                     kap = _data_kap_[i, t-1] #this is not kap0
+                    a = _data_a_[i, t-1]
+                    kap = _data_kap_[i, t-1] #this is not kap0
 
-#                     #these data record beginning of the period info of dividends and their discounted values
-#                     #that is, all the values are taken after they observe the shocks.
+                    #these data record beginning of the period info of dividends and their discounted values
+                    #that is, all the values are taken after they observe the shocks.
 
-#                     _data_val_[i, t] = fem2d_peval(a, kap, agrid, kapgrid, _data_sweat_val_[:,:, istate, is_o])
-        
-                
-#         sweat_div = self.sweat_div
-#         sweat_val = self.sweat_val #I think this one uses stochastic discount factor
-
-#         # sweat_val_bh = self.calc_sweat_eq_value(discount = self.bh)[1]
-#         sweat_val_1gR = self.calc_sweat_eq_value(discount = (1. + self.grate)/(1. + self.rbar))[1]
-
-#         # self.sweat_val_bh = sweat_val_bh
-#         self.sweat_val_1gR = sweat_val_1gR
+                    _data_val_[i, t] = fem2d_peval(a, kap, agrid, kapgrid, _data_sweat_val_[:,:, istate, is_o])
 
 
-#         data_div_sweat = np.zeros(data_a.shape)
-#         data_val_sweat = np.zeros(data_a.shape)        
-#         # data_val_sweat_bh = np.zeros(data_a.shape)
-#         data_val_sweat_1gR = np.zeros(data_a.shape)        
+        data_div_sweat = np.zeros(data_a.shape)
+        data_val_sweat_dyna_sdf = np.zeros(data_a.shape)
+        data_val_sweat_dyna_fix = np.zeros(data_a.shape)        
 
-        
 
-#         calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_div, data_div_sweat)
-#         calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val, data_val_sweat)
-#         # calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_bh, data_val_sweat_bh)
-#         calc_val_seq(data_a, data_kap, data_i_s, data_is_c, sweat_val_1gR, data_val_sweat_1gR)                
+        calc_val_seq(data_div_sweat, data_a, data_kap,  data_i_s, data_is_o, self.sweat_div)        
+        calc_val_seq(data_val_sweat_dyna_sdf, data_a, data_kap,  data_i_s, data_is_o, self.sweat_val_dyna_sdf)
+        calc_val_seq(data_val_sweat_dyna_fix, data_a, data_kap,  data_i_s, data_is_o, self.sweat_val_dyna_fix)        
 
 
         self.data_u = data_u
@@ -4025,10 +4020,10 @@ class Economy:
         self.data_ns = data_ns
         self.data_i_tax_bracket = data_i_tax_bracket
 
-        # self.data_div_sweat = data_div_sweat
-        # self.data_val_sweat = data_val_sweat        
-        # self.data_val_sweat_bh = data_val_sweat_bh
-        # self.data_val_sweat_1gR = data_val_sweat_1gR
+        self.data_div_sweat = data_div_sweat
+        self.data_val_sweat_dyna_sdf = data_val_sweat_dyna_sdf
+        self.data_val_sweat_dyna_fix = data_val_sweat_dyna_fix        
+
 
         return
 
@@ -4087,13 +4082,14 @@ class Economy:
             np.save(dir_path_save + 'vn_ys', self.vn_ys)
             np.save(dir_path_save + 'vn_os', self.vn_os)            
 
-            # np.save(dir_path_save + 'sweat_div', self.sweat_div)
-            # np.save(dir_path_save + 'sweat_val_dyna', self.sweat_val_dyna)
-            # np.save(dir_path_save + 'sweat_val_life', self.sweat_val_life)
+            np.save(dir_path_save + 'sweat_div', self.sweat_div)
+            np.save(dir_path_save + 'sweat_val_dyna_sdf', self.sweat_val_dyna_sdf)
+            np.save(dir_path_save + 'sweat_val_dyna_fix', self.sweat_val_dyna_fix)
 
-            # np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
-            # np.save(dir_path_save + 'data_val_sweat_dyna', self.data_val_sweat_dyna[:, -100:])
-            # np.save(dir_path_save + 'data_val_sweat_life', self.data_val_sweat_life[:, -100:])
+            np.save(dir_path_save + 'data_div_sweat', self.data_div_sweat[:, -100:])
+            np.save(dir_path_save + 'data_val_sweat_dyna_sdf', self.data_val_sweat_dyna_sdf[:, -100:])
+            np.save(dir_path_save + 'data_val_sweat_dyna_fix', self.data_val_sweat_dyna_fix[:, -100:])            
+
 
             np.save(dir_path_save + 'sind_age', self.sind_age)
             np.save(dir_path_save + 'cind_age', self.cind_age)
