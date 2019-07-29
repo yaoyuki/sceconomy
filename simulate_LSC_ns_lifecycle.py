@@ -85,16 +85,15 @@ if __name__ == '__main__':
 
 
     econ = Economy(sim_time = 1000, num_total_pop  = 100_000,
-        agrid = agrid2, zgrid = zgrid2, rho = 0.01, upsilon = 0.50, prob = prob,
+        agrid = agrid2, zgrid = zgrid2, rho = 0.01, prob = prob, prob_yo = prob_yo,
                    ome = ome_,  theta = theta_,
                    path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
                    scaling_n = GDP_guess, scaling_b = GDP_guess, g = 0.133*GDP_guess, yn = 0.266*GDP_guess, xnb = 0.110*GDP_guess,
                    delk = 0.041, delkap = 0.041,  veps = 0.418, vthet = 1.0 - 0.418,
                    tauc = 0.065, taud = 0.133,
-                   taup = taup, taub = taub, psib = psib
+                   taup = taup, taub = taub# , psib = psib
                    #, epsgrid = epsgrid2
-    )
-    
+    )    
 
     
     econ.set_prices(p = p_, rc = rc_)
