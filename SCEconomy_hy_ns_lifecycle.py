@@ -3095,7 +3095,7 @@ class Economy:
             print('')
 
             
-            t = -1
+            t = simtime-1
 
             # data_ss
             # 0: is_c

@@ -64,15 +64,20 @@ if __name__ == '__main__':
     agrid2 = curvedspace(0., 200., 2., 40)
     zgrid2 = np.load('./input_data/zgrid.npy') ** 2.0
 
+
     GDP_guess = 3.20
 
-    taup = 0.36#*(1.0 - 0.278)
-    taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28])# *(1.0 -  0.506) #large one
-    # psib = np.array([-0.016705100000000014, 0.00993489999999998, 0.03, 0.13975679999999993, 0.35576280000000016, 0.5075368000000003])
+    taup = 0.36 * (1.0 - 0.278)
+    taub = np.array([0.137, 0.185, 0.202, 0.238, 0.266, 0.28]) *(1.0 -  0.506) #large one
+    psib = np.array([-0.010393600000000013, 0.012646399999999981, 0.03, 0.12492479999999993, 0.3117408000000001,0.4430048000000002])
+
+    taun = np.array([0.293,  0.317, 0.324,  0.343,  0.39,  0.405, 0.408,  0.419])
+    psin = np.array([-0.10037472000000003, -0.08685792000000002, -0.08193888000000002, -0.06546208, 0.0011951999999999727, 0.03,  0.04398335999999975, 0.14192735999999984])
     
     
 
-    p_, rc_, ome_, theta_  = 1.4363987684178972, 0.06804621197252395, 0.4561128052733918, 0.5071181286751945,
+    p_, rc_, ome_, theta_  = 1.5212566636733704, 0.05885423450623066, 0.4561128052733918, 0.5071181286751945
+    
 
  
 
@@ -83,19 +88,18 @@ if __name__ == '__main__':
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
 
-
-    econ = Economy(sim_time = 1000, num_total_pop  = 100_000,
-        agrid = agrid2, zgrid = zgrid2, rho = 0.01, prob = prob, prob_yo = prob_yo,
-                   ome = ome_,  theta = theta_,
+    econ = Economy(sim_time = 1000, num_total_pop = num_pop,
+                   agrid = agrid2,  zgrid = zgrid2, rho = 0.01, prob = prob,
+                   ome = ome_, theta = theta_,
                    path_to_data_i_s = path_to_data_i_s, path_to_data_is_o = path_to_data_is_o,
                    scaling_n = GDP_guess, scaling_b = GDP_guess, g = 0.133*GDP_guess, yn = 0.266*GDP_guess, xnb = 0.110*GDP_guess,
                    delk = 0.041, delkap = 0.041,  veps = 0.418, vthet = 1.0 - 0.418,
                    tauc = 0.065, taud = 0.133,
-                   taup = taup, taub = taub# , psib = psib
-                   #, epsgrid = epsgrid2
-    )    
+                   taup = taup, taub = taub , psib = psib
 
+    )
     
+
     econ.set_prices(p = p_, rc = rc_)
     
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)

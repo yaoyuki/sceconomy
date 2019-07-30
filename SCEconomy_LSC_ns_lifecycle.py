@@ -1770,7 +1770,7 @@ class Economy:
 
             data_ss = np.ones((num_total_pop, 18)) * (-2.0)
 
-            t = -1
+            t = simtime-1
             for i in range(num_total_pop):
 
                 #need to check the consistency within variables... there may be errors...
@@ -1994,7 +1994,7 @@ class Economy:
             # print('kapmax = {}'.format(np.max(data_kap)))
             # print('kapmin = {}'.format(np.min(data_kap)))
 
-            t = -1
+            t = simtime-1
 
             # data_ss
             # 0: is_c
@@ -2226,7 +2226,7 @@ class Economy:
 
 
 
-            t = -1
+            t = simtime-1
             
             print('')
             print('Labor Market')
@@ -2442,9 +2442,9 @@ class Economy:
 
 
                     if is_c:
-                        u, cc, cs, cagg, l , n, tmp1, tmp2, ibra, tau, psi = get_cstatic([a, an, eps, is_o])
+                        u, cc, cs, cagg, l , n, tmp1, tmp2, ibra, tau, psi = get_cstatic(np.array([a, an, eps, is_o]))
                     else:
-                        u, cc, cs, cagg, l, tmp1, ks, ys, ibra, tau, psi, ns = get_sstatic([a, an, z, is_o])
+                        u, cc, cs, cagg, l, tmp1, ks, ys, ibra, tau, psi, ns = get_sstatic(np.array([a, an, z, is_o]))
 
                     data_u_[i, t] = u
                     data_cc_[i, t] = cc
