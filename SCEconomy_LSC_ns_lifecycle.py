@@ -1770,7 +1770,7 @@ class Economy:
 
             data_ss = np.ones((num_total_pop, 18)) * (-2.0)
 
-            t = simtime-1
+            t = sim_time-1
             for i in range(num_total_pop):
 
                 #need to check the consistency within variables... there may be errors...
@@ -1994,7 +1994,7 @@ class Economy:
             # print('kapmax = {}'.format(np.max(data_kap)))
             # print('kapmin = {}'.format(np.min(data_kap)))
 
-            t = simtime-1
+            t = sim_time-1
 
             # data_ss
             # 0: is_c
@@ -2226,7 +2226,7 @@ class Economy:
 
 
 
-            t = simtime-1
+            t = sim_time-1
             
             print('')
             print('Labor Market')

@@ -3095,7 +3095,7 @@ class Economy:
             print('')
 
             
-            t = simtime-1
+            t = sim_time-1
 
             # data_ss
             # 0: is_c
@@ -3324,7 +3324,7 @@ class Economy:
             for t in range(40):
                 print(' N is ', t, ', with = {:f}'.format((np.mean(np.all(data_is_c[:,-(t+2):-1] == False, axis = 1)) - np.mean(np.all(data_is_c[:,-(t+3):-1] == False, axis = 1)) )/ np.mean(1. - data_ss[:,0]))) 
 
-            t = -1
+            t = sim_time -1
             
             print('')
             print('Labor Market')
