@@ -298,7 +298,7 @@ if __name__ == '__main__':
     data_i_s = data_i_s[:, buffer_time:]
     np.save(path_to_data_i_s + '.npy' , data_i_s)
     split_shock(path_to_data_i_s, num_total_pop, num_core)
-    del data_rand, data_i_s    
+    del data_rand
 
     #save and split shocks for is_old
     np.random.seed(2)
@@ -309,7 +309,7 @@ if __name__ == '__main__':
     data_is_o = data_is_o[:, buffer_time:]
     np.save(path_to_data_is_o + '.npy' , data_is_o)
     split_shock(path_to_data_is_o, num_total_pop, num_core)
-    del data_rand, data_is_o
+    del data_rand
     ### end generate shocks and save them ###    
     
 
