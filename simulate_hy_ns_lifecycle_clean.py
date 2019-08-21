@@ -122,16 +122,17 @@ if __name__ == '__main__':
     
 
     mc_z   = tauchen(rho = rho_z  , sigma_u = sig_z  , m = 3, n = num_z) # discretize z
-    mc_eps = tauchen(rho = rho_eps, sigma_u = sig_eps, m = 3, n = num_eps) # discretize z     
+    mc_eps = tauchen(rho = rho_eps, sigma_u = sig_eps, m = 3, n = num_eps) # discretize eps
 
     
     # prob_z = mc_z.P
     # prob_eps = mc_eps.P
     # prob = np.kron(prob_eps, prob_z)
 
-    prob_z   = np.loadtxt('./DeBacker/debacker_prob_z.npy')
-    prob_eps = np.loadtxt('./DeBacker/debacker_prob_eps.npy')
-    prob = np.kron(prob_eps, prob_z)
+    prob_z   = np.loadtxt('./DeBacker/debacker_prob_z.npy') # read transition matrix from DeBacker
+    prob_eps = np.loadtxt('./DeBacker/debacker_prob_eps.npy') # read transition matrix from DeBacker
+    prob = np.kron(prob_eps, prob_z) 
+    
     # prob = np.load('./DeBacker/prob_epsz.npy') # transition matrix from DeBacker et al.
     zgrid = np.exp(mc_z.state_values) ** 2.0
     epsgrid = np.exp(mc_eps.state_values) 
@@ -176,9 +177,6 @@ if __name__ == '__main__':
     # one intercept should be fixed
     psib_fixed = 0.03 # value for the fixed intercept
     bbracket_fixed = 2 # index for the fixed intercept
-    # to exeognously pin down intercepts,  directly determine psib
-    # psib = None 
-
     psib = get_consistent_phi(bbracket, taub, psib_fixed, bbracket_fixed) # obtain consistent intercepts
 
     # labor income tax
@@ -189,8 +187,6 @@ if __name__ == '__main__':
     # one intercept should be fixed
     psin_fixed = 0.03 # value for the fixed intercept
     nbracket_fixed = 5 # index for the fixed intercept
-    # to exeognously pin down intercepts,  directly determine psin
-    # psin = None
     psin = get_consistent_phi(nbracket, taun, psin_fixed, nbracket_fixed) # obtain consistent intercepts
 
     
