@@ -82,8 +82,23 @@ if __name__ == '__main__':
     grate    = 0.02 # Growth rate of the economy
 
 
-    #state space grids
+    # state space grids
+    # state space grid requires four parameters
+    # min, max, curvature, number of grid point
+    # if curvature is 1, the grid is equi-spaced.
+    # if curvature is larger than one, it puts more points near min
+    
 
+    amin = 0.0 
+    amax = 200.
+    acurve = 2.0
+    num_a = 40
+
+    kapmin = 0.0
+    kapmax = 2.0
+    kapcurve = 2.0
+    num_kap = 30
+    
     # a function that generates non equi-spaced grid
     def curvedspace(begin, end, curve, num=100):
         ans = np.linspace(0., (end - begin)**(1.0/curve), num) ** (curve) + begin
@@ -91,8 +106,8 @@ if __name__ == '__main__':
         return ans
 
         
-    agrid = curvedspace(0., 200., 2., 40) 
-    kapgrid = curvedspace(0., 2.0, 2., 30)
+    agrid = curvedspace(amin, amax, acurve, num_a) 
+    kapgrid = curvedspace(kapmin, kapmax, kapcurve, num_kap)
     
 
     # productivity shock
@@ -116,9 +131,11 @@ if __name__ == '__main__':
     prob = np.load('./DeBacker/prob_epsz.npy') # transition matrix from DeBacker et al.
     zgrid = np.exp(mc_z.state_values) ** 2.0
     epsgrid = np.exp(mc_eps.state_values) 
-    
-    is_to_iz = np.load('./input_data/is_to_iz.npy') #convert s to eps
-    is_to_ieps = np.load('./input_data/is_to_ieps.npy') #convert s to z
+
+    is_to_iz = np.array([i for i in range(num_z) for j in range(num_eps)])
+    is_to_iz = np.array([j for i in range(num_z) for j in range(num_eps)])    
+    # is_to_iz = np.load('./input_data/is_to_iz.npy') #convert s to eps
+    # is_to_ieps = np.load('./input_data/is_to_ieps.npy') #convert s to z
 
     # lifecycle-specific parameters
     prob_yo = np.array([[44./45., 1./45.], [3./45., 42./45.]]) # transition matrix for young-old state
