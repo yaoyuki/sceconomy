@@ -267,13 +267,13 @@ class Economy:
 
     def __set_nltax_parameters__(self):
         
-        from LinearTax import get_consistent_phi
+        # from PiecewiseLinearTax import get_consistent_phi
 
         
-        self.bbracket = self.bbracket * self.scaling_b
-        #set transfer term if not provided
-        if self.psib is None:
-            self.psib = get_consistent_phi(self.bbracket, self.taub, self.psib_fixed, self.bbracket_fixed) # we need to set the last two as arguments
+        # self.bbracket = self.bbracket * self.scaling_b
+        # #set transfer term if not provided
+        # if self.psib is None:
+        #     self.psib = get_consistent_phi(self.bbracket, self.taub, self.psib_fixed, self.bbracket_fixed) # we need to set the last two as arguments
 
         tmp = self.bbracket
         self.bbracket = np.zeros(len(tmp)+2)
@@ -284,11 +284,11 @@ class Economy:
 
         
         
-        self.nbracket = self.nbracket * self.scaling_n
+        # self.nbracket = self.nbracket * self.scaling_n
 
-        #set transfer term if not provided
-        if self.psin is None:
-            self.psin = get_consistent_phi(self.nbracket, self.taun, self.psin_fixed, self.nbracket_fixed) # we need to set the last two as arguments
+        # #set transfer term if not provided
+        # if self.psin is None:
+        #     self.psin = get_consistent_phi(self.nbracket, self.taun, self.psin_fixed, self.nbracket_fixed) # we need to set the last two as arguments
 
         tmp = self.nbracket
         self.nbracket = np.zeros(len(tmp)+2)        
@@ -296,9 +296,6 @@ class Economy:
         self.nbracket[-1] = np.inf
         self.nbracket[1:-1] = tmp[:]
 
-
-        # self.psin = self.psin * self.scaling_n
-        
         
 
         

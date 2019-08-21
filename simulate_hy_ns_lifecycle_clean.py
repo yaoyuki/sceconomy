@@ -124,11 +124,15 @@ if __name__ == '__main__':
     mc_z   = tauchen(rho = rho_z  , sigma_u = sig_z  , m = 3, n = num_z) # discretize z
     mc_eps = tauchen(rho = rho_eps, sigma_u = sig_eps, m = 3, n = num_eps) # discretize z     
 
+    
     # prob_z = mc_z.P
     # prob_eps = mc_eps.P
     # prob = np.kron(prob_eps, prob_z)
 
-    prob = np.load('./DeBacker/prob_epsz.npy') # transition matrix from DeBacker et al.
+    prob_z   = np.loadtxt('./DeBacker/debacker_prob_z.npy')
+    prob_eps = np.loadtxt('./DeBacker/debacker_prob_eps.npy')
+    prob = np.kron(prob_eps, prob_z)
+    # prob = np.load('./DeBacker/prob_epsz.npy') # transition matrix from DeBacker et al.
     zgrid = np.exp(mc_z.state_values) ** 2.0
     epsgrid = np.exp(mc_eps.state_values) 
 
@@ -166,8 +170,8 @@ if __name__ == '__main__':
 
     # business tax
     taub = np.array([.137, .185, .202, .238, .266, .280])
-    bbracket = np.array([0.150, 0.319, 0.824, 2.085, 2.930]) # brackets relative to GDP
-    scaling_b = GDP_guess #actual brackets are bracket * GDP
+    bbracket_div_gdp = np.array([0.150, 0.319, 0.824, 2.085, 2.930]) # brackets relative to GDP
+    bbracket = bbracket_div_gdp * GDP_guess
     
     # one intercept should be fixed
     psib_fixed = 0.03 # value for the fixed intercept
@@ -175,17 +179,19 @@ if __name__ == '__main__':
     # to exeognously pin down intercepts,  directly determine psib
     # psib = None 
 
+    psib = get_consistent_phi(bbracket, taub, psib_fixed, bbracket_fixed) # obtain consistent intercepts
 
     # labor income tax
     taun = np.array([.2930, .3170, .3240, .3430, .3900, .4050, .4080, .4190])
-    nbracket = np.array([.1760, .2196, .2710, .4432, 0.6001, 1.4566, 2.7825]) # brackets relative to GDP
-    scaling_n = GDP_guess
+    nbracket_div_gdp = np.array([.1760, .2196, .2710, .4432, 0.6001, 1.4566, 2.7825]) # brackets relative to GDP
+    nbracket = nbracket_div_gdp * GDP_guess
     
     # one intercept should be fixed
     psin_fixed = 0.03 # value for the fixed intercept
     nbracket_fixed = 5 # index for the fixed intercept
     # to exeognously pin down intercepts,  directly determine psin
-    # psin = None         
+    # psin = None
+    psin = get_consistent_phi(nbracket, taun, psin_fixed, nbracket_fixed) # obtain consistent intercepts
 
     
 
@@ -241,29 +247,6 @@ if __name__ == '__main__':
                    seed = 2,
                    init_state = 0)
 
-    
-    # np.random.seed(0)
-    # data_rand = np.random.rand(num_total_pop, sim_time+buffer_time)
-    # data_i_s = np.ones((num_total_pop, sim_time+buffer_time), dtype = int)
-    # data_i_s[:, 0] = 7 #initial state. it does not matter if simulation is long enough.
-    # calc_trans(data_i_s, data_rand, prob)
-    # data_i_s = data_i_s[:, buffer_time:]
-    # np.save(path_to_data_i_s + '.npy' , data_i_s)
-    # split_shock(path_to_data_i_s, num_total_pop, num_core)
-    # del data_rand, data_i_s    
-
-    # #save and split shocks for is_old
-    # np.random.seed(2)
-    # data_rand = np.random.rand(num_total_pop, sim_time+buffer_time+1) #+1 is added since this matters in calculation
-    # data_is_o = np.ones((num_total_pop, sim_time+buffer_time+1), dtype = int)
-    # data_is_o[:, 0] = 0 #initial state. it does not matter if simulation is long enough.
-    # calc_trans(data_is_o, data_rand, prob_yo)
-    # data_is_o = data_is_o[:, buffer_time:]
-    # np.save(path_to_data_is_o + '.npy' , data_is_o)
-    # split_shock(path_to_data_is_o, num_total_pop, num_core)
-    # del data_rand, data_is_o
-    # ### end generate shocks and save them ###    
-
 
     print('Solving the model with the given prices...')
     print('Do not simulate more than one models at the same time...')
@@ -311,14 +294,10 @@ if __name__ == '__main__':
                    xnb = xnb,
                    taub = taub,
                    bbracket = bbracket,
-                   scaling_b = scaling_b,
-                   psib_fixed = psib_fixed,
-                   bbracket_fixed = bbracket_fixed,
+                   psib = psib,
                    taun = taun,
                    nbracket = nbracket,
-                   scaling_n = scaling_n,
-                   psin_fixed = psin_fixed,
-                   nbracket_fixed = nbracket_fixed,
+                   psin = psin,
                    sim_time = sim_time,
                    num_total_pop = num_total_pop,
                    num_suba_inner = num_suba_inner,
