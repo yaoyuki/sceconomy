@@ -271,7 +271,7 @@ def target(prices):
     print('dist = {:f}'.format(dist))
 
     f = open(nd_log_file, 'a')
-    f.writelines(str(p) + ', ' + str(rc) + ', ' + str(ome) + ', ' + str(varpi)  + ', ' + str(theta) +  ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[4]) + ', ' + str(moms[5]) + ', ' + str(moms[7]) + ', ' + str(moms[8])  +  '\n')
+    f.writelines(str(p_) + ', ' + str(rc_) + ', ' + str(ome_) + ', ' + str(varpi_)  + ', ' + str(theta_) +  ', ' + str(dist) + ', ' +  str(moms[0]) + ', ' + str(moms[1]) + ', ' + str(moms[2]) + ', ' + str(moms[4]) + ', ' + str(moms[5]) + ', ' + str(moms[7]) + ', ' + str(moms[8])  +  '\n')
   
     f.close()
     
