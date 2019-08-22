@@ -12,8 +12,8 @@ from scipy.optimize import minimize
 
 ### log file destination ###
 
-nd_log_file = '/cluster/shared/yaoxx366/log2/log.txt'
-detailed_output_file = '/cluster/shared/yaoxx366/log2/detail.txt'
+nd_log_file = './log/log.txt'
+detailed_output_file = './log/detail.txt'
 
 
 # initial prices and parameters
@@ -119,16 +119,16 @@ mc_eps = tauchen(rho = rho_eps, sigma_u = sig_eps, m = 3, n = num_eps) # discret
 # prob_eps = mc_eps.P
 # prob = np.kron(prob_eps, prob_z)
 
-prob_z   = np.loadtxt('./DeBacker/debacker_prob_z.npy') # read transition matrix from DeBacker
-prob_eps = np.loadtxt('./DeBacker/debacker_prob_eps.npy') # read transition matrix from DeBacker
-prob = np.kron(prob_eps, prob_z) 
+prob_z   = np.loadtxt('./DeBacker/debacker_prob_z.csv') # read transition matrix from DeBacker
+prob_eps = np.loadtxt('./DeBacker/debacker_prob_eps.csv') # read transition matrix from DeBacker
+prob = np.kron(prob_z, prob_eps)
 
 # prob = np.load('./DeBacker/prob_epsz.npy') # transition matrix from DeBacker et al.
 zgrid = np.exp(mc_z.state_values) ** 2.0
 epsgrid = np.exp(mc_eps.state_values) 
 
 is_to_iz = np.array([i for i in range(num_z) for j in range(num_eps)])
-is_to_iz = np.array([j for i in range(num_z) for j in range(num_eps)])    
+is_to_ieps = np.array([j for i in range(num_z) for j in range(num_eps)])    
 # is_to_iz = np.load('./input_data/is_to_iz.npy') #convert s to eps
 # is_to_ieps = np.load('./input_data/is_to_ieps.npy') #convert s to z
 
@@ -248,13 +248,13 @@ def target(prices):
                    tauc = tauc,
                    taud = taud,
                    taup = taup,
-                   theta = theta, # target
+                   theta = theta_, # target
                    veps = veps,
                    vthet = vthet,
                    zeta = zeta,
                    A = A,
                    upsilon = upsilon,
-                   varpi = varpi, # varpi
+                   varpi = varpi_, # varpi
                    agrid = agrid,
                    kapgrid = kapgrid,
                    prob = prob,
