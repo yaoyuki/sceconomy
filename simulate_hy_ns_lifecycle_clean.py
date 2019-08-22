@@ -20,10 +20,12 @@ if __name__ == '__main__':
     import numpy as np
     import time
     import subprocess
+    import pickle
+    from quantecon.markov.approximation import tauchen    
+
     from SCEconomy_hy_ns_lifecycle import Economy, split_shock
     from markov import calc_trans, Stationary
-    import pickle
-    from quantecon.markov.approximation import tauchen
+    from PiecewiseLinearTax import get_consistent_phi
 
     ###
     ### specify parameters and other inputs
@@ -249,7 +251,7 @@ if __name__ == '__main__':
     print('GDP_guess = ', GDP_guess)
 
 
-    #create Economy
+    #create an Economy instance
     econ = Economy(alpha = alpha,
                    beta = beta,
                    chi = chi,

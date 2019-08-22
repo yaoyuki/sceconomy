@@ -1,14 +1,14 @@
-import sys
-args = sys.argv
-
 import numpy as np
 import time
 import subprocess
-from SCEconomy_hy_ns_lifecycle import Economy, split_shock
 import pickle
-from markov import calc_trans, Stationary
-from scipy.optimize import minimize
+from quantecon.markov.approximation import tauchen    
 
+from SCEconomy_hy_ns_lifecycle import Economy, split_shock
+from markov import calc_trans, Stationary
+from PiecewiseLinearTax import get_consistent_phi
+
+from scipy.optimize import minimize
 
 ### log file destination ###
 
@@ -16,81 +16,143 @@ nd_log_file = '/cluster/shared/yaoxx366/log2/log.txt'
 detailed_output_file = '/cluster/shared/yaoxx366/log2/detail.txt'
 
 
-###
-### specify parameters and other inputs
-###
-
-
 # initial prices and parameters
 
-p_init = 2.147770639542637
-rc_init = 0.06813837786011569
+p_init = 2.147770639542637 # relative price of S-goods
+rc_init = 0.06813837786011569 # interest rate
 
 ome_init = 0.4786843155497944
 varpi_init = 0.5553092396149117
 theta_init = 0.5000702399881483
 
 prices_init = [p_init, rc_init, ome_init, varpi_init, theta_init]
-    
-# parameters
-alpha    = 0.3
-beta     = 0.98
-chi      = 0.0 
-delk     = 0.041
-delkap   = 0.041 
-eta      = 0.42
-grate    = 0.02 
-la       = 0.7 
-mu       = 1.5 
-# ome      = 0.4786843155497944
-phi      = 0.15 
-rho      = 0.01
-tauc     = 0.065
-taud     = 0.133
-taup     = 0.36
-# theta    = 0.5000702399881483
-veps     = 0.418
-vthet    = 1.0 - veps
-zeta     = 1.0
-A        = 1.577707121233179 #this should give yc = 1 (approx.) z^2 case
-upsilon  = 0.5
-# varpi    = 0.5553092396149117
 
 
 
-#state space grids
+# S-corp production function
+alpha    = 0.3 # capital share parameter for S-corp
+phi      = 0.15 # sweat capital share for S-corp
+# composite labor share parameter is defined by nu = 1. - alpha - phi
 
+
+# capital depreciation parameters
+delk     = 0.041 # physical capital depreciation rate
+delkap   = 0.041 # sweat ccapitaldepreciation rate for S-owners
+la       = 0.7 # 1-la sweat capital depreciation rate for C-workers
+
+# household preference
+beta     = 0.98 # discount rate
+eta      = 0.42 # utility weight on consumption
+mu       = 1.5  # risk aversion coeff. of utility
+
+# final good aggregator
+rho      = 0.01 # Elasticity of substitutions parameter between C-S goods
+# ome      = 0.4786843155497944 #weight parameter for C-goods in CES final good aggregator.
+
+# linear tax
+tauc     = 0.065 # consumption tax
+taud     = 0.133 # dividend tax
+taup     = 0.36 # profit tax 
+
+# C-corp production function
+# theta    = 0.5000702399881483 #capital share parameter for C-corporation Cobb-Douglas technology
+A        = 1.577707121233179 #TFP parameter for C-corporation Cobb-Douglas technology
+
+# parameters for sweat capital production function
+veps     = 0.418 # owner's time share
+vthet    = 1.0 - veps # C-good share
+zeta     = 1.0 # TFP term 
+
+# CES aggregator 
+upsilon  = 0.5 #elasticity parameter between owner's labor and employee's labor
+# varpi    = 0.5553092396149117# share parameter on employee's labor.
+
+# other parameters
+chi      = 0.0 # borrowing constraint parameter a' >= chi ks    
+grate    = 0.02 # Growth rate of the economy
+
+
+# state space grids
+# state space grid requires four parameters
+# min, max, curvature, number of grid point
+# if curvature is 1, the grid is equi-spaced.
+# if curvature is larger than one, it puts more points near min
+
+
+amin = 0.0 
+amax = 200.
+acurve = 2.0
+num_a = 40
+
+kapmin = 0.0
+kapmax = 2.0
+kapcurve = 2.0
+num_kap = 30
+
+# a function that generates non equi-spaced grid
 def curvedspace(begin, end, curve, num=100):
     ans = np.linspace(0., (end - begin)**(1.0/curve), num) ** (curve) + begin
     ans[-1] = end #so that the last element is exactly end
     return ans
     
-agrid = curvedspace(0., 200., 2., 40)
-kapgrid = curvedspace(0., 2.0, 2., 30)
     
+agrid = curvedspace(amin, amax, acurve, num_a) 
+kapgrid = curvedspace(kapmin, kapmax, kapcurve, num_kap)
 
+    
 # productivity shock
-prob = np.load('./DeBacker/prob_epsz.npy') #state space (eps,z) is mapped into one dimension (s)
-zgrid = np.load('./input_data/zgrid.npy') ** 2.0
-epsgrid = np.load('./input_data/epsgrid.npy')
-is_to_iz = np.load('./input_data/is_to_iz.npy') #convert s to eps
-is_to_ieps = np.load('./input_data/is_to_ieps.npy') #convert s to z
 
-# age shocks
-prob_yo = np.array([[44./45., 1./45.], [3./45., 42./45.]]) #[[y -> y, y -> o], [o -> y, o ->o]]
-iota     = 1.0
-la_tilde = 0.1
-tau_wo   = 0.5 
-tau_bo   = 0.5
-trans_retire = 0.48 
+rho_z = 0.7
+sig_z = 0.1
+num_z = 5
+
+rho_eps = 0.7
+sig_eps = 0.1
+num_eps = 5
 
 
+mc_z   = tauchen(rho = rho_z  , sigma_u = sig_z  , m = 3, n = num_z) # discretize z
+mc_eps = tauchen(rho = rho_eps, sigma_u = sig_eps, m = 3, n = num_eps) # discretize eps
 
+    
+# prob_z = mc_z.P
+# prob_eps = mc_eps.P
+# prob = np.kron(prob_eps, prob_z)
+
+prob_z   = np.loadtxt('./DeBacker/debacker_prob_z.npy') # read transition matrix from DeBacker
+prob_eps = np.loadtxt('./DeBacker/debacker_prob_eps.npy') # read transition matrix from DeBacker
+prob = np.kron(prob_eps, prob_z) 
+
+# prob = np.load('./DeBacker/prob_epsz.npy') # transition matrix from DeBacker et al.
+zgrid = np.exp(mc_z.state_values) ** 2.0
+epsgrid = np.exp(mc_eps.state_values) 
+
+is_to_iz = np.array([i for i in range(num_z) for j in range(num_eps)])
+is_to_iz = np.array([j for i in range(num_z) for j in range(num_eps)])    
+# is_to_iz = np.load('./input_data/is_to_iz.npy') #convert s to eps
+# is_to_ieps = np.load('./input_data/is_to_ieps.npy') #convert s to z
+
+# lifecycle-specific parameters
+prob_yo = np.array([[44./45., 1./45.], [3./45., 42./45.]]) # transition matrix for young-old state
+#[[y -> y, y -> o], [o -> y, o ->o]]
+iota     = 1.0 # paternalistic discounting rate. 
+la_tilde = 0.1 # 1 - la_tilde is sweat capital depreciation rate
+tau_wo   = 0.5 # productivity eps is replaced by tau_wo*eps if the agent is old
+tau_bo   = 0.5 # productivity z   is replaced by tau_bo*z   if the agent is old
+trans_retire = 0.48 # receives this transfer if the agent is old.
+
+    
 # GDP guess and GDP_indexed parameters (except for nonlinear tax)
-GDP_guess = 3.34
-g = 0.133*GDP_guess
-yn = 0.266*GDP_guess
-xnb = 0.110*GDP_guess
+
+g_div_gdp = 0.133 # government expenditure relative to GDP
+yn_div_gdp = 0.266 # non-business production relative to GDP
+xnb_div_gdp = 0.110 # non-business consumption relative to GDP
+GDP_guess = 3.14 #a guess for GDP value. This needs to be consistent with simulated GDP
+
+
+g = g_div_gdp*GDP_guess # actual GDP 
+yn = yn_div_gdp*GDP_guess # actual non-business production
+xnb = xnb_div_gdp*GDP_guess # actual non-business consumption
 
 
 
@@ -98,43 +160,41 @@ xnb = 0.110*GDP_guess
 
 # business tax
 taub = np.array([.137, .185, .202, .238, .266, .280])
-bbracket = np.array([0.150, 0.319, 0.824, 2.085, 2.930]) # brackets relative to GDP
-scaling_b = GDP_guess
+bbracket_div_gdp = np.array([0.150, 0.319, 0.824, 2.085, 2.930]) # brackets relative to GDP
+bbracket = bbracket_div_gdp * GDP_guess
 
 # one intercept should be fixed
 psib_fixed = 0.03 # value for the fixed intercept
 bbracket_fixed = 2 # index for the fixed intercept
-# to exeognously pin down intercepts,  directly determine psib
-# psib = None 
-
+psib = get_consistent_phi(bbracket, taub, psib_fixed, bbracket_fixed) # obtain consistent intercepts
 
 # labor income tax
 taun = np.array([.2930, .3170, .3240, .3430, .3900, .4050, .4080, .4190])
-nbracket = np.array([.1760, .2196, .2710, .4432, 0.6001, 1.4566, 2.7825]) # brackets relative to GDP
-scaling_n = GDP_guess
+nbracket_div_gdp = np.array([.1760, .2196, .2710, .4432, 0.6001, 1.4566, 2.7825]) # brackets relative to GDP
+nbracket = nbracket_div_gdp * GDP_guess
 
 # one intercept should be fixed
 psin_fixed = 0.03 # value for the fixed intercept
 nbracket_fixed = 5 # index for the fixed intercept
-# to exeognously pin down intercepts,  directly determine psin
-# psin = None         
+psin = get_consistent_phi(nbracket, taun, psin_fixed, nbracket_fixed) # obtain consistent intercepts
 
 
 
 # computational parameters
-sim_time = 1000
-num_total_pop = 100_000
+sim_time = 500 # simulation length
+num_total_pop = 25_000 # population in simulatin
 
-num_suba_inner = 20
-num_subkap_inner = 30
+num_suba_inner = 20 #the number of equi-spaced subgrid between agrid
+num_subkap_inner = 30 #the number of equi-spaced subgrid between kapgrid
 
-num_core = 640
+num_core = 640 # number of cores for parallel
 
 
 # computational parameters for exogenous shocks
-path_to_data_i_s = './tmp/data_i_s'
-path_to_data_is_o = './tmp/data_is_o'    
-buffer_time = 2_000
+path_to_data_i_s = './tmp/data_i_s' # temporary directory for shock
+path_to_data_is_o = './tmp/data_is_o' # temporary directory for shock
+buffer_time = 2_000 # 
+
 
 
 ### calibration target
@@ -171,6 +231,8 @@ def target(prices):
 
     print('computing for the case p = {:f}, rc = {:f}'.format(p_, rc_), end = ', ')
 
+
+    #create an Economy instance
     econ = Economy(alpha = alpha,
                    beta = beta,
                    chi = chi,
@@ -180,19 +242,19 @@ def target(prices):
                    grate = grate,
                    la = la,
                    mu = mu,
-                   ome = ome_, #target
+                   ome = ome_, # target
                    phi = phi,
                    rho = rho,
                    tauc = tauc,
                    taud = taud,
                    taup = taup,
-                   theta = theta_ , #target
+                   theta = theta, # target
                    veps = veps,
                    vthet = vthet,
                    zeta = zeta,
                    A = A,
                    upsilon = upsilon,
-                   varpi = varpi_, #target
+                   varpi = varpi, # varpi
                    agrid = agrid,
                    kapgrid = kapgrid,
                    prob = prob,
@@ -211,14 +273,10 @@ def target(prices):
                    xnb = xnb,
                    taub = taub,
                    bbracket = bbracket,
-                   scaling_b = scaling_b,
-                   psib_fixed = psib_fixed,
-                   bbracket_fixed = bbracket_fixed,
+                   psib = psib,
                    taun = taun,
                    nbracket = nbracket,
-                   scaling_n = scaling_n,
-                   psin_fixed = psin_fixed,
-                   nbracket_fixed = nbracket_fixed,
+                   psin = psin,
                    sim_time = sim_time,
                    num_total_pop = num_total_pop,
                    num_suba_inner = num_suba_inner,
@@ -226,7 +284,6 @@ def target(prices):
                    path_to_data_i_s = path_to_data_i_s,
                    path_to_data_is_o = path_to_data_is_o)
     
-
     econ.set_prices(p = p_, rc = rc_)
     
     with open('econ.pickle', mode='wb') as f: pickle.dump(econ, f)
