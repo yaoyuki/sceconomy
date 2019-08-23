@@ -8,6 +8,15 @@
 # 5. run Nelder Mead. All the intermediate steps are written in log files
 #
 
+# How to run the code
+# make sure that numpy does not automatically do parallel
+#
+# > export MKL_NUM_THREADS=1
+# 
+# then, simply run
+#
+# > python nelder_mead_hy_ns_lifecycle_clean.py
+#
 
 
 import numpy as np
