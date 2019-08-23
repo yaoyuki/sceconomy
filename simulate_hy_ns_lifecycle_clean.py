@@ -35,6 +35,9 @@ if __name__ == '__main__':
     ### log file destination ###
     detailed_output_file = './log/test.txt'
 
+
+    ### number of cores utilized
+    num_core = 640 # number of cores for parallel
     
     # prices
     p = 2.147770639542637 # relative price of S-goods
@@ -200,7 +203,7 @@ if __name__ == '__main__':
     num_suba_inner = 20 #the number of equi-spaced subgrid between agrid
     num_subkap_inner = 30 #the number of equi-spaced subgrid between kapgrid
 
-    num_core = 640 # number of cores for parallel
+
 
     
     # computational parameters for exogenous shocks

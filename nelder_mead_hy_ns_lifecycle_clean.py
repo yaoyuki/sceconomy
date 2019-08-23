@@ -1,3 +1,15 @@
+#
+# Structure of this code
+#
+# 1, import packages
+# 2. set parameters and inputs that are necessary to create an Economy instance
+# 3. define an objective function for Nelder-Mead
+# 4. generate shock variables and save under tmp directory
+# 5. run Nelder Mead. All the intermediate steps are written in log files
+#
+
+
+
 import numpy as np
 import time
 import subprocess
@@ -11,9 +23,11 @@ from PiecewiseLinearTax import get_consistent_phi
 from scipy.optimize import minimize
 
 ### log file destination ###
-
 nd_log_file = './log/log.txt'
 detailed_output_file = './log/detail.txt'
+
+### number of cores utilized ###
+num_core = 640
 
 
 # initial prices and parameters
@@ -27,6 +41,12 @@ theta_init = 0.5000702399881483
 
 prices_init = [p_init, rc_init, ome_init, varpi_init, theta_init]
 
+### calibration target
+
+pure_sweat_share = 0.090 # target
+s_emp_share = 0.33 # target
+xc_share = 0.134 # target
+#w*nc/GDP = 0.22
 
 
 # S-corp production function
@@ -129,12 +149,13 @@ epsgrid = np.exp(mc_eps.state_values)
 
 is_to_iz = np.array([i for i in range(num_z) for j in range(num_eps)])
 is_to_ieps = np.array([j for i in range(num_z) for j in range(num_eps)])    
-# is_to_iz = np.load('./input_data/is_to_iz.npy') #convert s to eps
-# is_to_ieps = np.load('./input_data/is_to_ieps.npy') #convert s to z
+
 
 # lifecycle-specific parameters
-prob_yo = np.array([[44./45., 1./45.], [3./45., 42./45.]]) # transition matrix for young-old state
-#[[y -> y, y -> o], [o -> y, o ->o]]
+
+# transition matrix for young-old state
+prob_yo = np.array([[44./45., 1./45.], [3./45., 42./45.]]) # [[y -> y, y -> o], [o -> y, o ->o]]
+
 iota     = 1.0 # paternalistic discounting rate. 
 la_tilde = 0.1 # 1 - la_tilde is sweat capital depreciation rate
 tau_wo   = 0.5 # productivity eps is replaced by tau_wo*eps if the agent is old
@@ -187,7 +208,7 @@ num_total_pop = 25_000 # population in simulatin
 num_suba_inner = 20 #the number of equi-spaced subgrid between agrid
 num_subkap_inner = 30 #the number of equi-spaced subgrid between kapgrid
 
-num_core = 640 # number of cores for parallel
+
 
 
 # computational parameters for exogenous shocks
@@ -196,13 +217,6 @@ path_to_data_is_o = './tmp/data_is_o' # temporary directory for shock
 buffer_time = 2_000 # 
 
 
-
-### calibration target
-
-pure_sweat_share = 0.090 # target
-s_emp_share = 0.33 # target
-xc_share = 0.134 # target
-#w*nc/GDP = 0.22
 
 
 ### nelder mead option
@@ -339,39 +353,41 @@ def target(prices):
 
 if __name__ == '__main__':
 
-    f = open(nd_log_file, 'w')
-    f.writelines('p, rc, ome, varpi,theta, dist, mom0, mom1, mom2, mom4, mom5, mom7, mom8\n')        
-    f.close()
+
+    def generate_shock(prob, num_agent, num_time, buffer_time, save_dest, seed, init_state):
+
+        np.random.seed(seed)
+        data_rand = np.random.rand(num_agent, num_time+buffer_time)
+        data_i = np.ones((num_agent, num_time+buffer_time), dtype = int)
+        data_i[:, 0] = init_state
+        calc_trans(data_i, data_rand, prob)
+        data_i = data_i[:, buffer_time:]
+        np.save(save_dest + '.npy' , data_i)
+        split_shock(save_dest, num_agent, num_core)
+
+        return data_i
 
 
+    data_i_s = generate_shock(prob = prob,
+                   num_agent = num_total_pop,
+                   num_time = sim_time,
+                   buffer_time = buffer_time,
+                   save_dest = path_to_data_i_s,
+                   seed = 0,
+                   init_state = 7)
 
-    ### generate shocks and save them ###
-    #save and split shocks for istate
-    np.random.seed(0)
-    data_rand = np.random.rand(num_total_pop, sim_time+buffer_time)
-    data_i_s = np.ones((num_total_pop, sim_time+buffer_time), dtype = int)
-    data_i_s[:, 0] = 7 #initial state. it does not matter if simulation is long enough.
-    calc_trans(data_i_s, data_rand, prob)
-    data_i_s = data_i_s[:, buffer_time:]
-    np.save(path_to_data_i_s + '.npy' , data_i_s)
-    split_shock(path_to_data_i_s, num_total_pop, num_core)
-    del data_rand
-
-    #save and split shocks for is_old
-    np.random.seed(2)
-    data_rand = np.random.rand(num_total_pop, sim_time+buffer_time+1) #+1 is added since this matters in calculation
-    data_is_o = np.ones((num_total_pop, sim_time+buffer_time+1), dtype = int)
-    data_is_o[:, 0] = 0 #initial state. it does not matter if simulation is long enough.
-    calc_trans(data_is_o, data_rand, prob_yo)
-    data_is_o = data_is_o[:, buffer_time:]
-    np.save(path_to_data_is_o + '.npy' , data_is_o)
-    split_shock(path_to_data_is_o, num_total_pop, num_core)
-    del data_rand
-    ### end generate shocks and save them ###    
+    data_is_o = generate_shock(prob = prob_yo,
+                   num_agent = num_total_pop,
+                   num_time = sim_time+1,
+                   buffer_time = buffer_time,
+                   save_dest = path_to_data_is_o,
+                   seed = 2,
+                   init_state = 0)
+    
     
 
     ### check
-    f = open(nd_log_file, 'a')
+    f = open(nd_log_file, 'w')
     f.writelines(np.array_str(np.bincount(data_i_s[:,0]) / np.sum(np.bincount(data_i_s[:,0])), precision = 4, suppress_small = True) + '\n')
     f.writelines(np.array_str(Stationary(prob), precision = 4, suppress_small = True) + '\n')
     
@@ -381,6 +397,11 @@ if __name__ == '__main__':
     f.close()
 
     del data_i_s, data_is_o
+
+    f = open(nd_log_file, 'a')
+    f.writelines('p, rc, ome, varpi,theta, dist, mom0, mom1, mom2, mom4, mom5, mom7, mom8\n')        
+    f.close()
+    
 
 
     nm_result = None
